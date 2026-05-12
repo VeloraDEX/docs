@@ -1,97 +1,33 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Velora Docs"
+description: "Docs for the Velora DEX aggregator and intents protocol. Pick your path: trade, integrate, build a solver, build an agent."
 ---
 
-## Setting up
+<Tip>
+  Building an AI agent? Start with the [Five-call recipe](/for-agents/quickstart/five-call-recipe) or feed the docs to your model from [llms.txt](https://docs.velora.xyz/llms.txt) and [llms-full.txt](https://docs.velora.xyz/llms-full.txt).
+</Tip>
 
-Get your documentation site up and running in minutes.
+# Welcome to Velora
 
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
+Velora is a DEX aggregator and intents protocol for swapping any token across any EVM chain. Pick your path below.
 
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Trade" icon="arrow-right-arrow-left" href="https://app.velora.xyz">
+    Swap, place limit orders, and bridge — head to the Velora app.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Build with the API" icon="terminal" href="/api-reference/introduction">
+    REST endpoints for Market, Delta, and Augustus RFQ.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Build with the SDK" icon="code" href="/sdk/install">
+    Type-safe TypeScript SDK for quotes, swaps, and Delta intents.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="Embed the Widget" icon="puzzle-piece" href="/widget/install">
+    Drop a swap widget into any React app or any HTML page.
   </Card>
-</Columns>
-
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+  <Card title="Build a Solver" icon="bolt" href="/for-solvers/overview">
+    Fill Delta intents on Portikus and earn from spread.
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Build an Agent" icon="robot" href="/for-agents/quickstart/five-call-recipe">
+    AI-first integration — MCP server, recipes, error playbooks.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
-
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+</CardGroup>

@@ -1,87 +1,358 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Velora Docs",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
     "dark": "#15803D"
   },
   "favicon": "/favicon.svg",
+  "banner": {
+    "content": "Building an AI agent? See [llms.txt](https://docs.velora.xyz/llms.txt) and [llms-full.txt](https://docs.velora.xyz/llms-full.txt).",
+    "dismissible": true
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Overview",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get oriented",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "overview/what-is-velora",
+              "overview/product-stack",
+              "overview/how-velora-works",
+              "overview/supported-chains-and-contracts"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Trading concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "overview/trading-concepts/swaps",
+              "overview/trading-concepts/limit-orders",
+              "overview/trading-concepts/crosschain-swaps",
+              "overview/trading-concepts/slippage-gas-and-mev",
+              "overview/trading-concepts/transaction-lifecycle"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Security",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              {
+                "group": "Audits",
+                "pages": [
+                  "overview/security/audits",
+                  "overview/security/audits/augustus-v6-2",
+                  "overview/security/audits/augustus-v6-1",
+                  "overview/security/audits/augustus-v5",
+                  "overview/security/audits/augustus-rfq"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Get started",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/introduction",
+              "api-reference/authentication",
+              "api-reference/rate-limits",
+              "api-reference/error-reference",
+              "api-reference/versioning-policy"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Market API (v6.2)",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/market/overview"
+            ]
+          },
+          {
+            "group": "Delta API",
+            "pages": [
+              "api-reference/delta/overview"
+            ]
+          },
+          {
+            "group": "Augustus RFQ API",
+            "pages": [
+              "api-reference/rfq/overview"
+            ]
+          },
+          {
+            "group": "Tokens & utilities",
+            "pages": [
+              "api-reference/tokens/overview"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "sdk/overview",
+              "sdk/install",
+              "sdk/choose-a-variant"
+            ]
+          },
+          {
+            "group": "Variants",
+            "pages": [
+              "sdk/simple-sdk",
+              "sdk/composable-sdk"
+            ]
+          },
+          {
+            "group": "Modules",
+            "pages": [
+              "sdk/modules/swap",
+              "sdk/modules/limit-orders",
+              "sdk/modules/delta"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "sdk/configure-providers",
+              "sdk/testing-integration",
+              "sdk/monetize",
+              "sdk/migrating-from-paraswap-sdk"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Widget",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "widget/overview",
+              "widget/install",
+              "widget/configure"
+            ]
+          },
+          {
+            "group": "Customize",
+            "pages": [
+              "widget/customize",
+              "widget/variants",
+              "widget/wallet-management",
+              "widget/events-and-callbacks",
+              "widget/internationalization"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "widget/widget-api-reference",
+              "widget/monetize",
+              "widget/compatibility"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "widget/examples/react",
+              "widget/examples/nextjs",
+              "widget/examples/vanilla-html-embed"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Delta",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "delta/overview",
+              "delta/how-it-works",
+              "delta/quickstart"
+            ]
+          },
+          {
+            "group": "Integration",
+            "pages": [
+              "delta/api-integration",
+              "delta/crosschain-delta"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "delta/order-lifecycle-and-status-codes",
+              "delta/eip-712-typed-data-reference"
+            ]
+          },
+          {
+            "group": "Smart contracts",
+            "pages": [
+              "delta/smart-contracts/delta-contract",
+              "delta/smart-contracts/portikus-contracts"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "For Solvers",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "for-solvers/overview",
+              "for-solvers/quickstart"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "for-solvers/architecture/order-flow",
+              "for-solvers/architecture/auctions",
+              "for-solvers/architecture/settlement"
+            ]
+          },
+          {
+            "group": "Workflows",
+            "pages": [
+              "for-solvers/workflows/collecting-orders",
+              "for-solvers/workflows/quoting",
+              "for-solvers/workflows/filling",
+              "for-solvers/workflows/settling"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "for-solvers/authentication",
+              "for-solvers/testing-and-sandbox",
+              "for-solvers/reputation-and-slas"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "For Agents",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "for-agents/overview",
+              "for-agents/concepts-and-objects"
+            ]
+          },
+          {
+            "group": "Quickstart",
+            "pages": [
+              "for-agents/quickstart/five-call-recipe",
+              "for-agents/quickstart/decision-tables",
+              "for-agents/quickstart/code-samples"
+            ]
+          },
+          {
+            "group": "Workflows",
+            "pages": [
+              "for-agents/workflows/token-approvals",
+              "for-agents/workflows/transaction-execution",
+              "for-agents/workflows/status-and-recovery",
+              "for-agents/workflows/partial-completion"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "for-agents/reference/endpoint-specs",
+              "for-agents/reference/error-playbooks",
+              "for-agents/reference/data-schemas"
+            ]
+          },
+          {
+            "group": "MCP server",
+            "pages": [
+              "for-agents/mcp-server/overview",
+              "for-agents/mcp-server/installation",
+              "for-agents/mcp-server/available-tools",
+              "for-agents/mcp-server/examples"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "for-agents/cli/overview",
+              "for-agents/cli/installation",
+              "for-agents/cli/commands",
+              "for-agents/cli/examples"
+            ]
+          },
+          {
+            "group": "Prompting",
+            "pages": [
+              "for-agents/prompt-patterns"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Cross-cutting how-tos",
+            "pages": [
+              "guides/debug-failed-transactions",
+              "guides/handling-stuck-orders",
+              "guides/mev-protection-patterns",
+              "guides/optimizing-for-latency",
+              "guides/intermediate-token-routing",
+              "guides/gas-estimation-and-sponsorship",
+              "guides/permit-and-permit2-patterns"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Changelog",
+        "groups": [
+          {
+            "group": "By surface",
+            "pages": [
+              "changelog/monthly-summary",
+              "changelog/market-api",
+              "changelog/delta-api",
+              "changelog/augustusrfq",
+              "changelog/sdk",
+              "changelog/widget",
+              "changelog/smart-contracts"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "FAQ",
+        "groups": [
+          {
+            "group": "End-user questions",
+            "pages": [
+              "faq/getting-started",
+              "faq/trading",
+              "faq/limit-orders",
+              "faq/fees-and-monetization",
+              "faq/slippage-and-price-impact",
+              "faq/token-support",
+              "faq/route-availability",
+              "faq/troubleshooting"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
@@ -91,32 +362,51 @@
     "links": [
       {
         "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "href": "mailto:support@velora.xyz"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "label": "Launch app",
+      "href": "https://app.velora.xyz"
     }
   },
   "contextual": {
     "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
+    ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "x": "https://x.com/veloradex",
+      "github": "https://github.com/VeloraDEX"
     }
-  }
+  },
+  "redirects": [
+    { "source": "/velora-governance/vlr-token", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/vlr-token-overview", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/legacy-token-psp", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0/psp-staking-mechanisms", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0/incentives-distribution", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0/social-escrow-system-and-paraboost", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0/staking-psp", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/vlr-token/psp-2.0/unstaking-psp", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/velora-dao", "destination": "/", "permanent": true },
+    { "source": "/velora-governance/reserve-and-treasury", "destination": "/", "permanent": true },
+    { "source": "/intro-to-velora/velora-overview/protocol-revenue", "destination": "/", "permanent": true },
+    { "source": "/api/augustusrfq/api-references/nft", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/augustusrfq/api-references/nft/:slug*", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/velora-api/velora-market-api/master/api-v5", "destination": "/api-reference/market/overview", "permanent": true },
+    { "source": "/intro-to-velora/protocols/velora-delta", "destination": "/delta/overview", "permanent": true },
+    { "source": "/intro-to-velora/protocols/aggregation-protocol", "destination": "/overview/product-stack", "permanent": true },
+    { "source": "/intro-to-velora/protocols/augustus-rfq", "destination": "/api-reference/rfq/overview", "permanent": true }
+  ]
 }
