@@ -1,15 +1,73 @@
 ---
-title: "Overview"
-description: "Delta is Velora's intents protocol — users sign orders, solvers compete to fill them."
-keywords: ["delta","intents","overview"]
+title: "Why Delta"
+description: "Delta is Velora's intent protocol — gas-less, MEV-protected, cross-chain swaps that settle in one signature. Here's what makes it different from a regular swap."
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Delta is Velora's intent protocol. Instead of building, signing, and submitting an on-chain transaction yourself, you sign an off-chain **order** describing what you want — and a competitive network of solvers (Portikus) fills it on your behalf.
 
-## When to use this
+## What you get
 
-## How it works
+<CardGroup cols={3}>
+  <Card title="Gas-less" icon="gas-pump">
+    The user never pays gas. Solvers cover execution cost out of their margin.
+  </Card>
+  <Card title="MEV-protected" icon="shield">
+    Orders are filled via private auction. No public mempool. No sandwich risk.
+  </Card>
+  <Card title="Cross-chain native" icon="link">
+    One signed order can resolve across chains via bridge-aware solvers. No second tx.
+  </Card>
+</CardGroup>
 
-## Examples
+## Delta vs a normal swap
 
-## Related pages
+|  | Normal swap (Market API) | Delta intent |
+|---|---|---|
+| User signs | A transaction (on-chain tx) | An EIP-712 order (off-chain message) |
+| User pays gas | Yes | No |
+| MEV exposure | Public mempool — sandwichable | Private auction — solver competition |
+| Cross-chain | Separate tx per chain | One signature, multi-chain settlement |
+| Fill guarantee | Best-effort routing | Solver commits at quote time |
+| Failure mode | Tx reverts | Order expires or is rejected — no funds lost |
+
+## See it work
+
+The full lifecycle is four calls — quote, build, sign, submit — and then you poll for status:
+
+```bash
+# 1. Get a Delta quote
+curl "https://api.paraswap.io/quote?...&mode=DELTA"
+
+# 2. Build the order (returns EIP-712 typed data)
+curl -X POST "https://api.paraswap.io/delta/orders/build" -d @price.json
+
+# 3. Sign the typed data with the user's wallet (ERC-2098 compact)
+
+# 4. Submit the signed order
+curl -X POST "https://api.paraswap.io/delta/orders" -d @signed.json
+
+# 5. Poll status
+curl "https://api.paraswap.io/delta/orders/:id"
+```
+
+Walk through the full flow in the **[Delta Quickstart →](/delta/quickstart)**
+
+## When to use Delta vs Market
+
+- **Use Delta** when the user is swapping at meaningful size, when MEV is a concern, when gas-less UX matters (mobile, social, wallet onboarding), or when the swap is cross-chain.
+- **Use the Market API** when you need atomic on-chain execution inside a larger transaction (composability), when the swap is tiny and the gas overhead doesn't matter, or when `mode=DELTA` returns no quote (Delta is BUY-side and native-source restricted).
+- **Use `mode=ALL`** in the quote endpoint to get both responses and pick at runtime.
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="play" href="/delta/quickstart">
+    cURL the full lifecycle end-to-end.
+  </Card>
+  <Card title="How it works" icon="diagram-project" href="/delta/how-it-works">
+    Order server, solver auction, settlement.
+  </Card>
+  <Card title="Cross-chain Delta" icon="link" href="/delta/crosschain-delta">
+    One signature, multi-chain settlement.
+  </Card>
+</CardGroup>

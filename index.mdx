@@ -1,33 +1,126 @@
 ---
-title: "Velora Docs"
-description: "Docs for the Velora DEX aggregator and intents protocol. Pick your path: trade, integrate, build a solver, build an agent."
+title: "Best execution. Every chain. One API."
+description: "Velora is the DEX aggregator and intents protocol powering best execution across every EVM chain. Quote, swap, or place a gas-less intent in one call."
+mode: "custom"
 ---
 
-<Tip>
-  Building an AI agent? Start with the [Five-call recipe](/for-agents/quickstart/five-call-recipe) or feed the docs to your model from [llms.txt](https://docs.velora.xyz/llms.txt) and [llms-full.txt](https://docs.velora.xyz/llms-full.txt).
-</Tip>
+<div className="relative">
 
-# Welcome to Velora
+<div className="mx-auto max-w-6xl px-6 pt-16 pb-10">
 
-Velora is a DEX aggregator and intents protocol for swapping any token across any EVM chain. Pick your path below.
+# Best execution. Every chain. One API.
 
-<CardGroup cols={2}>
-  <Card title="Trade" icon="arrow-right-arrow-left" href="https://app.velora.xyz">
-    Swap, place limit orders, and bridge — head to the Velora app.
+Velora routes any swap across every DEX, bridge, and solver on every EVM chain — and lets you ship a gas-less, MEV-protected intent with a single signature. No infrastructure, no per-chain integration, no liquidity gaps.
+
+<div className="mt-8 flex flex-wrap gap-3">
+  <a href="/integrate/quickstart" className="inline-flex items-center rounded-md bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">
+    Quickstart in 60 seconds →
+  </a>
+  <a href="/delta/overview" className="inline-flex items-center rounded-md border border-emerald-600 px-5 py-2.5 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950">
+    Try Delta (intents)
+  </a>
+  <a href="/for-agents/overview" className="inline-flex items-center rounded-md border border-zinc-300 dark:border-zinc-700 px-5 py-2.5 text-sm font-semibold text-zinc-900 dark:text-zinc-100 hover:bg-zinc-100 dark:hover:bg-zinc-800">
+    Build an AI agent
+  </a>
+</div>
+
+</div>
+
+<div className="mx-auto max-w-6xl px-6 pb-12">
+
+<CodeGroup>
+
+```bash cURL
+curl -s "https://api.paraswap.io/quote?srcToken=0xA0b8...eB48&destToken=0xdAC1...1ec7&amount=1000000000&srcDecimals=6&destDecimals=6&side=SELL&network=1&mode=ALL"
+```
+
+```ts TypeScript SDK
+import { constructSimpleSDK } from '@velora-dex/sdk';
+
+const sdk = constructSimpleSDK({ chainId: 1, fetch });
+
+const quote = await sdk.quote.getQuote({
+  srcToken: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',  // USDC
+  destToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDT
+  amount: '1000000000',  // 1,000 USDC
+  side: 'SELL',
+  mode: 'ALL',
+  userAddress: '0x...',
+});
+```
+
+```python Python
+import requests
+
+r = requests.get("https://api.paraswap.io/quote", params={
+    "srcToken":  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "destToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "amount":    "1000000000",
+    "side":      "SELL",
+    "network":   1,
+    "mode":      "ALL",
+}).json()
+print(r["fallbackReason"] if "fallbackReason" in r else "DELTA quote OK")
+```
+
+```json Response
+{
+  "priceRoute": {
+    "srcAmount":  "1000000000",
+    "destAmount": "999847221",
+    "bestRoute":  [ /* best path across 30+ DEXs */ ]
+  },
+  "delta": {
+    "destAmount": "999912450",
+    "deadline":   1735689600,
+    "partnerAndFee": "0x..."
+  }
+}
+```
+
+</CodeGroup>
+
+</div>
+
+<div className="mx-auto max-w-6xl px-6 pb-16">
+
+<div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
+    <div className="text-3xl font-semibold text-emerald-600">$150B+</div>
+    <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Cumulative volume</div>
+  </div>
+  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
+    <div className="text-3xl font-semibold text-emerald-600">30+</div>
+    <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">EVM chains</div>
+  </div>
+  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
+    <div className="text-3xl font-semibold text-emerald-600">100+</div>
+    <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Liquidity sources</div>
+  </div>
+  <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 p-5">
+    <div className="text-3xl font-semibold text-emerald-600">Gas-less</div>
+    <div className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Delta intents, MEV-protected</div>
+  </div>
+</div>
+
+</div>
+
+<div className="mx-auto max-w-6xl px-6 pb-20">
+
+## Pick your path
+
+<CardGroup cols={3}>
+  <Card title="Integrate" icon="code" href="/integrate/quickstart">
+    Quote, swap, and limit orders via SDK, Widget, or REST. Ship in an afternoon.
   </Card>
-  <Card title="Build with the API" icon="terminal" href="/api-reference/introduction">
-    REST endpoints for Market, Delta, and Augustus RFQ.
+  <Card title="Delta" icon="bolt" href="/delta/overview">
+    Gas-less, MEV-protected, cross-chain intents. One signature, best fill.
   </Card>
-  <Card title="Build with the SDK" icon="code" href="/sdk/install">
-    Type-safe TypeScript SDK for quotes, swaps, and Delta intents.
-  </Card>
-  <Card title="Embed the Widget" icon="puzzle-piece" href="/widget/install">
-    Drop a swap widget into any React app or any HTML page.
-  </Card>
-  <Card title="Build a Solver" icon="bolt" href="/for-solvers/overview">
-    Fill Delta intents on Portikus and earn from spread.
-  </Card>
-  <Card title="Build an Agent" icon="robot" href="/for-agents/quickstart/five-call-recipe">
-    AI-first integration — MCP server, recipes, error playbooks.
+  <Card title="Build on Velora" icon="cubes" href="/for-agents/overview">
+    Run a solver on Portikus or build an AI agent against the MCP server.
   </Card>
 </CardGroup>
+
+</div>
+
+</div>
