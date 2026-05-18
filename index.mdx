@@ -31,7 +31,17 @@ Velora routes any swap across every DEX, bridge, and solver on every EVM chain â
 <CodeGroup>
 
 ```bash cURL
-curl -s "https://api.paraswap.io/quote?srcToken=0xA0b8...eB48&destToken=0xdAC1...1ec7&amount=1000000000&srcDecimals=6&destDecimals=6&side=SELL&network=1&mode=ALL"
+curl -s "https://api.paraswap.io/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  -G | jq
 ```
 
 ```ts TypeScript SDK
@@ -40,12 +50,14 @@ import { constructSimpleSDK } from '@velora-dex/sdk';
 const sdk = constructSimpleSDK({ chainId: 1, fetch });
 
 const quote = await sdk.quote.getQuote({
-  srcToken: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',  // USDC
-  destToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDT
-  amount: '1000000000',  // 1,000 USDC
+  srcToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',  // ETH
+  destToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount: '1000000000000000000',  // 1 ETH
+  srcDecimals: 18,
+  destDecimals: 6,
   side: 'SELL',
   mode: 'ALL',
-  userAddress: '0x...',
+  userAddress: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
 });
 ```
 
@@ -53,27 +65,129 @@ const quote = await sdk.quote.getQuote({
 import requests
 
 r = requests.get("https://api.paraswap.io/quote", params={
-    "srcToken":  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    "destToken": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    "amount":    "1000000000",
-    "side":      "SELL",
-    "network":   1,
-    "mode":      "ALL",
+    "srcToken":    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "destToken":   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "amount":      "1000000000000000000",
+    "srcDecimals": 18,
+    "destDecimals": 6,
+    "side":        "SELL",
+    "chainId":     1,
+    "mode":        "ALL",
+    "userAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
 }).json()
 print(r["fallbackReason"] if "fallbackReason" in r else "DELTA quote OK")
 ```
 
+```go Go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+)
+
+func main() {
+	q := url.Values{}
+	q.Set("srcToken",    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE")
+	q.Set("destToken",   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48")
+	q.Set("amount",      "1000000000000000000")
+	q.Set("srcDecimals", "18")
+	q.Set("destDecimals","6")
+	q.Set("side",        "SELL")
+	q.Set("chainId",     "1")
+	q.Set("mode",        "ALL")
+	q.Set("userAddress", "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+
+	resp, _ := http.Get("https://api.paraswap.io/quote?" + q.Encode())
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+
+	var out map[string]any
+	json.Unmarshal(body, &out)
+	fmt.Println(out)
+}
+```
+
+```rust Rust
+use reqwest::blocking::Client;
+use serde_json::Value;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let params = [
+        ("srcToken",    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"),
+        ("destToken",   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"),
+        ("amount",      "1000000000000000000"),
+        ("srcDecimals", "18"),
+        ("destDecimals","6"),
+        ("side",        "SELL"),
+        ("chainId",     "1"),
+        ("mode",        "ALL"),
+        ("userAddress", "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
+    ];
+
+    let body: Value = Client::new()
+        .get("https://api.paraswap.io/quote")
+        .query(&params)
+        .send()?
+        .json()?;
+
+    println!("{}", body);
+    Ok(())
+}
+```
+
 ```json Response
 {
-  "priceRoute": {
-    "srcAmount":  "1000000000",
-    "destAmount": "999847221",
-    "bestRoute":  [ /* best path across 30+ DEXs */ ]
-  },
-  "delta": {
-    "destAmount": "999912450",
-    "deadline":   1735689600,
-    "partnerAndFee": "0x..."
+  "market": {
+    "blockNumber": 25121370,
+    "network": 1,
+    "srcToken": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "srcDecimals": 18,
+    "srcAmount": "1000000000000000000",
+    "destToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "destDecimals": 6,
+    "destAmount": "2115974695",
+    "bestRoute": [
+      {
+        "percent": 100,
+        "swaps": [
+          {
+            "srcToken": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "srcDecimals": 18,
+            "destToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "destDecimals": 6,
+            "swapExchanges": [
+              {
+                "exchange": "Native",
+                "srcAmount": "1000000000000000000",
+                "destAmount": "2115974695",
+                "percent": 100,
+                "poolAddresses": ["0x8a2ddc0461Fcf96F81a05529Bed540d4f1eb2a00"],
+                "poolIdentifiers": ["native_0xc02a...756cc2_0xa0b8...06eb48_bid"],
+                "data": { "gasUSD": "0.081835" }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "gasCostUSD": "0.105459",
+    "gasCost": "154640",
+    "side": "SELL",
+    "version": "6.2",
+    "contractAddress": "0x6a000f20005980200259b80c5102003040001068",
+    "tokenTransferProxy": "0x6a000f20005980200259b80c5102003040001068",
+    "contractMethod": "swapExactAmountIn",
+    "partnerFee": 0.01,
+    "srcUSD": "2115.4500000000",
+    "destUSD": "2115.5388042128",
+    "destAmountAfterFee": "2115763098",
+    "partner": "anon",
+    "maxImpactReached": false,
+    "hmac": "3833b0eca9d91dfc56d9fe3d01fdcc17dfbe123e"
   }
 }
 ```
