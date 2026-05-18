@@ -3,11 +3,15 @@
   "theme": "mint",
   "name": "Velora Docs",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#F75C2A",
+    "light": "#FF9E1B",
+    "dark": "#FE6F17"
   },
-  "favicon": "/favicon.svg",
+  "fonts": {
+    "heading": { "family": "Geist" },
+    "body": { "family": "Inter" }
+  },
+  "favicon": "/favicon.png",
   "banner": {
     "content": "Building an AI agent? See [llms.txt](https://docs.velora.xyz/llms.txt) and [llms-full.txt](https://docs.velora.xyz/llms-full.txt).",
     "dismissible": true
