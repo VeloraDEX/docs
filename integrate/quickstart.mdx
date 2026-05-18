@@ -12,7 +12,7 @@ You can integrate Velora three ways. This page is the **decision matrix** plus a
 | Maximum control, any language, any backend | [Market API](/api-reference/market/overview) / [Delta API](/api-reference/delta/overview) | ~60 seconds |
 | Type-safe TypeScript, your own UI | [@velora-dex/sdk](/sdk/install) | ~5 minutes |
 | Drop-in UI, zero design work | [@velora-dex/widget](/widget/install) | ~10 minutes |
-| Cross-chain, gas-less, MEV-protected fills | [Delta](/delta/overview) (via API or SDK) | ~10 minutes |
+| Crosschain, gasless, MEV-protected fills | [Delta](/delta/overview) (via API or SDK) | ~10 minutes |
 | AI agent / LLM integration | [MCP server](/for-agents/mcp-server/overview) + [five-call recipe](/for-agents/quickstart/five-call-recipe) | ~5 minutes |
 
 ## 60-second cURL quickstart
@@ -32,7 +32,7 @@ curl -s "https://api.paraswap.io/quote" \
   -G | jq
 ```
 
-The response contains both a `priceRoute` (best Market route — calldata-ready against Augustus v6.2) and a `delta` block (gas-less intent — sign and submit). You pick which to execute.
+The response contains both a `priceRoute` (best Market route — calldata-ready against Augustus v6.2) and a `delta` block (gasless intent — sign and submit). You pick which to execute.
 
 ## Next steps
 
@@ -44,7 +44,7 @@ The response contains both a `priceRoute` (best Market route — calldata-ready 
     Embeddable React component or vanilla iframe.
   </Card>
   <Card title="Ship a Delta intent" icon="bolt" href="/delta/quickstart">
-    Gas-less, MEV-protected, single-signature swap.
+    Gasless, MEV-protected, single-signature swap.
   </Card>
 </CardGroup>
 
