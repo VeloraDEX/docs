@@ -1,2 +1,32 @@
 html[data-current-path="/"] .nav-tabs { display: none !important; }
 html[data-current-path="/"] #navbar { border-bottom: none !important; }
+
+#background-color {
+  background-image: url("/images/hero-bg-light.svg") !important;
+  background-repeat: no-repeat !important;
+  background-position: center center !important;
+  background-size: cover !important;
+}
+
+html.dark #background-color {
+  background-image: url("/images/hero-bg-dark.svg") !important;
+}
+
+#navbar-transition {
+  background-color: transparent !important;
+}
+
+.card {
+  background-color: #fafcff !important;
+  border-color: #EAE9ED !important;
+  border-radius: 6px !important;
+}
+.card [data-component-part="card-title"] { color: #343647 !important; }
+.card .prose { color: #62626F !important; }
+
+html.dark .card {
+  background-color: #151724 !important;
+  border-color: #1E2033 !important;
+}
+html.dark .card [data-component-part="card-title"] { color: #EAE9ED !important; }
+html.dark .card .prose { color: #62626F !important; }
