@@ -1,0 +1,54 @@
+---
+title: "Telegram trading bot"
+description: "Prompt an AI agent to build a Telegram bot that quotes and executes Velora swaps with MEV protection."
+last-verified: 2026-05-15
+keywords: ["telegram","bot","trading","mev"]
+---
+
+## Outcome
+
+A Telegram bot in TypeScript that lets a user `/buy <token>` or `/sell <token>`, quotes via Velora `mode=ALL`, surfaces slippage and price impact, and executes via Delta when available (gasless, MEV-protected). Falls back to Market with a conservative slippage when Delta is unavailable.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are building a Telegram bot in TypeScript using `grammy` or `telegraf`. The bot has access to a user's connected EVM wallet via a custodied key tied to chat id (assume the wallet infra is solved; just call `signMessage` and `signTransaction`).
+
+Implement `/buy <symbol_or_address> <amount_in_usd>` and `/sell <symbol_or_address> <amount_in_usd>`.
+
+Requirements:
+- Resolve token addresses against Velora's tokens endpoint (`/tokens/:network`).
+- Quote with `mode=ALL` at `POST https://api.velora.xyz/quote`. Always pass `partner=my-app-name` (replace with the bot's partner-key string). Native ETH placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
+- Show the user `destAmount`, `destUSD`, `gasCostUSD`, and `priceImpact` BEFORE asking them to confirm.
+- If `response.delta` exists, prefer the Delta path: build → sign EIP-712 → submit → poll. The user pays no gas.
+- If only `priceRoute` exists, fall back to Market with `slippage=100` (1%) and warn the user about MEV exposure on larger trades (size > $5k).
+- Include the `priceImpact` warning at >2%.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/overview/why-velora
+- https://docs.velora.xyz/api-reference/market/quote
+- https://docs.velora.xyz/api-reference/delta/quote
+- https://docs.velora.xyz/api-reference/delta/orders-build
+- https://docs.velora.xyz/api-reference/delta/orders
+- https://docs.velora.xyz/guides/mev-protection-patterns
+- https://docs.velora.xyz/delta/order-lifecycle-and-status-codes
+
+Do NOT auto-execute trades without explicit user confirmation. Do NOT swallow Delta polling errors silently.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- A `/buy` flow on a $1k trade routes through Delta and settles gaslessly within the lifecycle window.
+- On a tiny test trade where Delta returns no quote, Market is used with the slippage and MEV warning surfaced.

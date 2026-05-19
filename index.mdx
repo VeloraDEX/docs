@@ -13,7 +13,7 @@ mode: "custom"
 Velora routes any swap across every DEX, bridge, and solver on every EVM chain — and lets you ship a gasless, MEV-protected intent with a single signature. No infrastructure, no per-chain integration, no liquidity gaps.
 
 <div className="mt-8 flex flex-wrap gap-3">
-  <a href="/integrate/quickstart" className="inline-flex items-center rounded-md bg-primary dark:bg-primary-light px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
+  <a href="/overview/why-velora#quickstart" className="inline-flex items-center rounded-md bg-primary dark:bg-primary-light px-5 py-2.5 text-sm font-semibold text-white hover:opacity-90 transition-opacity">
     Quickstart in 60 seconds →
   </a>
   <a href="/delta/overview" className="inline-flex items-center rounded-md border border-primary dark:border-primary-light px-5 py-2.5 text-sm font-semibold text-primary dark:text-primary-light hover:bg-orange-50 dark:hover:bg-orange-950">
@@ -31,7 +31,7 @@ Velora routes any swap across every DEX, bridge, and solver on every EVM chain �
 <CodeGroup>
 
 ```bash cURL
-curl -s "https://api.paraswap.io/quote" \
+curl -s "https://api.velora.xyz/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
   --data-urlencode "amount=1000000000000000000" \
@@ -41,6 +41,7 @@ curl -s "https://api.paraswap.io/quote" \
   --data-urlencode "chainId=1" \
   --data-urlencode "mode=ALL" \
   --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
   -G | jq
 ```
 
@@ -58,13 +59,14 @@ const quote = await sdk.quote.getQuote({
   side: 'SELL',
   mode: 'ALL',
   userAddress: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  partner: 'my-app-name',
 });
 ```
 
 ```python Python
 import requests
 
-r = requests.get("https://api.paraswap.io/quote", params={
+r = requests.get("https://api.velora.xyz/quote", params={
     "srcToken":    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
     "destToken":   "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     "amount":      "1000000000000000000",
@@ -74,6 +76,7 @@ r = requests.get("https://api.paraswap.io/quote", params={
     "chainId":     1,
     "mode":        "ALL",
     "userAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "partner":     "my-app-name",
 }).json()
 print(r["fallbackReason"] if "fallbackReason" in r else "DELTA quote OK")
 ```
@@ -100,8 +103,9 @@ func main() {
 	q.Set("chainId",     "1")
 	q.Set("mode",        "ALL")
 	q.Set("userAddress", "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045")
+	q.Set("partner",     "my-app-name")
 
-	resp, _ := http.Get("https://api.paraswap.io/quote?" + q.Encode())
+	resp, _ := http.Get("https://api.velora.xyz/quote?" + q.Encode())
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(resp.Body)
 
@@ -126,10 +130,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("chainId",     "1"),
         ("mode",        "ALL"),
         ("userAddress", "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
+        ("partner",     "my-app-name"),
     ];
 
     let body: Value = Client::new()
-        .get("https://api.paraswap.io/quote")
+        .get("https://api.velora.xyz/quote")
         .query(&params)
         .send()?
         .json()?;
@@ -185,7 +190,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     "srcUSD": "2115.4500000000",
     "destUSD": "2115.5388042128",
     "destAmountAfterFee": "2115763098",
-    "partner": "anon",
+    "partner": "my-app-name",
     "maxImpactReached": false,
     "hmac": "3833b0eca9d91dfc56d9fe3d01fdcc17dfbe123e"
   }
@@ -224,14 +229,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Pick your path
 
 <CardGroup cols={3}>
-  <Card title="Integrate" icon="code" href="/integrate/quickstart">
+  <Card title="Integrate" icon="code" href="/overview/why-velora#quickstart">
     Quote, swap, and limit orders via SDK, Widget, or REST. Ship in an afternoon.
   </Card>
   <Card title="Delta" icon="bolt" href="/delta/overview">
     Gasless, MEV-protected, Crosschain intents. One signature, best fill.
   </Card>
-  <Card title="Build on Velora" icon="cubes" href="/for-agents/overview">
-    Run a solver on Portikus or build an AI agent against the MCP server.
+  <Card title="For Agents" icon="robot" href="/for-agents/overview">
+    Build an AI agent against the MCP server, CLI, or curated Prompt Library.
   </Card>
 </CardGroup>
 

@@ -1,33 +1,45 @@
-> **First-time setup**: Customize this file for your project. Prompt the user to customize this file for their project.
-> For Mintlify product knowledge (components, configuration, writing standards),
-> install the Mintlify skill: `npx skills add https://mintlify.com/docs`
-
 # Documentation project instructions
 
 ## About this project
 
-- This is a documentation site built on [Mintlify](https://mintlify.com)
-- Pages are MDX files with YAML frontmatter
-- Configuration lives in `docs.json`
-- Run `mint dev` to preview locally
-- Run `mint broken-links` to check links
+- This is the Velora documentation site built on [Mintlify](https://mintlify.com).
+- Pages are MDX files with YAML frontmatter.
+- Configuration lives in `docs.json`.
+- Run `npm run dev` (alias for `mint dev`) to preview locally.
+- Run `npm run check` before opening a PR. It runs two guards:
+  - `npm run check:links` — `mint broken-links --check-anchors --check-snippets`.
+  - `npm run check:build` — `mint validate` (strict mode).
 
 ## Terminology
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+Use these terms consistently across all docs:
+
+| Use | Don't use |
+|---|---|
+| Velora | ParaSwap (legacy; only when referring to historical context) |
+| VLR | PSP (legacy; only when discussing the migration) |
+| Market API | aggregator API, v5/v6 API |
+| Delta | "the Delta API" in marketing prose (the product noun is just "Delta"). In API-reference titles only, "Delta API" is allowed as the API-surface name parallel to "Market API". |
+| AugustusRFQ | RFQ contract, OTC contract |
+| Augustus v6.2 | Augustus router, AugustusSwapper |
+| Portikus | the Delta solver network, the intent solver network |
+| gasless | gas-less, gas-free |
+| crosschain | cross-chain |
+| solver | filler, executor |
 
 ## Style preferences
 
-{/* Add any project-specific style rules below */}
-
-- Use active voice and second person ("you")
-- Keep sentences concise — one idea per sentence
-- Use sentence case for headings
-- Bold for UI elements: Click **Settings**
-- Code formatting for file names, commands, paths, and code references
+- Use active voice and second person ("you").
+- Keep sentences concise — one idea per sentence.
+- Use sentence case for headings.
+- Bold for UI elements: Click **Settings**.
+- Code formatting for file names, commands, paths, contract addresses, and code references.
+- **Failure-mode-first standard for API reference pages**: every endpoint page in `/api-reference/` must open with a "How this call breaks in production" section (5–8 rows: symptom → root cause → fix) before any OpenAPI spec render. Tables live as MDX snippets under `/snippets/failure-modes/<endpoint-slug>.mdx` and are imported at the top of the page (`import X from "/snippets/failure-modes/<endpoint-slug>.mdx";`), then rendered as `<X />`.
+- **Snippet editing is git/CLI only.** Mintlify's web editor does not support snippet files. To edit a failure-mode table, clone the repo and edit `snippets/failure-modes/<endpoint>.mdx` directly, then push or open a PR. The Mintlify dashboard cannot save changes to snippet files.
 
 ## Content boundaries
 
-{/* Define what should and shouldn't be documented */}
-{/* Example: Don't document internal admin features */}
+- Don't document internal admin features, off-chain Portikus operator dashboards, or private partner endpoints.
+- **API host policy**: code examples and the `openapi:` `servers` block use `https://api.velora.xyz` — the production endpoint. The legacy hosts `api.paraswap.io` and `apiv5.paraswap.io` are deprecated; they should only appear in the apiv5 → current-host migration page (and in that page only as the *source* of the migration, never the *destination*). The `npm run check:host` script enforces this; if you legitimately need to mention a legacy host in a new page, add it to the allowlist in `scripts/check-api-host.sh`.
+- **Partner key in code examples**: every quote/swap example should include `partner=my-app-name` (cURL) / `partner: 'my-app-name'` (SDK) so integrators copy it. The literal `my-app-name` is the placeholder users replace with their own partner-key string.
+- Contract addresses live in exactly one place: `/resources/chains-and-contracts`. Other pages link there, never inline-duplicate. **Exception**: failure-mode-row tables may inline a specific deployed address when the address is the actual diagnostic (e.g. "Delta contract must be the spender" → cite `0x...933C96D` inline). Document this exception on the same page when first used.

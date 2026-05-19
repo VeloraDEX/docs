@@ -1,0 +1,29 @@
+---
+title: "Migrations"
+description: "Internal upgrades for existing Velora integrators — Market → Delta, Augustus v5 → v6.2, legacy hosts, SDK rename."
+keywords: ["migrations","upgrades","breaking-changes"]
+---
+
+These pages are for engineers already shipping on Velora. They cover the only kinds of changes that should ever break your integration: internal protocol upgrades, host cutovers, and SDK renames. Nothing here is about migrating *to* Velora from a third party.
+
+## Available migrations
+
+<CardGroup cols={2}>
+  <Card title="Market → Delta (parallel)" icon="arrows-split-up-and-left" href="/resources/migrations/market-to-delta-parallel">
+    Keep Market wired, add Delta via `mode=ALL`, branch per response shape.
+  </Card>
+  <Card title="Market → Delta (replace)" icon="right-left" href="/resources/migrations/market-to-delta-replace">
+    When to fully cut over: gasless UX, MEV exposure, surplus economics.
+  </Card>
+  <Card title="Augustus v5 → v6.2" icon="cube" href="/resources/migrations/augustus-v5-to-v6-2">
+    Contract integrators: calldata diffs, no more TokenTransferProxy, parameter renames.
+  </Card>
+  <Card title="Legacy paraswap.io host → api.velora.xyz" icon="server" href="/resources/migrations/apiv5-to-api-host">
+    Move off `apiv5.paraswap.io` and `api.paraswap.io` to `api.velora.xyz`.
+  </Card>
+  <Card title="paraswap-sdk → @velora-dex/sdk" icon="box" href="/resources/migrations/paraswap-sdk-to-velora-sdk">
+    Package rename, breaking changes, and step-by-step upgrade.
+  </Card>
+</CardGroup>
+
+<Tip>Each migration page leads with **what breaks if you do nothing** and ends with a verifiable end-state check.</Tip>

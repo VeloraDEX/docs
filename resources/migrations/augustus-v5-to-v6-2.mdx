@@ -1,0 +1,28 @@
+---
+title: "Augustus v5 → v6.2"
+description: "Contract-integrator upgrade: calldata diffs, removed TokenTransferProxy, parameter renames."
+keywords: ["migration","augustus","v5","v6.2","contracts"]
+---
+
+<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
+
+## What breaks if you do nothing
+
+Calldata returned by `POST /transactions` now targets Augustus v6.2 by default. If your contract integration hardcoded the v5 router or `TokenTransferProxy` address, those approvals and contract calls will silently route to a deprecated surface.
+
+## High-level diffs
+
+- **`TokenTransferProxy` is gone.** v6.2 pulls tokens directly via the router contract. ERC-20 approvals must be granted to the v6.2 router address, not to a separate proxy.
+- **`excludeContractMethodsWithoutFeeModel`** has been renamed (see new param list in [API Reference](/api-reference/market/overview)).
+- **Method signatures changed.** v6.2 introduces `swapExactAmountIn` and `swapExactAmountOut` as canonical entry points; v5's `multiSwap`/`megaSwap` are deprecated.
+
+## Steps
+
+1. Look up the v6.2 router address per chain on [Chains & contracts](/resources/chains-and-contracts).
+2. Re-grant ERC-20 approvals to the v6.2 router. Revoke the legacy v5 TokenTransferProxy approval if you want cleanup.
+3. If you decode calldata server-side, regenerate ABIs against v6.2.
+4. Update any hardcoded contract-method names in your dApp.
+
+## End-state check
+
+`POST /quote` response → `priceRoute.version` is `"6.2"` and `priceRoute.contractAddress` matches the v6.2 router for the chain.

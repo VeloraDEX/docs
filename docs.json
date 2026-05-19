@@ -24,12 +24,10 @@
           {
             "group": "Get oriented",
             "pages": [
-              "overview/what-is-velora",
-              "overview/by-the-numbers",
-              "overview/showcase",
-              "overview/product-stack",
+              "overview/why-velora",
               "overview/how-velora-works",
-              "overview/supported-chains-and-contracts"
+              "overview/product-stack",
+              "overview/who-uses-velora"
             ]
           },
           {
@@ -63,12 +61,6 @@
         "tab": "Integrate",
         "groups": [
           {
-            "group": "Quickstart",
-            "pages": [
-              "integrate/quickstart"
-            ]
-          },
-          {
             "group": "SDK",
             "pages": [
               "sdk/overview",
@@ -86,8 +78,7 @@
               },
               "sdk/configure-providers",
               "sdk/testing-integration",
-              "sdk/monetize",
-              "sdk/migrating-from-paraswap-sdk"
+              "sdk/monetize"
             ]
           },
           {
@@ -123,7 +114,6 @@
             "group": "Get started",
             "pages": [
               "delta/overview",
-              "delta/quickstart",
               "delta/how-it-works"
             ]
           },
@@ -140,94 +130,74 @@
               "delta/order-lifecycle-and-status-codes",
               "delta/eip-712-typed-data-reference"
             ]
-          },
-          {
-            "group": "Smart contracts",
-            "pages": [
-              "delta/smart-contracts/delta-contract",
-              "delta/smart-contracts/portikus-contracts"
-            ]
           }
         ]
       },
       {
-        "tab": "Build on Velora",
+        "tab": "For Agents",
         "groups": [
           {
-            "group": "Solvers",
+            "group": "Get started",
             "pages": [
-              "for-solvers/overview",
-              "for-solvers/quickstart",
-              {
-                "group": "Architecture",
-                "pages": [
-                  "for-solvers/architecture/order-flow",
-                  "for-solvers/architecture/auctions",
-                  "for-solvers/architecture/settlement"
-                ]
-              },
-              {
-                "group": "Workflows",
-                "pages": [
-                  "for-solvers/workflows/collecting-orders",
-                  "for-solvers/workflows/quoting",
-                  "for-solvers/workflows/filling",
-                  "for-solvers/workflows/settling"
-                ]
-              },
-              "for-solvers/authentication",
-              "for-solvers/testing-and-sandbox",
-              "for-solvers/reputation-and-slas"
+              "for-agents/overview",
+              "for-agents/concepts-and-objects"
             ]
           },
           {
-            "group": "Agents",
+            "group": "Quickstart",
             "pages": [
-              "for-agents/overview",
-              "for-agents/concepts-and-objects",
-              {
-                "group": "Quickstart",
-                "pages": [
-                  "for-agents/quickstart/five-call-recipe",
-                  "for-agents/quickstart/decision-tables",
-                  "for-agents/quickstart/code-samples"
-                ]
-              },
-              {
-                "group": "Workflows",
-                "pages": [
-                  "for-agents/workflows/token-approvals",
-                  "for-agents/workflows/transaction-execution",
-                  "for-agents/workflows/status-and-recovery",
-                  "for-agents/workflows/partial-completion"
-                ]
-              },
-              {
-                "group": "Reference",
-                "pages": [
-                  "for-agents/reference/endpoint-specs",
-                  "for-agents/reference/error-playbooks",
-                  "for-agents/reference/data-schemas"
-                ]
-              },
-              {
-                "group": "MCP server",
-                "pages": [
-                  "for-agents/mcp-server/overview",
-                  "for-agents/mcp-server/installation",
-                  "for-agents/mcp-server/available-tools",
-                  "for-agents/mcp-server/examples"
-                ]
-              },
-              {
-                "group": "CLI",
-                "pages": [
-                  "for-agents/cli/overview",
-                  "for-agents/cli/installation",
-                  "for-agents/cli/commands",
-                  "for-agents/cli/examples"
-                ]
-              },
+              "for-agents/quickstart/five-call-recipe",
+              "for-agents/quickstart/decision-tables",
+              "for-agents/quickstart/code-samples"
+            ]
+          },
+          {
+            "group": "Prompt library",
+            "pages": [
+              "for-agents/prompt-library/index",
+              "for-agents/prompt-library/nextjs-market-swap",
+              "for-agents/prompt-library/nextjs-delta-swap",
+              "for-agents/prompt-library/parallel-aggregators",
+              "for-agents/prompt-library/telegram-trading-bot",
+              "for-agents/prompt-library/crosschain-aave-deposit",
+              "for-agents/prompt-library/mcp-client-from-scratch",
+              "for-agents/prompt-library/widget-react-embed",
+              "for-agents/prompt-library/rfq-otc-flow"
+            ]
+          },
+          {
+            "group": "MCP server",
+            "pages": [
+              "for-agents/mcp-server/overview",
+              "for-agents/mcp-server/installation",
+              "for-agents/mcp-server/available-tools",
+              "for-agents/mcp-server/examples"
+            ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "for-agents/cli/overview",
+              "for-agents/cli/installation",
+              "for-agents/cli/commands",
+              "for-agents/cli/examples"
+            ]
+          },
+          {
+            "group": "Workflows",
+            "pages": [
+              "for-agents/workflows/token-approvals",
+              "for-agents/workflows/transaction-execution",
+              "for-agents/workflows/status-and-recovery",
+              "for-agents/workflows/partial-completion"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "for-agents/reference/endpoint-specs",
+              "for-agents/reference/error-playbooks",
+              "for-agents/reference/data-schemas",
               "for-agents/prompt-patterns"
             ]
           }
@@ -249,13 +219,18 @@
           {
             "group": "Market API (v6.2)",
             "pages": [
-              "api-reference/market/overview"
+              "api-reference/market/overview",
+              "api-reference/market/quote",
+              "api-reference/market/transactions"
             ]
           },
           {
             "group": "Delta API",
             "pages": [
-              "api-reference/delta/overview"
+              "api-reference/delta/overview",
+              "api-reference/delta/quote",
+              "api-reference/delta/orders-build",
+              "api-reference/delta/orders"
             ]
           },
           {
@@ -288,15 +263,26 @@
             ]
           },
           {
-            "group": "Changelog",
+            "group": "Recipes",
             "pages": [
-              "changelog/monthly-summary",
-              "changelog/market-api",
-              "changelog/delta-api",
-              "changelog/augustusrfq",
-              "changelog/sdk",
-              "changelog/widget",
-              "changelog/smart-contracts"
+              "resources/recipes/index"
+            ]
+          },
+          {
+            "group": "Migrations",
+            "pages": [
+              "resources/migrations/index",
+              "resources/migrations/market-to-delta-parallel",
+              "resources/migrations/market-to-delta-replace",
+              "resources/migrations/augustus-v5-to-v6-2",
+              "resources/migrations/apiv5-to-api-host",
+              "resources/migrations/paraswap-sdk-to-velora-sdk"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "resources/chains-and-contracts"
             ]
           },
           {

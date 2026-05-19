@@ -1,0 +1,52 @@
+---
+title: "Crosschain swap + Aave deposit"
+description: "Prompt an AI agent to wire a one-tx Crosschain swap-and-deposit into Aave via Delta."
+last-verified: 2026-05-15
+keywords: ["crosschain","delta","aave","deposit"]
+---
+
+## Outcome
+
+A single user signature kicks off a **Crosschain Delta** order: source token on chain A is swapped to USDC on chain B, then immediately deposited into Aave v3 on chain B. The user pays no gas on either side.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are building a React component that runs a Velora Crosschain Delta flow with a post-fill action hook into Aave v3.
+
+Requirements:
+- The user holds (say) USDC on Polygon. They want to end up with aUSDC supplied to Aave v3 on Base. One signature.
+- Use Velora's Crosschain Delta API. Endpoints: `POST /quote` (with the Crosschain params per [Crosschain Delta docs]), `POST /delta/orders/build`, `POST /delta/orders`.
+- Always pass `partner=my-app-name` on every quote call (replace with the host app's partner-key string).
+- The solver fills on Base; you provide a post-fill calldata hook that calls `aavePool.supply(USDC, amount, user, 0)` against Aave v3's Base pool address.
+- Read the Aave v3 pool address from a constants file (do NOT hardcode in component code).
+- Surface clear status: "Quoting" → "Signing" → "Filling on Base" → "Depositing into Aave" → "Done".
+- On failure at any stage, return the user to a recoverable state. Cancel the Delta order if it hasn't filled.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/delta/overview
+- https://docs.velora.xyz/delta/crosschain-delta
+- https://docs.velora.xyz/api-reference/delta/quote
+- https://docs.velora.xyz/api-reference/delta/orders-build
+- https://docs.velora.xyz/api-reference/delta/orders
+- https://docs.velora.xyz/delta/order-lifecycle-and-status-codes
+
+Do NOT chain the Aave deposit as a separate signed transaction — it must be part of the Delta fill. Do NOT skip the order-status poll between fill and deposit.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- One signature from the user. No gas paid on either chain.
+- Aave on Base shows the supplied position under the user's address.

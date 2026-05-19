@@ -1,0 +1,112 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Velora Delta API (stub)",
+    "version": "0.0.1",
+    "description": "Stub bundle. Real spec content lands in a later workstream. Used now only to wire MDX `openapi:` frontmatter."
+  },
+  "servers": [
+    { "url": "https://api.velora.xyz", "description": "Production" }
+  ],
+  "paths": {
+    "/quote": {
+      "post": {
+        "summary": "Get a Delta intent quote",
+        "operationId": "deltaQuote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "srcToken":   { "type": "string", "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
+                  "destToken":  { "type": "string", "example": "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
+                  "amount":     { "type": "string", "example": "1000000000" },
+                  "side":       { "type": "string", "enum": ["SELL", "BUY"] },
+                  "network":    { "type": "integer", "example": 1 },
+                  "mode":       { "type": "string", "enum": ["ALL", "DELTA", "MARKET"], "example": "DELTA" },
+                  "slippage":   { "type": "integer", "description": "Slippage in basis points" },
+                  "userAddress":{ "type": "string" },
+                  "partner":    { "type": "string", "example": "my-app-name" }
+                },
+                "required": ["srcToken", "destToken", "amount", "side", "network"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Delta quote",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "delta": { "type": "object" },
+                    "hmac":  { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid parameters" },
+          "422": { "description": "Unsupported chain or token" }
+        }
+      }
+    },
+    "/delta/orders/build": {
+      "post": {
+        "summary": "Build a signable Delta order from a quote",
+        "operationId": "deltaOrdersBuild",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "price": { "type": "object", "description": "The `delta` block returned by POST /quote, passed verbatim." },
+                  "hmac":  { "type": "string" }
+                },
+                "required": ["price", "hmac"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order with EIP-712 typed data ready to sign",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": { "description": "Invalid input or stale price" }
+        }
+      }
+    },
+    "/delta/orders": {
+      "post": {
+        "summary": "Submit a signed Delta order",
+        "operationId": "deltaOrdersSubmit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order":     { "type": "object" },
+                  "signature": { "type": "string" }
+                },
+                "required": ["order", "signature"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order accepted; returns order id and status URL." },
+          "400": { "description": "Invalid signature or order shape" }
+        }
+      }
+    }
+  }
+}

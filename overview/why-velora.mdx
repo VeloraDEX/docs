@@ -1,0 +1,122 @@
+---
+title: "Why Velora"
+description: "Velora is best execution across every EVM chain — quote, swap, and gasless intents from one API, SDK, or Widget. Ship your first swap in 60 seconds."
+keywords: ["velora","overview","quickstart","why"]
+---
+
+Velora is a DEX aggregator and intents protocol. One integration gives you:
+
+- **Market routing** — best price across every DEX, AMM, and bridge on every EVM chain Velora supports.
+- **Delta intents** — gasless, MEV-protected swaps filled by a competitive solver network. Single signature.
+- **Crosschain** — Delta orders that resolve across chains via bridge-aware solvers.
+- **Augustus RFQ** — on-chain limit orders and OTC for ERC-20, with optional partial fills.
+
+You can pick a single surface or run them side by side. The Market API and Delta API share the same `POST /quote` entry point; `mode=ALL` returns both and you choose which to execute.
+
+## Choose your integration
+
+| You want to… | Use | Time to first swap |
+|---|---|---|
+| Maximum control, any language, any backend | [Market API](/api-reference/market/overview) / [Delta API](/api-reference/delta/overview) | ~60 seconds |
+| Type-safe TypeScript, your own UI | [@velora-dex/sdk](/sdk/install) | ~5 minutes |
+| Drop-in UI, zero design work | [@velora-dex/widget](/widget/install) | ~10 minutes |
+| Crosschain, gasless, MEV-protected fills | [Delta](/delta/overview) (via API or SDK) | ~10 minutes |
+| AI agent / LLM integration | [MCP server](/for-agents/mcp-server/overview) + [five-call recipe](/for-agents/quickstart/five-call-recipe) | ~5 minutes |
+
+## Quickstart
+
+Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Market route and the Delta intent side-by-side in a single response, and you pick which to execute.
+
+<CodeGroup>
+
+```bash Market (cURL)
+curl -s "https://api.velora.xyz/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```bash Delta (cURL)
+curl -s "https://api.velora.xyz/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=DELTA" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```ts SDK (TypeScript)
+import { constructSimpleSDK } from '@velora-dex/sdk';
+
+const sdk = constructSimpleSDK({ chainId: 1, fetch });
+
+const quote = await sdk.quote.getQuote({
+  srcToken:    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
+  destToken:   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount:      '1000000000000000000', // 1 ETH
+  srcDecimals: 18,
+  destDecimals: 6,
+  side: 'SELL',
+  mode: 'ALL',
+  userAddress: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  partner: 'my-app-name',
+});
+
+if ('delta' in quote) {
+  // gasless path — sign and submit via /delta/orders
+} else {
+  // calldata path — submit `priceRoute` to /transactions
+}
+```
+
+```tsx Widget (React)
+import { VeloraWidget } from '@velora-dex/widget';
+
+export default function SwapPage() {
+  return (
+    <VeloraWidget
+      chainId={1}
+      partner="my-app-name"
+      defaultSrcToken="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      defaultDestToken="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    />
+  );
+}
+```
+
+</CodeGroup>
+
+The Market response contains a `priceRoute` (calldata-ready against Augustus v6.2). The Delta response contains a `delta` block (sign with EIP-712, submit to `/delta/orders`). With `mode=ALL` you get both.
+
+## Next steps
+
+<CardGroup cols={3}>
+  <Card title="Build with the SDK" icon="code" href="/sdk/install">
+    Type-safe TypeScript wrapper for quote → build → sign → submit.
+  </Card>
+  <Card title="Drop in the Widget" icon="puzzle-piece" href="/widget/install">
+    Embeddable React component or vanilla iframe.
+  </Card>
+  <Card title="Ship a Delta intent" icon="bolt" href="/delta/overview">
+    Gasless, MEV-protected, single-signature swap.
+  </Card>
+</CardGroup>
+
+<Tip>
+  All endpoints work without a partner key for low-volume testing. To unlock production rate limits and fee-sharing, see [Authentication & partner key](/api-reference/authentication).
+</Tip>
+

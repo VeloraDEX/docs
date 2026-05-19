@@ -1,0 +1,26 @@
+---
+title: "Market → Delta (parallel)"
+description: "Keep your Market integration wired, opt into Delta intents alongside it, and branch on the response shape."
+keywords: ["migration","delta","market","parallel"]
+---
+
+<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
+
+## What breaks if you do nothing
+
+Nothing. This migration is opt-in. Your existing Market integration keeps working as-is.
+
+## Why migrate
+
+- **Better UX** — Delta intents are gasless and MEV-protected. Users sign once; the solver network fills.
+- **No code rewrite** — `POST /quote` with `mode=ALL` returns both a Market `priceRoute` and a Delta `delta` block in a single response. You pick which to execute per-quote.
+
+## Steps
+
+1. Change `mode=MARKET` (or omit) to `mode=ALL` on your `POST /quote` calls.
+2. Branch on the response: if `response.delta` exists, take the gasless path; else fall back to the existing `priceRoute` flow.
+3. For the Delta path, call `POST /delta/orders/build`, sign the EIP-712 typed data, then `POST /delta/orders`.
+
+## End-state check
+
+Run a quote with `mode=ALL`. Confirm both `priceRoute` and `delta` are present. Pick one and complete a swap end-to-end.

@@ -1,0 +1,57 @@
+---
+title: "Next.js Delta swap"
+description: "Prompt an AI agent to add Velora Delta gasless swaps to a Next.js dApp."
+last-verified: 2026-05-15
+keywords: ["nextjs","delta","gasless","intents"]
+---
+
+## Outcome
+
+A Next.js 14 page that runs the full **Delta** flow: quote → build → EIP-712 sign → submit → poll. The user pays no gas; the solver network fills.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are working in a Next.js 14 App Router project with Wagmi v2 and Viem already configured.
+
+Build a `/swap-gasless` page that lets the user place a Velora Delta intent for any ERC-20 → any ERC-20.
+
+Requirements:
+- Use the Velora Delta REST API at `https://api.velora.xyz`. Endpoints: `POST /quote` (with `mode=DELTA`), `POST /delta/orders/build`, `POST /delta/orders`, `GET /delta/orders/:id`.
+- Always pass `partner=my-app-name` on every quote call (replace `my-app-name` with the host app's partner-key string).
+- For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
+- Always include `slippage` (basis points) in the quote — omitting it returns 400.
+- Pass the `delta` block returned by the quote verbatim to `/delta/orders/build` as `price`. Do not normalize, sort, or re-stringify it. Include the `hmac` from the same quote response.
+- Use Viem's `signTypedData` to sign the EIP-712 payload returned by `/delta/orders/build`. Then submit to `/delta/orders`.
+- Poll `GET /delta/orders/:id` and display lifecycle states (`pending` → `filled` / `failed`).
+- Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain — fetch from /resources/chains-and-contracts or read it from the typed-data `domain.verifyingContract`.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/delta/overview
+- https://docs.velora.xyz/delta/how-it-works
+- https://docs.velora.xyz/api-reference/delta/quote
+- https://docs.velora.xyz/api-reference/delta/orders-build
+- https://docs.velora.xyz/api-reference/delta/orders
+- https://docs.velora.xyz/delta/eip-712-typed-data-reference
+- https://docs.velora.xyz/delta/order-lifecycle-and-status-codes
+
+Do NOT mutate the `delta` block between quote and build. Do NOT grant approval to Augustus — Delta has its own spender contract.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- The user signs **once** (EIP-712 typed data) and pays **no gas**.
+- The order transitions through `pending` → `filled` and the user receives the `destToken`.
+- The token approval was granted to the Delta contract address from the typed-data domain, not Augustus.

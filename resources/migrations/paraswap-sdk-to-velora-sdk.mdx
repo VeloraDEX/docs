@@ -1,0 +1,30 @@
+---
+title: "paraswap-sdk → @velora-dex/sdk"
+description: "Step-by-step migration from the legacy @paraswap/sdk package to @velora-dex/sdk."
+keywords: ["sdk","migration","paraswap","velora"]
+---
+
+<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
+
+## What breaks if you do nothing
+
+`@paraswap/sdk` is no longer actively developed. New API features (latest Augustus version, Delta enhancements, Crosschain) land in `@velora-dex/sdk` only. Your build will keep compiling, but you'll silently fall behind.
+
+## Steps
+
+1. Remove `@paraswap/sdk` from `package.json`. Install `@velora-dex/sdk`.
+2. Replace imports — most named exports kept the same shape. The factory rename is `constructSimpleSDK` (the function name itself is unchanged; only the package source changed).
+3. Re-run your TypeScript build. Most projects compile clean on the first pass.
+
+## Code diff (illustrative)
+
+```diff
+- import { constructSimpleSDK } from '@paraswap/sdk';
++ import { constructSimpleSDK } from '@velora-dex/sdk';
+
+  const sdk = constructSimpleSDK({ chainId: 1, fetch });
+```
+
+## End-state check
+
+`grep -R "@paraswap/sdk"` returns zero hits. Existing quote-and-swap flow returns the same `priceRoute` shape it did before.

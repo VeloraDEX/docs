@@ -1,0 +1,48 @@
+---
+title: "Velora MCP client in 50 lines"
+description: "Prompt an AI agent to build a minimal MCP client against the Velora MCP server."
+last-verified: 2026-05-15
+keywords: ["mcp","client","agents"]
+---
+
+## Outcome
+
+A minimal MCP client (≤50 lines of TypeScript) that connects to the Velora MCP server, lists available tools, and runs a single end-to-end `quote → swap` flow via tool calls.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are building a tiny standalone MCP client in TypeScript using the `@modelcontextprotocol/sdk` package.
+
+Requirements:
+- Connect to the Velora MCP server (transport and endpoint per /for-agents/mcp-server/installation).
+- After connection, call `tools/list` and print the available tools.
+- Run a `quote` tool call for 1 ETH → USDC on Ethereum mainnet with `partner=my-app-name`, then a `swap` tool call against the resulting quote.
+- Print every tool result. Exit cleanly when the swap returns success or terminal failure.
+- Total file size: ≤ 50 lines, excluding imports.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/for-agents/mcp-server/overview
+- https://docs.velora.xyz/for-agents/mcp-server/installation
+- https://docs.velora.xyz/for-agents/mcp-server/available-tools
+- https://docs.velora.xyz/for-agents/mcp-server/examples
+
+Do NOT hardcode tool schemas — read them from `tools/list` and use the response shape at runtime.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- The script runs end-to-end and prints a successful `swap` result.
+- `wc -l` on the source file (sans imports) reports ≤ 50.

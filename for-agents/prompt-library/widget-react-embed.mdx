@@ -1,0 +1,50 @@
+---
+title: "Velora Widget — React embed with theming"
+description: "Prompt an AI agent to embed the Velora Widget into a React app with custom theming."
+last-verified: 2026-05-15
+keywords: ["widget","react","theming","embed"]
+---
+
+## Outcome
+
+A React component that mounts the Velora Widget with the host app's design tokens (colors, typography, border radius). No iframe — direct in-app embed. Partner key wired so swaps attribute fee-share to the host.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are integrating the Velora Widget into an existing React 18 app.
+
+Requirements:
+- Install `@velora-dex/widget`.
+- Mount the widget at `/swap` route via React Router or Next.js routing.
+- Pass `chainId`, `partner` (a partner-key string from env, e.g. `my-app-name`), and optional `defaultSrcToken` / `defaultDestToken`.
+- Theme the widget: pass the host app's primary/secondary colors, fontFamily, and borderRadius through the widget's theming props (see `widget/customize`).
+- Subscribe to widget events (swap start, swap success, swap error) and pipe them into the host app's analytics module.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/widget/install
+- https://docs.velora.xyz/widget/configure
+- https://docs.velora.xyz/widget/customize
+- https://docs.velora.xyz/widget/events-and-callbacks
+- https://docs.velora.xyz/widget/monetize
+
+Do NOT embed via iframe if the host app is also React — use the direct embed. Do NOT hardcode the partner key in client code; load it from env.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- The widget visually matches the host app's design tokens.
+- A successful test swap fires the host's analytics events with the expected payload.
+- The partner key is present at runtime but not in the source tree.

@@ -1,0 +1,38 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Velora AugustusRFQ API (stub)",
+    "version": "0.0.1",
+    "description": "Stub bundle. Real spec content lands in a later workstream. Used now only to wire MDX `openapi:` frontmatter."
+  },
+  "servers": [
+    { "url": "https://api.velora.xyz", "description": "Production" }
+  ],
+  "paths": {
+    "/rfq/orders": {
+      "post": {
+        "summary": "Submit a signed AugustusRFQ order",
+        "operationId": "rfqOrdersSubmit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "order":     { "type": "object" },
+                  "signature": { "type": "string" }
+                },
+                "required": ["order", "signature"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Order accepted" },
+          "400": { "description": "Invalid signature or order shape" }
+        }
+      }
+    }
+  }
+}

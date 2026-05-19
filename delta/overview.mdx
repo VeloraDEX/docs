@@ -36,21 +36,21 @@ The full lifecycle is four calls — quote, build, sign, submit — and then you
 
 ```bash
 # 1. Get a Delta quote
-curl "https://api.paraswap.io/quote?...&mode=DELTA"
+curl "https://api.velora.xyz/quote?...&mode=DELTA&partner=my-app-name"
 
 # 2. Build the order (returns EIP-712 typed data)
-curl -X POST "https://api.paraswap.io/delta/orders/build" -d @price.json
+curl -X POST "https://api.velora.xyz/delta/orders/build" -d @price.json
 
 # 3. Sign the typed data with the user's wallet (ERC-2098 compact)
 
 # 4. Submit the signed order
-curl -X POST "https://api.paraswap.io/delta/orders" -d @signed.json
+curl -X POST "https://api.velora.xyz/delta/orders" -d @signed.json
 
 # 5. Poll status
-curl "https://api.paraswap.io/delta/orders/:id"
+curl "https://api.velora.xyz/delta/orders/:id"
 ```
 
-Walk through the full flow in the **[Delta Quickstart →](/delta/quickstart)**
+Walk through the full flow in the **[Quickstart →](/overview/why-velora#quickstart)**
 
 ## When to use Delta vs Market
 
@@ -61,7 +61,7 @@ Walk through the full flow in the **[Delta Quickstart →](/delta/quickstart)**
 ## Next steps
 
 <CardGroup cols={3}>
-  <Card title="Quickstart" icon="play" href="/delta/quickstart">
+  <Card title="Quickstart" icon="play" href="/overview/why-velora#quickstart">
     cURL the full lifecycle end-to-end.
   </Card>
   <Card title="How it works" icon="diagram-project" href="/delta/how-it-works">

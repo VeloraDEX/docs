@@ -1,0 +1,47 @@
+---
+title: "Run Velora alongside another aggregator"
+description: "Prompt an AI agent to wire Velora as a parallel quote source and route per-quote."
+last-verified: 2026-05-15
+keywords: ["parallel","aggregators","routing","price-comparison"]
+---
+
+## Outcome
+
+A backend service that **fans out a single user swap intent** to Velora and one other aggregator, compares the quotes, and returns the winner. Velora is queried via `mode=ALL` so both Market and Delta paths compete in the same response.
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are extending an existing TypeScript backend that already wires one DEX aggregator (assume 1inch or 0x). Add Velora as a parallel quote source.
+
+Requirements:
+- Velora endpoint: `POST https://api.velora.xyz/quote` with `mode=ALL` and `partner=my-app-name` (replace with the host app's partner-key string). The response may contain `priceRoute` (Market) and/or `delta` (Delta) — pick the better one within the Velora result, then compete it against the other aggregator's quote.
+- Compare on `destUSD` (or `destAmount` normalized to a common token) net of `gasCostUSD` and `partnerFee`.
+- Fan out in parallel; respect a hard 800ms budget per quote source; fall back gracefully if one source times out.
+- For the Velora native-ETH placeholder use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case).
+- If Velora wins via Delta, return both the `delta` block and `hmac` to the caller so they can sign and submit. If via Market, return `priceRoute`.
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/overview/why-velora
+- https://docs.velora.xyz/api-reference/market/quote
+- https://docs.velora.xyz/api-reference/delta/quote
+
+Do NOT race-update shared state across the two aggregators' callbacks. Do NOT fall back silently to the slower source if the budget is exceeded — surface a clear error.
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- A side-by-side comparison log shows both aggregators quoting the same trade within the 800ms budget.
+- When Velora's Delta path wins on a large trade, the response carries the `delta` block + `hmac` ready to sign.

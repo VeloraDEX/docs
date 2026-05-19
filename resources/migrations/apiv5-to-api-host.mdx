@@ -1,0 +1,23 @@
+---
+title: "Legacy paraswap.io host → api.velora.xyz"
+description: "Move off the deprecated apiv5.paraswap.io and api.paraswap.io hosts to api.velora.xyz, the production endpoint."
+keywords: ["migration","api","host","apiv5","paraswap","velora","deprecation"]
+---
+
+<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
+
+## What breaks if you do nothing
+
+The legacy hosts `apiv5.paraswap.io` and `api.paraswap.io` are deprecated. They still answer today, but they are **not** the production endpoint and will be retired. Code pinned to either host will start failing once it goes offline — some endpoints have already moved.
+
+The production host is **`https://api.velora.xyz`**.
+
+## Steps
+
+1. Replace `https://apiv5.paraswap.io` and `https://api.paraswap.io` with `https://api.velora.xyz` in your code, env vars, and config files.
+2. Re-check the endpoints you use. Most map 1:1; a small set were renamed when consolidated.
+3. Re-run your integration tests against `api.velora.xyz` before flipping production traffic.
+
+## End-state check
+
+`grep -RE "(apiv5\.paraswap\.io|api\.paraswap\.io)"` in your codebase returns zero hits. Smoke test: a known `POST /quote` call against `api.velora.xyz` returns the same `priceRoute` it did on the legacy host.

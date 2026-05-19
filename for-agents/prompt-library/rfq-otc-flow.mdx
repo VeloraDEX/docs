@@ -1,0 +1,57 @@
+---
+title: "AugustusRFQ OTC flow"
+description: "Prompt an AI agent to sign and fill an AugustusRFQ order off-chain."
+last-verified: 2026-05-15
+keywords: ["rfq","otc","augustus","limit-orders"]
+---
+
+## Outcome
+
+A pair of TypeScript scripts: one for the **maker** (constructs and signs an AugustusRFQ order off-chain, supports partial fills) and one for the **taker** (validates the signature and submits the fill on-chain).
+
+## Prompt
+
+<CodeGroup>
+
+```text Claude Code
+You are building two CLI scripts in TypeScript using Viem.
+
+Maker script (`make-order.ts`):
+- Constructs an AugustusRFQ limit order: sell `srcAmount` of `srcToken` for at least `destAmount` of `destToken`, expires at a configurable timestamp, partial fills allowed.
+- Signs the EIP-712 typed data with the maker's private key.
+- Outputs the order JSON + signature to stdout (the taker can pick this up via stdin or a side-channel).
+
+Taker script (`fill-order.ts`):
+- Reads the maker's order + signature from stdin.
+- Validates the signature recovers to the maker's address.
+- Approves `srcToken` and `destToken` to the AugustusRFQ contract if not already approved.
+- Submits the fill on-chain via the AugustusRFQ `fillOrderNFT` or equivalent method, supporting partial fill `fillAmount`.
+
+Requirements:
+- Read the AugustusRFQ contract address per chain from `/resources/chains-and-contracts`.
+- Validate `order.expiry > now()` before submitting.
+- Catch and surface the common revert reasons (insufficient allowance, expired, already filled).
+
+Reference these docs and follow them exactly:
+- https://docs.velora.xyz/api-reference/rfq/overview
+- https://docs.velora.xyz/resources/chains-and-contracts
+- https://docs.velora.xyz/overview/security/audits/augustus-rfq
+
+Do NOT submit a fill without re-validating signature and expiry against the on-chain block timestamp. Do NOT skip the partial-fill amount check (taker could fill more than the maker intended otherwise).
+```
+
+```text Cursor
+[Same prompt body as Claude Code above.]
+```
+
+```text Codex
+[Same prompt body as Claude Code above.]
+```
+
+</CodeGroup>
+
+## End-state check
+
+- Maker can sign offline; the taker fills on-chain successfully.
+- A partial fill (e.g. 50%) settles correctly; the remaining 50% is still fillable by a different taker.
+- Expired or double-fill attempts revert cleanly with the expected error.

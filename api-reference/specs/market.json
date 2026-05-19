@@ -1,0 +1,98 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Velora Market API (stub)",
+    "version": "0.0.1",
+    "description": "Stub bundle. Real spec content lands in a later workstream. Used now only to wire MDX `openapi:` frontmatter."
+  },
+  "servers": [
+    { "url": "https://api.velora.xyz", "description": "Production" }
+  ],
+  "paths": {
+    "/quote": {
+      "post": {
+        "summary": "Get a Market or combined Market+Delta quote",
+        "operationId": "marketQuote",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "srcToken":     { "type": "string" },
+                  "destToken":    { "type": "string" },
+                  "amount":       { "type": "string" },
+                  "srcDecimals":  { "type": "integer" },
+                  "destDecimals": { "type": "integer" },
+                  "side":         { "type": "string", "enum": ["SELL", "BUY"] },
+                  "chainId":      { "type": "integer" },
+                  "mode":         { "type": "string", "enum": ["ALL", "MARKET", "DELTA"], "example": "ALL" },
+                  "userAddress":  { "type": "string" },
+                  "slippage":     { "type": "integer" },
+                  "partner":      { "type": "string", "example": "my-app-name" }
+                },
+                "required": ["srcToken", "destToken", "amount", "side", "chainId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Quote response. Shape depends on `mode` and what routing wins.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "priceRoute": { "type": "object", "description": "Market route. Calldata-ready against Augustus v6.2." },
+                    "delta":      { "type": "object", "description": "Delta intent. Sign and submit." },
+                    "hmac":       { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid request" },
+          "422": { "description": "Unsupported chain or token" }
+        }
+      }
+    },
+    "/transactions/{network}": {
+      "post": {
+        "summary": "Build calldata for a Market swap",
+        "operationId": "marketTransactions",
+        "parameters": [
+          { "name": "network", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "priceRoute":   { "type": "object", "description": "The `priceRoute` block returned by POST /quote, passed verbatim." },
+                  "srcToken":     { "type": "string" },
+                  "destToken":    { "type": "string" },
+                  "srcAmount":    { "type": "string" },
+                  "destAmount":   { "type": "string" },
+                  "userAddress":  { "type": "string" },
+                  "slippage":     { "type": "integer" }
+                },
+                "required": ["priceRoute", "userAddress"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Augustus calldata + tx fields",
+            "content": { "application/json": { "schema": { "type": "object" } } }
+          },
+          "400": { "description": "Invalid input or stale priceRoute" }
+        }
+      }
+    }
+  }
+}

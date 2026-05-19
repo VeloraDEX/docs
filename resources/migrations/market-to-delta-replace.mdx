@@ -1,0 +1,33 @@
+---
+title: "Market → Delta (replace)"
+description: "When and how to fully cut over from Market routing to Delta intents."
+keywords: ["migration","delta","market","cutover"]
+---
+
+<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
+
+## What breaks if you do nothing
+
+Nothing. Market routing isn't going away. This migration is for teams who want to consolidate on Delta for product reasons — not a forced cutover.
+
+## When to fully cut over
+
+- **Gasless UX** is a meaningful differentiator for your users (consumer wallets, agent flows, sub-$50 swaps).
+- **MEV exposure** is a known issue in your current Market flow (large trades, low-liquidity pairs).
+- **Surplus economics** — solver competition routinely returns positive slippage to your users on Delta orders.
+
+## When to keep Market
+
+- Latency budget under ~1s end-to-end.
+- Heavy token coverage on pairs that Delta solvers don't yet quote.
+- You already amortize gas across many users (batched executor, account abstraction with paymaster).
+
+## Steps
+
+1. Force `mode=DELTA` on `POST /quote`. Treat a missing `delta` block as a routing failure for your UX.
+2. Remove Augustus calldata signing paths. All execution goes through `/delta/orders`.
+3. Update your token-approval flow: the Delta contract — not Augustus — is the spender.
+
+## End-state check
+
+Wallet, balance, and history pages show only Delta-style settlements. Augustus calldata flow is no longer reachable from your UI.
