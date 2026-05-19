@@ -26,19 +26,19 @@ See the [AI tools guides](/ai-tools) for tool-specific setup.
 
 ## Development
 
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
+This project uses [pnpm](https://pnpm.io). Install dependencies at the root of the docs:
 
 ```
-npm i -g mint
+pnpm install
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+Then start the local preview, where your `docs.json` is located:
 
 ```
-mint dev
+pnpm run dev
 ```
 
-View your local preview at `http://localhost:3000`.
+View your local preview at `http://localhost:3001`.
 
 ## Publishing changes
 

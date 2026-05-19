@@ -5,10 +5,10 @@
 - This is the Velora documentation site built on [Mintlify](https://mintlify.com).
 - Pages are MDX files with YAML frontmatter.
 - Configuration lives in `docs.json`.
-- Run `npm run dev` (alias for `mint dev`) to preview locally.
-- Run `npm run check` before opening a PR. It runs two guards:
-  - `npm run check:links` — `mint broken-links --check-anchors --check-snippets`.
-  - `npm run check:build` — `mint validate` (strict mode).
+- Run `pnpm run dev` (alias for `mint dev`) to preview locally.
+- Run `pnpm run check` before opening a PR. It runs two guards:
+  - `pnpm run check:links` — `mint broken-links --check-anchors --check-snippets`.
+  - `pnpm run check:build` — `mint validate` (strict mode).
 
 ## Terminology
 
