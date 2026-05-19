@@ -1,0 +1,2 @@
+html[data-current-path="/"] .nav-tabs { display: none !important; }
+html[data-current-path="/"] #navbar { border-bottom: none !important; }
