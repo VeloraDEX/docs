@@ -1,10 +1,9 @@
 | Symptom | Root cause | Fix |
 |---|---|---|
 | 400 `Invalid srcToken` or `Invalid destToken`           | Native ETH sent as `0x0` or lowercase `0xeee...e`                              | Use the mixed-case placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` |
-| Response has `delta` block but no `priceRoute`         | `mode=ALL` was set and Delta won the routing decision                          | Branch on `response.delta` vs `response.priceRoute`, or force `mode=MARKET` if you need the Market path specifically |
-| 422 `Unsupported chain`                                | `chainId` not in the supported-chain list for the current API host             | Hit `GET /chains` to confirm the live list; see [Chains & contracts](/resources/chains-and-contracts) |
+| 422 `Unsupported chain`                                | `network` not in the supported-chain list for the current API host             | Hit `GET /chains` to confirm the live list; see [Chains & contracts](/resources/chains-and-contracts) |
 | `priceRoute.maxImpactReached: true`                    | Price impact exceeds the configured ceiling for this route                     | Reduce trade size, split into hops, or pass an explicit higher `maxImpact` if your product accepts the risk |
-| Stale `priceRoute` rejected by `POST /transactions`    | More than ~30s elapsed between quote and tx-build, route became invalid        | Re-quote and pass the fresh `priceRoute` verbatim; never cache across user gestures |
+| Stale `priceRoute` rejected by `POST /transactions/:network` | More than ~30s elapsed between quote and tx-build, route became invalid    | Re-quote and pass the fresh `priceRoute` verbatim; never cache across user gestures |
 | 429 from the gateway                                   | Rate-limited without a partner key, or partner-key tier exceeded               | See [Authentication](/api-reference/authentication) to attach a partner key, or back off and retry |
 
 <Note>Updated from support tickets at each release. Last updated: 2026-05-15.</Note>

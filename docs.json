@@ -13,7 +13,7 @@
   },
   "favicon": "/favicon.png",
   "banner": {
-    "content": "Building an AI agent? See [llms.txt](https://docs.velora.xyz/llms.txt) and [llms-full.txt](https://docs.velora.xyz/llms-full.txt).",
+    "content": "Building an AI agent? See [llms.txt](/llms.txt) and [llms-full.txt](/llms-full.txt).",
     "dismissible": true
   },
   "navigation": {
@@ -220,7 +220,7 @@
             "group": "Market API (v6.2)",
             "pages": [
               "api-reference/market/overview",
-              "api-reference/market/quote",
+              "api-reference/market/prices",
               "api-reference/market/transactions"
             ]
           },

@@ -13,14 +13,14 @@ Nothing. This migration is opt-in. Your existing Market integration keeps workin
 ## Why migrate
 
 - **Better UX** — Delta intents are gasless and MEV-protected. Users sign once; the solver network fills.
-- **No code rewrite** — `POST /quote` with `mode=ALL` returns both a Market `priceRoute` and a Delta `delta` block in a single response. You pick which to execute per-quote.
+- **No code rewrite** — `GET /quote` with `mode=ALL` returns both a Market `market` block (same shape as `/prices`'s `priceRoute`) and a Delta `delta` block in a single response. You pick which to execute per-quote.
 
 ## Steps
 
-1. Change `mode=MARKET` (or omit) to `mode=ALL` on your `POST /quote` calls.
-2. Branch on the response: if `response.delta` exists, take the gasless path; else fall back to the existing `priceRoute` flow.
+1. Switch from `GET /prices` to `GET /quote?mode=ALL`.
+2. Branch on the response: if `response.delta` exists, take the gasless path; else fall back to `response.market` and the existing calldata flow (it's the same shape your code already handles).
 3. For the Delta path, call `POST /delta/orders/build`, sign the EIP-712 typed data, then `POST /delta/orders`.
 
 ## End-state check
 
-Run a quote with `mode=ALL`. Confirm both `priceRoute` and `delta` are present. Pick one and complete a swap end-to-end.
+Run a quote with `mode=ALL`. Confirm both `market` and `delta` are present. Pick one and complete a swap end-to-end.

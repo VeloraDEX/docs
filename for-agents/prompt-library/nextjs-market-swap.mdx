@@ -19,7 +19,7 @@ You are working in a Next.js 14 App Router project with Wagmi v2 and Viem alread
 Build a `/swap` page that lets the user swap any ERC-20 → any ERC-20 on Velora's Market API.
 
 Requirements:
-- Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `POST /quote` and `POST /transactions/:network`.
+- Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `GET /prices` and `POST /transactions/:network`.
 - Always pass `partner=my-app-name` on every quote call (replace `my-app-name` with the host app's partner-key string).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed-case — lowercase is rejected).
 - Quote first, then call `/transactions/:network` with the `priceRoute` returned by the quote, passed verbatim.
@@ -29,7 +29,7 @@ Requirements:
 
 Reference these docs and follow them exactly:
 - https://docs.velora.xyz/overview/why-velora#quickstart
-- https://docs.velora.xyz/api-reference/market/quote
+- https://docs.velora.xyz/api-reference/market/prices
 - https://docs.velora.xyz/api-reference/market/transactions
 - https://docs.velora.xyz/guides/permit-and-permit2-patterns
 

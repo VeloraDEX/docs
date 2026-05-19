@@ -19,7 +19,7 @@ You are working in a Next.js 14 App Router project with Wagmi v2 and Viem alread
 Build a `/swap-gasless` page that lets the user place a Velora Delta intent for any ERC-20 → any ERC-20.
 
 Requirements:
-- Use the Velora Delta REST API at `https://api.velora.xyz`. Endpoints: `POST /quote` (with `mode=DELTA`), `POST /delta/orders/build`, `POST /delta/orders`, `GET /delta/orders/:id`.
+- Use the Velora Delta REST API at `https://api.velora.xyz`. Endpoints: `GET /quote` (with `mode=DELTA`), `POST /delta/orders/build`, `POST /delta/orders`, `GET /delta/orders/:id`.
 - Always pass `partner=my-app-name` on every quote call (replace `my-app-name` with the host app's partner-key string).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
 - Always include `slippage` (basis points) in the quote — omitting it returns 400.

@@ -1,50 +1,94 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Velora Delta API (stub)",
-    "version": "0.0.1",
-    "description": "Stub bundle. Real spec content lands in a later workstream. Used now only to wire MDX `openapi:` frontmatter."
+    "title": "Velora Delta API",
+    "version": "1.0.0",
+    "description": "Velora Delta API — intent-based quoting with optional Market fallback."
   },
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
   "paths": {
     "/quote": {
-      "post": {
-        "summary": "Get a Delta intent quote",
+      "get": {
+        "summary": "Retrieve a Delta price, with optional fallback to Market",
         "operationId": "deltaQuote",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "srcToken":   { "type": "string", "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" },
-                  "destToken":  { "type": "string", "example": "0xdAC17F958D2ee523a2206206994597C13D831ec7" },
-                  "amount":     { "type": "string", "example": "1000000000" },
-                  "side":       { "type": "string", "enum": ["SELL", "BUY"] },
-                  "network":    { "type": "integer", "example": 1 },
-                  "mode":       { "type": "string", "enum": ["ALL", "DELTA", "MARKET"], "example": "DELTA" },
-                  "slippage":   { "type": "integer", "description": "Slippage in basis points" },
-                  "userAddress":{ "type": "string" },
-                  "partner":    { "type": "string", "example": "my-app-name" }
-                },
-                "required": ["srcToken", "destToken", "amount", "side", "network"]
-              }
-            }
-          }
-        },
+        "parameters": [
+          { "name": "srcToken", "in": "query", "required": true, "schema": { "type": "string", "default": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }, "description": "Source token address." },
+          { "name": "srcDecimals", "in": "query", "required": true, "schema": { "type": "integer", "default": 18 }, "description": "Source token decimals." },
+          { "name": "destToken", "in": "query", "required": true, "schema": { "type": "string", "default": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }, "description": "Destination token address. For cross-chain quotes, the destination token on the destination chain." },
+          { "name": "destDecimals", "in": "query", "required": true, "schema": { "type": "integer", "default": 6 }, "description": "Destination token decimals." },
+          { "name": "amount", "in": "query", "required": true, "schema": { "type": "string", "default": "1000000000000000000" }, "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
+          { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
+          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "default": 1 }, "description": "Source chain ID. Supported values: 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 250 (Fantom), 1101 (zkEVM), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), 100 (Gnosis)." },
+          { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["ALL", "DELTA", "MARKET"], "default": "ALL" }, "description": "Controls pricing source and fallback behavior. ALL returns both Delta and Market blocks; DELTA returns Delta only; MARKET returns Market only." },
+          { "name": "userAddress", "in": "query", "required": false, "schema": { "type": "string", "default": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" } },
+          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "my-app-name" }, "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
+          { "name": "destChainId", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Destination chain ID for cross-chain quotes. Omit for same-chain quotes." }
+        ],
         "responses": {
           "200": {
-            "description": "Delta quote",
+            "description": "Delta quote, optionally with a Market block depending on `mode`.",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "delta": { "type": "object" },
-                    "hmac":  { "type": "string" }
+                    "delta": {
+                      "type": "object",
+                      "description": "Delta intent. Sign and submit via /delta/orders/build then /delta/orders. Includes `hmac`.",
+                      "properties": {
+                        "srcToken": { "type": "string" },
+                        "destToken": { "type": "string" },
+                        "srcAmount": { "type": "string" },
+                        "destAmount": { "type": "string" },
+                        "destAmountBeforeFee": { "type": "string" },
+                        "gasCostUSD": { "type": "string" },
+                        "gasCost": { "type": "string" },
+                        "srcUSD": { "type": "string" },
+                        "destUSD": { "type": "string" },
+                        "destUSDBeforeFee": { "type": "string" },
+                        "gasCostBeforeFee": { "type": "string" },
+                        "gasCostUSDBeforeFee": { "type": "string" },
+                        "partner": { "type": "string" },
+                        "partnerFee": { "type": "number" },
+                        "bridge": {
+                          "type": "object",
+                          "properties": {
+                            "outputToken": { "type": "string" },
+                            "protocolData": { "type": "string" },
+                            "scalingFactor": { "type": "string" },
+                            "destinationChainId": { "type": "integer" },
+                            "protocolSelector": { "type": "string" }
+                          }
+                        },
+                        "bridgeInfo": {
+                          "type": "object",
+                          "properties": {
+                            "protocolName": { "type": "string" },
+                            "destAmountAfterBridge": { "type": "string" },
+                            "destUSDAfterBridge": { "type": "string" },
+                            "estimatedTimeMs": { "type": "integer" },
+                            "fees": { "type": "array", "items": { "type": "object" } }
+                          }
+                        },
+                        "availableBridges": { "type": "array", "items": { "type": "object" } },
+                        "hmac": { "type": "string" }
+                      }
+                    },
+                    "market": {
+                      "type": "object",
+                      "description": "Market route block. Same shape as the GET /prices `priceRoute` field. Present when `mode` is ALL or MARKET."
+                    },
+                    "deltaAddress": { "type": "string", "description": "The Delta settlement contract address for the source chain." },
+                    "fallbackReason": {
+                      "type": "object",
+                      "description": "Set when Delta couldn't price and the response fell back to Market.",
+                      "properties": {
+                        "errorType": { "type": "string" },
+                        "details": { "type": "string" }
+                      }
+                    }
                   }
                 }
               }
@@ -66,8 +110,8 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "price": { "type": "object", "description": "The `delta` block returned by POST /quote, passed verbatim." },
-                  "hmac":  { "type": "string" }
+                  "price": { "type": "object", "description": "The `delta` block returned by GET /quote, passed verbatim." },
+                  "hmac":  { "type": "string", "description": "The `hmac` from the `delta` block, passed verbatim." }
                 },
                 "required": ["price", "hmac"]
               }

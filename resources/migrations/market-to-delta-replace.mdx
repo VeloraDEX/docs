@@ -24,7 +24,7 @@ Nothing. Market routing isn't going away. This migration is for teams who want t
 
 ## Steps
 
-1. Force `mode=DELTA` on `POST /quote`. Treat a missing `delta` block as a routing failure for your UX.
+1. Call `GET /quote?mode=DELTA` instead of `GET /prices`. Treat a missing `delta` block as a routing failure for your UX.
 2. Remove Augustus calldata signing paths. All execution goes through `/delta/orders`.
 3. Update your token-approval flow: the Delta contract — not Augustus — is the spender.
 

@@ -20,4 +20,4 @@ The production host is **`https://api.velora.xyz`**.
 
 ## End-state check
 
-`grep -RE "(apiv5\.paraswap\.io|api\.paraswap\.io)"` in your codebase returns zero hits. Smoke test: a known `POST /quote` call against `api.velora.xyz` returns the same `priceRoute` it did on the legacy host.
+`grep -RE "(apiv5\.paraswap\.io|api\.paraswap\.io)"` in your codebase returns zero hits. Smoke test: a known `GET /prices` call against `api.velora.xyz` returns the same `priceRoute` it did on the legacy host.

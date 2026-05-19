@@ -11,7 +11,7 @@ Velora is a DEX aggregator and intents protocol. One integration gives you:
 - **Crosschain** — Delta orders that resolve across chains via bridge-aware solvers.
 - **Augustus RFQ** — on-chain limit orders and OTC for ERC-20, with optional partial fills.
 
-You can pick a single surface or run them side by side. The Market API and Delta API share the same `POST /quote` entry point; `mode=ALL` returns both and you choose which to execute.
+You can pick a single surface or run them side by side. The Market API exposes `GET /prices` for direct aggregator routing; the Delta API exposes `GET /quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and can return a `delta` block, a `market` block (same shape as `/prices`'s `priceRoute`), or both — letting you pick which to execute from a single call.
 
 ## Choose your integration
 
@@ -30,15 +30,14 @@ Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Marke
 <CodeGroup>
 
 ```bash Market (cURL)
-curl -s "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/prices" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
   --data-urlencode "amount=1000000000000000000" \
   --data-urlencode "srcDecimals=18" \
   --data-urlencode "destDecimals=6" \
   --data-urlencode "side=SELL" \
-  --data-urlencode "chainId=1" \
-  --data-urlencode "mode=ALL" \
+  --data-urlencode "network=1" \
   --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
   --data-urlencode "partner=my-app-name" \
   -G | jq
@@ -79,7 +78,7 @@ const quote = await sdk.quote.getQuote({
 if ('delta' in quote) {
   // gasless path — sign and submit via /delta/orders
 } else {
-  // calldata path — submit `priceRoute` to /transactions
+  // calldata path — submit `market` to /transactions
 }
 ```
 
@@ -100,7 +99,7 @@ export default function SwapPage() {
 
 </CodeGroup>
 
-The Market response contains a `priceRoute` (calldata-ready against Augustus v6.2). The Delta response contains a `delta` block (sign with EIP-712, submit to `/delta/orders`). With `mode=ALL` you get both.
+`GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /quote?mode=ALL` returns both — as `response.market` (Market route) and `response.delta` (Delta intent) — and you pick which to execute.
 
 ## Next steps
 

@@ -1,6 +1,6 @@
 | Symptom | Root cause | Fix |
 |---|---|---|
-| 400 `Invalid price` after a fresh quote                  | The `delta` block from `POST /quote` was mutated, re-encoded, or re-stringified before submit | Pass the `delta` object **verbatim** as `price`. Don't run it through JSON normalizers, sorters, or schema validators |
+| 400 `Invalid price` after a fresh quote                  | The `delta` block from `GET /quote` was mutated, re-encoded, or re-stringified before submit | Pass the `delta` object **verbatim** as `price`. Don't run it through JSON normalizers, sorters, or schema validators |
 | 400 `Invalid hmac`                                       | The `hmac` from the quote response was dropped, modified, or paired with a different `delta`  | Always send the `hmac` paired with the exact `delta` returned from the same quote response |
 | EIP-712 typed-data signature is rejected by the order server | Wallet signed against a different chain id, verifying contract, or version       | Verify `domain.chainId`, `domain.verifyingContract`, and `domain.name`/`version` match what `POST /delta/orders/build` returned — see [EIP-712 typed data reference](/delta/eip-712-typed-data-reference) |
 | Approval reverts before signing                          | Token approval granted to the Augustus router instead of the Delta contract     | Approve the **Delta contract** as spender — it's the spender on Delta flows, not Augustus. See [Chains & contracts](/resources/chains-and-contracts) |

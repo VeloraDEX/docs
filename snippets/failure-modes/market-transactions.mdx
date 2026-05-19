@@ -1,6 +1,6 @@
 | Symptom | Root cause | Fix |
 |---|---|---|
-| 400 `Invalid priceRoute` or `Stale priceRoute`         | `priceRoute` modified between quote and tx-build, or older than ~30s         | Pass the `priceRoute` block from `POST /quote` verbatim; re-quote if more than ~30s elapsed |
+| 400 `Invalid priceRoute` or `Stale priceRoute`         | `priceRoute` modified between quote and tx-build, or older than ~30s         | Pass the `priceRoute` block from `GET /prices` verbatim; re-quote if more than ~30s elapsed |
 | Calldata reverts on-chain with `INSUFFICIENT_OUTPUT`   | Slippage tolerance too tight for current market depth                        | Increase `slippage` (in bps) on the rebuild, or surface a higher tolerance to the user before retrying |
 | Calldata reverts with `TransferHelper: TRANSFER_FROM_FAILED` | ERC-20 allowance to the v6.2 router insufficient (or pointed at the legacy v5 router) | Approve the Augustus v6.2 router address — see [Chains & contracts](/resources/chains-and-contracts); migrating off v5 → [Augustus v5 → v6.2](/resources/migrations/augustus-v5-to-v6-2) |
 | `txData` gas estimate fails on the user's RPC          | RPC gas estimation can't simulate the exact block conditions                 | Use the `gas` field returned in the response as a baseline + 15–25% headroom |

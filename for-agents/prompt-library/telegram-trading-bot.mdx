@@ -20,15 +20,15 @@ Implement `/buy <symbol_or_address> <amount_in_usd>` and `/sell <symbol_or_addre
 
 Requirements:
 - Resolve token addresses against Velora's tokens endpoint (`/tokens/:network`).
-- Quote with `mode=ALL` at `POST https://api.velora.xyz/quote`. Always pass `partner=my-app-name` (replace with the bot's partner-key string). Native ETH placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
+- Quote with `mode=ALL` at `GET https://api.velora.xyz/quote`. Always pass `partner=my-app-name` (replace with the bot's partner-key string). Native ETH placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
 - Show the user `destAmount`, `destUSD`, `gasCostUSD`, and `priceImpact` BEFORE asking them to confirm.
 - If `response.delta` exists, prefer the Delta path: build → sign EIP-712 → submit → poll. The user pays no gas.
-- If only `priceRoute` exists, fall back to Market with `slippage=100` (1%) and warn the user about MEV exposure on larger trades (size > $5k).
+- If only `response.market` exists, fall back to Market with `slippage=100` (1%) and warn the user about MEV exposure on larger trades (size > $5k).
 - Include the `priceImpact` warning at >2%.
 
 Reference these docs and follow them exactly:
 - https://docs.velora.xyz/overview/why-velora
-- https://docs.velora.xyz/api-reference/market/quote
+- https://docs.velora.xyz/api-reference/market/prices
 - https://docs.velora.xyz/api-reference/delta/quote
 - https://docs.velora.xyz/api-reference/delta/orders-build
 - https://docs.velora.xyz/api-reference/delta/orders

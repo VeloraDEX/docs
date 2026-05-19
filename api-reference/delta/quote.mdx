@@ -1,7 +1,7 @@
 ---
-title: "POST /quote (Delta)"
-description: "Get a Delta intent quote. Returns a signed-orderable price plus EIP-712 typed data."
-openapi: "/api-reference/specs/delta.json POST /quote"
+title: "GET /quote (Delta)"
+description: "Retrieve a Delta price, with optional fallback to Market via mode=ALL or mode=MARKET."
+openapi: "/api-reference/specs/delta.json GET /quote"
 ---
 
 import DeltaQuoteFailureModes from "/snippets/failure-modes/delta-quote.mdx";
