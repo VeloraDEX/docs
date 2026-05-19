@@ -1,13 +1,146 @@
 ---
 title: "GET /prices (Market)"
 description: "Get a Market route from the Velora aggregator."
-openapi: "/api-reference/specs/market.json GET /prices"
+api: "GET https://api.velora.xyz/prices"
 ---
 
 import MarketPricesFailureModes from "/snippets/failure-modes/market-prices.mdx";
 
-## How this call breaks in production
+## Query parameters
+
+<ParamField query="srcToken" type="string" required default="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE">
+  Source token address. A token symbol listed in `/tokens` can be used instead.
+</ParamField>
+
+<ParamField query="srcDecimals" type="integer" default={18}>
+  Source token decimals. Can be omitted if a token symbol is used in `srcToken`.
+</ParamField>
+
+<ParamField query="destToken" type="string" required default="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48">
+  Destination token address. A token symbol listed in `/tokens` can be used instead.
+</ParamField>
+
+<ParamField query="destDecimals" type="integer" default={6}>
+  Destination token decimals. Can be omitted if a token symbol is used in `destToken`.
+</ParamField>
+
+<ParamField query="amount" type="string" required default="1000000000000000000">
+  `srcToken` amount (SELL) or `destToken` amount (BUY), in WEI/raw units.
+</ParamField>
+
+<ParamField query="side" type="string" default="SELL">
+  `SELL` or `BUY`.
+</ParamField>
+
+<ParamField query="network" type="integer" default={1}>
+  Network ID. Default: `1` (Mainnet).
+</ParamField>
+
+<ParamField query="otherExchangePrices" type="boolean" default={false}>
+  If `true`, the response includes price quotes from other exchanges in an `others` object.
+</ParamField>
+
+<ParamField query="includeDEXS" type="string">
+  Comma-separated list of DEXs to include.
+</ParamField>
+
+<ParamField query="excludeDEXS" type="string">
+  Comma-separated list of DEXs to exclude.
+</ParamField>
+
+<ParamField query="excludeRFQ" type="boolean" default={false}>
+  Exclude all RFQ liquidity from pricing.
+</ParamField>
+
+<ParamField query="includeContractMethods" type="string">
+  Comma-separated list of contract methods to include.
+</ParamField>
+
+<ParamField query="excludeContractMethods" type="string">
+  Comma-separated list of contract methods to exclude.
+</ParamField>
+
+<ParamField query="userAddress" type="string" default="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045">
+  End-user wallet address.
+</ParamField>
+
+<ParamField query="route" type="string">
+  Dash-separated list of tokens for the price route. Max 4 tokens.
+</ParamField>
+
+<ParamField query="partner" type="string" default="my-app-name">
+  Partner string. Defaults to `anon` which charges 1bps fee for all swaps.
+</ParamField>
+
+<ParamField query="maxImpact" type="number">
+  Bypass the API price-impact check (default = 15%). Value in `%`.
+</ParamField>
+
+<ParamField query="receiver" type="string">
+  Receiver wallet address. Omit when swapping from/to the same account.
+</ParamField>
+
+<ParamField query="srcTokenTransferFee" type="string">
+  Tax in basis points charged on `srcToken` transfers.
+</ParamField>
+
+<ParamField query="destTokenTransferFee" type="string">
+  Tax in basis points charged on `destToken` transfers.
+</ParamField>
+
+<ParamField query="srcTokenDexTransferFee" type="string">
+  Tax in BPS charged only on DEX swaps for `srcToken`.
+</ParamField>
+
+<ParamField query="destTokenDexTransferFee" type="string">
+  Tax in BPS charged only on DEX swaps for `destToken`.
+</ParamField>
+
+<ParamField query="version" type="string" default="6.2">
+  Protocol version. Use `"5"` for legacy v5; default is `"6.2"`.
+</ParamField>
+
+<ParamField query="excludeContractMethodsWithoutFeeModel" type="boolean" default={false}>
+  Exclude contract methods that don't support the fee model.
+</ParamField>
+
+<ParamField query="ignoreBadUsdPrice" type="boolean" default={false}>
+  Skip the USD-price availability check.
+</ParamField>
+
+## Response
+
+<ResponseField name="priceRoute" type="object">
+  Market route. Calldata-ready against Augustus v6.2 when `version=6.2`.
+
+  <Expandable title="properties">
+    <ResponseField name="blockNumber" type="integer" />
+    <ResponseField name="network" type="integer" />
+    <ResponseField name="srcToken" type="string" />
+    <ResponseField name="srcDecimals" type="integer" />
+    <ResponseField name="srcAmount" type="string" />
+    <ResponseField name="destToken" type="string" />
+    <ResponseField name="destDecimals" type="integer" />
+    <ResponseField name="destAmount" type="string" />
+    <ResponseField name="bestRoute" type="object[]" />
+    <ResponseField name="gasCostUSD" type="string" />
+    <ResponseField name="gasCost" type="string" />
+    <ResponseField name="side" type="string">
+      `SELL` or `BUY`.
+    </ResponseField>
+    <ResponseField name="version" type="string" />
+    <ResponseField name="contractAddress" type="string" />
+    <ResponseField name="tokenTransferProxy" type="string" />
+    <ResponseField name="contractMethod" type="string" />
+    <ResponseField name="partnerFee" type="number" />
+    <ResponseField name="srcUSD" type="string" />
+    <ResponseField name="destUSD" type="string" />
+    <ResponseField name="partner" type="string" />
+    <ResponseField name="maxImpactReached" type="boolean" />
+    <ResponseField name="hmac" type="string" />
+  </Expandable>
+</ResponseField>
+
+## Troubleshooting
 
 <MarketPricesFailureModes />
-
-{/* Mintlify auto-renders the OpenAPI block below from the `openapi:` frontmatter. */}
