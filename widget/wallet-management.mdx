@@ -1,15 +1,135 @@
 ---
 title: "Wallet management"
-description: "Bring your own wallet connector or use the default integration."
-keywords: ["widget","wallets"]
+description: "Use the widget's built-in wallet connectors or bring your own EIP-1193 provider from the host app."
+keywords: ["widget","wallet","wagmi","eip-1193","provider"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The widget supports two wallet ownership models, controlled by the `widgetMode` config field.
 
-## When to use this
+| Mode | Who owns the wallet | When to use |
+|---|---|---|
+| `"standalone"` *(default)* | The widget. Uses built-in wagmi connectors (injected wallets, WalletConnect, EIP-6963 discovery). | Standalone trading pages; landing pages; embeds where the host app has no wallet flow. |
+| `"dapp"` | The host app. Pass an EIP-1193 `provider` and handle Connect Wallet clicks yourself. | dApps that already have a wallet connection (wagmi, RainbowKit, Web3Modal, etc.). |
 
-## Quickstart
+## Standalone mode
 
-## Examples
+In `standalone` mode the widget renders its own Connect Wallet button and handles the full connector flow using built-in wagmi connectors. No extra configuration needed.
+
+```tsx
+<Widget config={{ widgetMode: "standalone" }} /> // default — can be omitted
+```
+
+### Optional: add Privy as a connector
+
+If you want Privy in the connector list (alongside the built-in connectors), pass `privyAppId`. Privy is **not required** — the widget works without it.
+
+```tsx
+<Widget
+  config={{
+    privyAppId: "clxxx...xxx",
+    privyClientId: "client_xxx...xxx", // optional, only takes effect with privyAppId
+  }}
+/>
+```
+
+## dApp mode — bring your own provider
+
+Set `widgetMode: "dapp"` and pass an EIP-1193 provider. Your host app is responsible for connecting the wallet.
+
+```tsx
+<Widget
+  config={{ widgetMode: "dapp" }}
+  provider={window.ethereum}
+  events={{
+    onConnectWalletClick: () => {
+      // open your host app's wallet modal
+      openConnectModal();
+    },
+  }}
+/>
+```
+
+### The `provider` prop
+
+Must satisfy `EIP1193ProviderLax`. This is a looser version of viem's `EIP1193Provider`, since many third-party wallets don't satisfy viem's strict signature:
+
+```ts
+type EIP1193ProviderLax = {
+  request: (args: { method: any; params?: any }) => Promise<any>;
+  on: (event: any, callback: (arg: unknown) => void) => void;
+  removeListener: (event: any, callback: (arg: unknown) => void) => void;
+};
+```
+
+Most wallet connectors — wagmi connectors, RainbowKit, raw `window.ethereum` — satisfy this shape.
+
+### The Connect Wallet button in dApp mode
+
+<Warning>
+In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. The behavior of the button depends on whether you pass an `onConnectWalletClick` handler:
+
+- **Without** `onConnectWalletClick` — the button is **disabled**.
+- **With** `onConnectWalletClick` — the button is **enabled**, but the widget will **not** open its own drawer. You must run your host app's wallet connection flow inside the handler.
+</Warning>
+
+```tsx
+<Widget
+  config={{ widgetMode: "dapp" }}
+  provider={provider}
+  events={{
+    onConnectWalletClick: () => {
+      // host-app responsibility — e.g. open RainbowKit modal
+      openConnectModal();
+    },
+  }}
+/>
+```
+
+### Hide the wallet UI entirely
+
+If your host app shows the connected account elsewhere, hide the widget's wallet header:
+
+```tsx
+<Widget
+  config={{
+    widgetMode: "dapp",
+    excludeUI: ["wallet-management"],
+  }}
+  provider={provider}
+/>
+```
+
+## Decision tree
+
+```text
+Does your host app already manage the user wallet?
+├── No  → widgetMode: "standalone"  (optionally add privyAppId for Privy)
+└── Yes → widgetMode: "dapp" + provider + onConnectWalletClick
+         └── Already show the connected account in the host UI?
+             └── Yes → excludeUI: ["wallet-management"]
+```
+
+## Connection events
+
+Both modes emit `onConnectWallet` events you can use for analytics — see [Events & callbacks](/widget/events-and-callbacks#onconnectwallet) for payload details.
+
+```tsx
+<Widget
+  events={{
+    onConnectWallet: ({ event }) => {
+      if (event.name === "ConnectWallet:connect") {
+        analytics.track("wallet_connected", {
+          connector: event.params.connectorType,
+          action: event.params.connectorAction,
+        });
+      }
+    },
+  }}
+/>
+```
 
 ## Related pages
+
+- [Configure](/widget/configure) — other config fields.
+- [Events & callbacks](/widget/events-and-callbacks) — `onConnectWallet`, `onConnectWalletClick`.
+- [Widget API reference](/widget/widget-api-reference) — full `EIP1193ProviderLax` type.
