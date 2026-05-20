@@ -1,25 +1,5 @@
 ---
 title: "POST /delta/orders"
 description: "Submit a signed Delta order to the solver network."
-api: "POST https://api.velora.xyz/delta/orders"
+openapi: "/api-reference/specs/delta.json POST /delta/orders"
 ---
-
-import DeltaOrdersFailureModes from "/snippets/failure-modes/delta-orders.mdx";
-
-## Body parameters
-
-<ParamField body="order" type="object" required>
-  The order object produced by `POST /delta/orders/build`, passed verbatim.
-</ParamField>
-
-<ParamField body="signature" type="string" required>
-  The EIP-712 signature of the order's typed data, hex-encoded.
-</ParamField>
-
-## Response
-
-Order accepted; returns the order id and a status URL.
-
-## Troubleshooting
-
-<DeltaOrdersFailureModes />

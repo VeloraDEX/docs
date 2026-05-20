@@ -12,6 +12,10 @@
     "body": { "family": "Inter" }
   },
   "favicon": "/favicon.png",
+  "api": {
+    "playground": { "display": "interactive" },
+    "examples": { "prefill": true }
+  },
   "banner": {
     "content": "Building an AI agent? See [llms.txt](/llms.txt) and [llms-full.txt](/llms-full.txt).",
     "dismissible": true
@@ -213,7 +217,8 @@
               "api-reference/authentication",
               "api-reference/rate-limits",
               "api-reference/error-reference",
-              "api-reference/versioning-policy"
+              "api-reference/versioning-policy",
+              "api-reference/troubleshooting"
             ]
           },
           {

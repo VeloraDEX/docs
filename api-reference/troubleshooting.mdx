@@ -1,0 +1,36 @@
+---
+title: "Troubleshooting"
+description: "Common failure modes across the Velora Market and Delta APIs — symptom, root cause, and fix."
+---
+
+import MarketPricesFailureModes from "/snippets/failure-modes/market-prices.mdx";
+import MarketTransactionsFailureModes from "/snippets/failure-modes/market-transactions.mdx";
+import DeltaQuoteFailureModes from "/snippets/failure-modes/delta-quote.mdx";
+import DeltaOrdersBuildFailureModes from "/snippets/failure-modes/delta-orders-build.mdx";
+import DeltaOrdersFailureModes from "/snippets/failure-modes/delta-orders.mdx";
+
+Each table covers a single endpoint and is updated from support tickets at each release. Jump straight to the endpoint you're calling.
+
+## Market API
+
+### GET /prices
+
+<MarketPricesFailureModes />
+
+### POST /transactions/:network
+
+<MarketTransactionsFailureModes />
+
+## Delta API
+
+### GET /quote
+
+<DeltaQuoteFailureModes />
+
+### POST /delta/orders/build
+
+<DeltaOrdersBuildFailureModes />
+
+### POST /delta/orders
+
+<DeltaOrdersFailureModes />

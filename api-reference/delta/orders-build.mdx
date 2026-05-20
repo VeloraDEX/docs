@@ -1,25 +1,5 @@
 ---
 title: "POST /delta/orders/build"
 description: "Build a signable Delta order — EIP-712 typed data — from a Delta quote."
-api: "POST https://api.velora.xyz/delta/orders/build"
+openapi: "/api-reference/specs/delta.json POST /delta/orders/build"
 ---
-
-import DeltaOrdersBuildFailureModes from "/snippets/failure-modes/delta-orders-build.mdx";
-
-## Body parameters
-
-<ParamField body="price" type="object" required>
-  The `delta` block returned by `GET /quote`, passed verbatim.
-</ParamField>
-
-<ParamField body="hmac" type="string" required>
-  The `hmac` from the `delta` block, passed verbatim.
-</ParamField>
-
-## Response
-
-Returns an order with EIP-712 typed data ready to sign.
-
-## Troubleshooting
-
-<DeltaOrdersBuildFailureModes />
