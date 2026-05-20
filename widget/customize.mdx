@@ -1,15 +1,72 @@
 ---
-title: "Customize (theming)"
-description: "Customize widget colors, typography, and components to match your brand."
-keywords: ["widget","theming","styling"]
+title: "Customize"
+description: "Pick a theme, follow the user's system preference, and understand how the widget's CSS is scoped."
+keywords: ["widget","theming","styling","css","dark-mode"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The widget exposes a single visual control today: a `theme` config field that switches between bundled light and dark themes. Colors, typography, and components are not currently configurable from the host app.
 
-## When to use this
+<Note>
+**Scope, honestly.** There's no design-token theming API — you can't pass brand colors, fonts, or a border-radius scale yet. If that's a blocker for your integration, reach out to [support@velora.xyz](mailto:support@velora.xyz).
+</Note>
 
-## Quickstart
+## Set a theme
 
-## Examples
+```tsx
+<Widget config={{ theme: "light" }} />
+<Widget config={{ theme: "dark" }} />
+<Widget />                              // follows system preference
+```
+
+`theme` accepts the `WidgetTheme` type: `"light" | "dark"`.
+
+If you omit `theme`, the widget reads the user's OS preference via `prefers-color-scheme` and updates live when the preference changes.
+
+## Switch themes at runtime
+
+The theme is a controlled prop — pass a new value any time to switch.
+
+```tsx
+import { useState } from "react";
+import { Widget, type WidgetTheme } from "@velora-dex/widget";
+
+export function ThemedWidget() {
+  const [theme, setTheme] = useState<WidgetTheme>("light");
+
+  return (
+    <>
+      <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+        Toggle theme
+      </button>
+      <Widget config={{ theme }} />
+    </>
+  );
+}
+```
+
+## CSS scoping
+
+The widget is built with Tailwind v4 and scopes all CSS variables under the `.velora-widget` class. That means:
+
+- The widget's styles **don't leak** into the rest of your app.
+- Your app's global styles **don't bleed into** the widget either — selectors targeting bare elements (`a`, `button`, `input`) inside the widget's DOM tree will still apply, but the widget's own variables take precedence within its root.
+
+## Stylesheet auto-injection
+
+The compiled stylesheet is auto-injected when you `import { Widget }`. No `.css` import required.
+
+```tsx
+import { Widget } from "@velora-dex/widget";
+// Stylesheet injected — nothing else needed.
+```
+
+If your bundler strips side-effect imports aggressively (rare but possible with aggressive `treeshake`), force-include the stylesheet:
+
+```tsx
+import "@velora-dex/widget/styles.css";
+```
 
 ## Related pages
+
+- [Configure](/widget/configure) — every other config option.
+- [Compatibility](/widget/compatibility) — Tailwind / bundler caveats.
