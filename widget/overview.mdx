@@ -1,10 +1,10 @@
 ---
 title: "Overview"
-description: "Embed the Velora swap widget in your app with @velora-dex/widget — or drop it into plain HTML with zero code."
-keywords: ["widget", "overview", "embed"]
+description: "Embed the Velora swap widget in your React app with @velora-dex/widget — multi-chain swaps, limit orders, OTC, and TWAP in a single drop-in component."
+keywords: ["widget","overview","embed","react"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora Widget is a React component that gives your users a complete trading interface — swaps, limit orders, OTC, and TWAP — across every chain Velora supports. Drop `<Widget />` into your app, pass a `QueryClientProvider`, and you have a working DEX inside your product.
 
 ## Try it live
 
@@ -12,10 +12,79 @@ keywords: ["widget", "overview", "embed"]
   Configure chains, tokens, theme, and partner fees in a live preview — opens in a new tab.
 </Card>
 
-## When to use this
+## What you get
+
+<CardGroup cols={2}>
+  <Card title="Multi-chain swaps" icon="arrows-left-right">
+    Ethereum, Polygon, BNB, Avalanche, Arbitrum, Optimism, Base, Gnosis, Unichain — same-chain and crosschain.
+  </Card>
+  <Card title="Limit, OTC, and TWAP orders" icon="clock">
+    Powered by [Delta](/delta/overview). Gasless and MEV-protected.
+  </Card>
+  <Card title="Wallet integration" icon="wallet">
+    Built-in wagmi connectors out of the box, or bring your own EIP-1193 provider.
+  </Card>
+  <Card title="Partner fees" icon="coins">
+    Take a fee or a surplus share on every trade. See [Monetize](/widget/monetize).
+  </Card>
+  <Card title="Theming" icon="palette">
+    Light and dark themes with automatic system-preference detection. CSS scoped under `.velora-widget` to avoid leaking.
+  </Card>
+  <Card title="Type safety" icon="shield-check">
+    Full TypeScript types for config, events, and form state.
+  </Card>
+</CardGroup>
+
+## Quick example
+
+```tsx
+import { Widget } from "@velora-dex/widget";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Widget
+        config={{
+          theme: "light",
+          partnerConfig: { partner: "my-app-name" },
+        }}
+      />
+    </QueryClientProvider>
+  );
+}
+```
 
 ## How it works
 
-## Examples
+The widget is a single React component shipped as `@velora-dex/widget`:
 
-## Related pages
+- **Quotes** come from the same [Market API](/api-reference/market/overview) and [Delta API](/api-reference/delta/overview) you'd hit from the SDK — no separate widget backend.
+- **Wallet** is either the widget's built-in wagmi connectors (default, `widgetMode: "standalone"`) or an EIP-1193 provider you pass (`widgetMode: "dapp"`).
+- **Styles** are auto-injected on import and scoped under `.velora-widget` (Tailwind v4) so they don't leak into your app.
+- **State** is owned by the widget, but every important transition fires through the `events` prop so you can sync analytics or your own UI.
+
+## Pick your starting point
+
+<CardGroup cols={2}>
+  <Card title="Install" icon="download" href="/widget/install">
+    Add `@velora-dex/widget` and render the component.
+  </Card>
+  <Card title="Configure" icon="sliders" href="/widget/configure">
+    Restrict chains, pick trade modes, hide UI elements.
+  </Card>
+  <Card title="Wallet management" icon="wallet" href="/widget/wallet-management">
+    Built-in connectors vs bring-your-own EIP-1193 provider.
+  </Card>
+  <Card title="Monetize" icon="coins" href="/widget/monetize">
+    Take a fee or surplus share on every swap.
+  </Card>
+  <Card title="Events & callbacks" icon="bell" href="/widget/events-and-callbacks">
+    Hook into every lifecycle event for analytics and host-app sync.
+  </Card>
+  <Card title="React example" icon="code" href="/widget/examples/react">
+    A minimal Vite + React integration.
+  </Card>
+</CardGroup>
