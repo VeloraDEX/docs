@@ -1,15 +1,85 @@
 ---
 title: "Install"
 description: "Install @velora-dex/widget and render the swap widget in your React app."
-keywords: ["widget","install"]
+keywords: ["widget","install","quickstart"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora Widget is a React component published as [`@velora-dex/widget`](https://www.npmjs.com/package/@velora-dex/widget). Install it alongside `@tanstack/react-query` and render it anywhere in your component tree.
 
-## When to use this
+## Install the package
 
-## Quickstart
+<CodeGroup>
 
-## Examples
+```bash pnpm
+pnpm add @velora-dex/widget @tanstack/react-query
+```
 
-## Related pages
+```bash npm
+npm install @velora-dex/widget @tanstack/react-query
+```
+
+```bash yarn
+yarn add @velora-dex/widget @tanstack/react-query
+```
+
+</CodeGroup>
+
+### Peer dependencies
+
+| Package | Version |
+|---|---|
+| `react` | `18.x` or `19.x` |
+| `react-dom` | `18.x` or `19.x` |
+| `@tanstack/react-query` | `^5.90` |
+
+## Render the widget
+
+Wrap your app in a `QueryClientProvider` and drop `<Widget />` anywhere below it.
+
+```tsx
+import { Widget } from "@velora-dex/widget";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Widget />
+    </QueryClientProvider>
+  );
+}
+```
+
+That's it — the widget mounts with sensible defaults: system-preference theme, all supported chains, Delta enabled, and built-in wallet connectors.
+
+<Note>
+The widget's compiled stylesheet is auto-injected when you import `Widget`, so no extra `.css` import is required. If your bundler strips side-effect imports aggressively, you can force-include it with `import "@velora-dex/widget/styles.css"`.
+</Note>
+
+## Verify it works
+
+You should see the swap form render with:
+
+- A **Connect Wallet** button in the header
+- Source and destination token pickers
+- A trade-mode toggle (Swap / Limit / OTC / TWAP)
+
+If the widget renders but throws on first interaction, it's almost always a missing `QueryClientProvider` — confirm it's above `<Widget />` in the tree.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Configure" icon="sliders" href="/widget/configure">
+    Restrict chains, pick trade modes, set theme, hide UI elements.
+  </Card>
+  <Card title="Wallet management" icon="wallet" href="/widget/wallet-management">
+    Use the built-in wallet connectors or bring your own EIP-1193 provider.
+  </Card>
+  <Card title="Monetize" icon="coins" href="/widget/monetize">
+    Collect partner fees on every swap routed through your integration.
+  </Card>
+  <Card title="Framework examples" icon="code" href="/widget/examples/react">
+    Working setups for Vite + React and Next.js app router.
+  </Card>
+</CardGroup>
