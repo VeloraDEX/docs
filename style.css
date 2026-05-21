@@ -18,16 +18,24 @@ html.dark #background-color {
 }
 
 .card {
-  background-color: #fafcff !important;
-  border-color: #EAE9ED !important;
-  border-radius: 6px !important;
+  background-color: #ffffff !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
-.card [data-component-part="card-title"] { color: #343647 !important; }
-.card .prose { color: #62626F !important; }
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(255, 106, 31, 0.10), 0 16px 40px rgba(255, 106, 31, 0.12);
+}
+.card svg { color: #FF6A1F !important; }
+.card [data-component-part="card-title"] { color: #141822 !important; }
+.card .prose { color: #525C70 !important; }
 
 html.dark .card {
-  background-color: #151724 !important;
-  border-color: #1E2033 !important;
+  background-color: #171B25 !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.2);
 }
-html.dark .card [data-component-part="card-title"] { color: #EAE9ED !important; }
-html.dark .card .prose { color: #62626F !important; }
+html.dark .card [data-component-part="card-title"] { color: #EDEFF3 !important; }
+html.dark .card .prose { color: #B4BBC8 !important; }

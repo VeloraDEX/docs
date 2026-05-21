@@ -1,48 +1,37 @@
 ---
-title: "Velora Docs"
+title: "DEX aggregator & intents API"
 description: "Velora is the DEX aggregator and intents protocol powering best execution across 10+ EVM chains."
 mode: "custom"
 ---
 
 <div className="mx-auto max-w-4xl px-6 pt-2 md:pt-10 pb-24 text-center">
 
-  <img
-    src="/logo/light.svg"
-    alt="Velora"
-    className="mx-auto h-16 w-auto dark:hidden"
-  />
-  <img
-    src="/logo/dark.svg"
-    alt="Velora"
-    className="mx-auto h-16 w-auto hidden dark:block"
-  />
-
-  <h1 className="mt-8 text-4xl md:text-5xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-    Developer Documentation
+  <h1 className="mt-8 text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05] text-zinc-900 dark:text-zinc-50">
+    Build with Velora
   </h1>
 
-  <p className="mt-6 mx-auto max-w-2xl text-lg text-zinc-600 dark:text-zinc-400">
-    The DEX aggregator and intents protocol for builders. Quote, swap, or place a gasless intent — from one API, SDK, or Widget.
+  <p className="mt-5 mx-auto max-w-2xl text-lg sm:text-xl text-zinc-700 dark:text-zinc-300">
+    Quote, swap, place limit, TWAP, OTC or cross-chain orders — from one API, SDK or Widget.
   </p>
 
-  <div className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-    <span><span className="font-semibold text-zinc-900 dark:text-zinc-100">$150B+</span> cumulative volume</span>
-    <span><span className="font-semibold text-zinc-900 dark:text-zinc-100">10+</span> EVM chains</span>
-    <span><span className="font-semibold text-zinc-900 dark:text-zinc-100">100+</span> liquidity sources</span>
+  <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-zinc-600 dark:text-zinc-300">
+    <span><span className="font-bold text-zinc-900 dark:text-white">$150B<span className="text-[#FF6A1F]">+</span></span> cumulative volume</span>
+    <span><span className="font-bold text-zinc-900 dark:text-white">10<span className="text-[#FF6A1F]">+</span></span> EVM chains</span>
+    <span><span className="font-bold text-zinc-900 dark:text-white">100<span className="text-[#FF6A1F]">+</span></span> liquidity sources</span>
   </div>
 
   <div className="mt-14">
-    <CardGroup cols={3}>
+    <Columns cols={3}>
       <Card title="Quickstart" icon="rocket" href="/overview/why-velora#quickstart">
         Ship your first swap in 60 seconds.
       </Card>
-      <Card title="API Reference" icon="code" href="/api-reference/introduction">
+      <Card title="API reference" icon="code" href="/api-reference/introduction">
         Endpoints, parameters, and code samples.
       </Card>
       <Card title="For AI agents" icon="robot" href="/for-agents/overview">
         MCP server, CLI, and prompt library.
       </Card>
-    </CardGroup>
+    </Columns>
   </div>
 
 </div>

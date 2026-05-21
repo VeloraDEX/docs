@@ -3,9 +3,9 @@
   "theme": "mint",
   "name": "Velora Docs",
   "colors": {
-    "primary": "#F75C2A",
-    "light": "#FF9E1B",
-    "dark": "#FE6F17"
+    "primary": "#FF6A1F",
+    "light": "#FF6A1F",
+    "dark": "#FF6A1F"
   },
   "fonts": {
     "heading": { "family": "Geist" },
