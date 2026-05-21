@@ -1,7 +1,7 @@
 ---
 title: "Events & callbacks"
 description: "Listen to widget lifecycle events — wallet connections, approvals, swaps, orders, and form changes."
-keywords: ["widget","events","callbacks","analytics","lifecycle"]
+keywords: ["widget", "events", "callbacks", "analytics", "lifecycle"]
 ---
 
 Pass an `events` object to subscribe to widget lifecycle events. Every callback receives `{ event, state }` where `state` is a snapshot of the full widget state and `event` is a discriminated union of named sub-events.
@@ -22,22 +22,22 @@ All callbacks are optional. Subscribe only to what you need.
 
 ## Callback summary
 
-| Callback | Fires when |
-|---|---|
-| [`onConnectWallet`](#onconnectwallet) | A wallet connects (or the Connect button is clicked). |
+| Callback                                        | Fires when                                             |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| [`onConnectWallet`](#onconnectwallet)           | A wallet connects (or the Connect button is clicked).  |
 | [`onConnectWalletClick`](#onconnectwalletclick) | The Connect Wallet button is clicked (dApp-mode hook). |
-| [`onAllowToken`](#onallowtoken) | Token approval / permit lifecycle. |
-| [`onWrapETH`](#onwrapeth) | ETH → WETH wrap lifecycle (Delta pre-step). |
-| [`onSwap`](#onswap) | Market or Delta swap lifecycle. |
-| [`onTwapOrder`](#ontwaporder) | TWAP order lifecycle. |
-| [`onLimitOrder`](#onlimitorder) | Delta limit-order lifecycle. |
-| [`onOTCOrder`](#onotcorder) | OTC order lifecycle. |
-| [`onCancelTx`](#oncanceltx) | User cancels a pending swap tx (replacement). |
-| [`onCancelOrder`](#oncancelorder) | User cancels a Delta or OTC order. |
-| [`onFillOTCOrder`](#onfillotcorder) | User fills an existing OTC order. |
-| [`onSettingsChange`](#onsettingschange) | User changes widget settings (slippage, gas, bridges). |
-| [`onFormInputChange`](#onforminputchange) | Any input in any trading form changes. |
-| [`onPriceChange`](#onpricechange) | Price quote refreshes or query state changes. |
+| [`onAllowToken`](#onallowtoken)                 | Token approval / permit lifecycle.                     |
+| [`onWrapETH`](#onwrapeth)                       | ETH → WETH wrap lifecycle (Delta pre-step).            |
+| [`onSwap`](#onswap)                             | Market or Delta swap lifecycle.                        |
+| [`onTwapOrder`](#ontwaporder)                   | TWAP order lifecycle.                                  |
+| [`onLimitOrder`](#onlimitorder)                 | Delta limit-order lifecycle.                           |
+| [`onOTCOrder`](#onotcorder)                     | OTC order lifecycle.                                   |
+| [`onCancelTx`](#oncanceltx)                     | User cancels a pending swap tx (replacement).          |
+| [`onCancelOrder`](#oncancelorder)               | User cancels a Delta or OTC order.                     |
+| [`onFillOTCOrder`](#onfillotcorder)             | User fills an existing OTC order.                      |
+| [`onSettingsChange`](#onsettingschange)         | User changes widget settings (slippage, gas, bridges). |
+| [`onFormInputChange`](#onforminputchange)       | Any input in any trading form changes.                 |
+| [`onPriceChange`](#onpricechange)               | Price quote refreshes or query state changes.          |
 
 ---
 
@@ -52,16 +52,16 @@ Fires when a wallet connects to the widget, and on the click that initiates conn
 
 **`ConnectWallet:connect` params:**
 
-| Param | Type | Description |
-|---|---|---|
-| `connectorType` | `string` | Type of connector used. |
-| `connectorName` | `string` | Wallet name (from WalletConnect or EIP-6963). |
-| `connectorAction` | `"Click" \| "Eager" \| "Embedded" \| "External"` | How the connection happened. |
-| `provider` | `EIP1193ProviderLax` | The underlying provider. |
-| `account` | `Address` | Connected account address. |
-| `walletName` | `string \| null` | Wallet display name. |
-| `walletIcon` | `string \| null` | Wallet icon URL. |
-| `chainId` | `number` | Chain the wallet is connected to. |
+| Param             | Type                                             | Description                                   |
+| ----------------- | ------------------------------------------------ | --------------------------------------------- |
+| `connectorType`   | `string`                                         | Type of connector used.                       |
+| `connectorName`   | `string`                                         | Wallet name (from WalletConnect or EIP-6963). |
+| `connectorAction` | `"Click" \| "Eager" \| "Embedded" \| "External"` | How the connection happened.                  |
+| `provider`        | `EIP1193ProviderLax`                             | The underlying provider.                      |
+| `account`         | `Address`                                        | Connected account address.                    |
+| `walletName`      | `string \| null`                                 | Wallet display name.                          |
+| `walletIcon`      | `string \| null`                                 | Wallet icon URL.                              |
+| `chainId`         | `number`                                         | Chain the wallet is connected to.             |
 
 ```tsx
 <Widget
@@ -80,7 +80,8 @@ Fires when a wallet connects to the widget, and on the click that initiates conn
 ```
 
 <Note>
-`ConnectWallet:click` carries no params. Check `event.name` before reading connect-specific fields.
+  `ConnectWallet:click` carries no params. Check `event.name` before reading
+  connect-specific fields.
 </Note>
 
 ---
@@ -88,15 +89,6 @@ Fires when a wallet connects to the widget, and on the click that initiates conn
 ## `onConnectWalletClick`
 
 Fires when the Connect Wallet button is clicked. Same payload type as `onConnectWallet`, but only emits `ConnectWallet:click`.
-
-<Warning>
-**dApp-mode behavior.** When `widgetMode: "dapp"`:
-
-- **Without** an `onConnectWalletClick` handler — the button is **disabled**.
-- **With** an `onConnectWalletClick` handler — the button is **enabled**, but the widget will **not** open its own Connect Wallet drawer. You must run your own wallet connection flow inside the handler.
-
-See [Wallet management](/widget/wallet-management) for the full pattern.
-</Warning>
 
 ```tsx
 <Widget
@@ -124,18 +116,18 @@ Token approval (`approve`) or signed-permit (`permit1` / `permit2`) lifecycle.
 
 **Common params:**
 
-| Param | Description |
-|---|---|
-| `token` | Token being approved. |
-| `amountWei` | Approval amount, in wei. |
-| `spenderAddress` | The contract receiving the allowance. |
-| `chainId` | Chain ID. |
-| `tradeMode` | `"swap" \| "limit" \| "otc" \| "twap"`. |
-| `type` | `"approve" \| "permit"`. |
-| `permitType` | (if permit) `"permit1" \| "permit2"`. |
-| `txHash` | (if sent / confirmed / failed) Transaction hash. |
-| `txReceipt` | (if confirmed / failed) Transaction receipt. |
-| `error` | (if failed) Error object. |
+| Param            | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `token`          | Token being approved.                            |
+| `amountWei`      | Approval amount, in wei.                         |
+| `spenderAddress` | The contract receiving the allowance.            |
+| `chainId`        | Chain ID.                                        |
+| `tradeMode`      | `"swap" \| "limit" \| "otc" \| "twap"`.          |
+| `type`           | `"approve" \| "permit"`.                         |
+| `permitType`     | (if permit) `"permit1" \| "permit2"`.            |
+| `txHash`         | (if sent / confirmed / failed) Transaction hash. |
+| `txReceipt`      | (if confirmed / failed) Transaction receipt.     |
+| `error`          | (if failed) Error object.                        |
 
 ```tsx
 <Widget
@@ -190,16 +182,16 @@ The most common callback — fires for both market and Delta swap lifecycles.
 
 **Params common to all sub-events:**
 
-| Param | Description |
-|---|---|
-| `swapMode` | `"market" \| "delta"`. |
-| `price` | Quote info (shape varies by `swapMode`). |
-| `tokenFrom`, `tokenTo` | Tokens involved. |
-| `sendAmount`, `receiveAmount` | Amounts. |
-| `receiverAddress` | Destination address. |
-| `srcChainId`, `destChainId` | Chains involved. |
-| `connectedAccount` | Connected wallet address. |
-| `side` | `"BUY" \| "SELL"`. |
+| Param                         | Description                              |
+| ----------------------------- | ---------------------------------------- |
+| `swapMode`                    | `"market" \| "delta"`.                   |
+| `price`                       | Quote info (shape varies by `swapMode`). |
+| `tokenFrom`, `tokenTo`        | Tokens involved.                         |
+| `sendAmount`, `receiveAmount` | Amounts.                                 |
+| `receiverAddress`             | Destination address.                     |
+| `srcChainId`, `destChainId`   | Chains involved.                         |
+| `connectedAccount`            | Connected wallet address.                |
+| `side`                        | `"BUY" \| "SELL"`.                       |
 
 **Sub-event-specific:** `txHash`, `callsId`, `order` (Delta), `txReceipt`, `callsReceipt`, `error`, `cancelTxDetails`.
 
@@ -297,16 +289,16 @@ Fires when the user replaces a pending swap tx with a "cancel" tx (same nonce, z
 
 **Params:**
 
-| Param | Description |
-|---|---|
-| `txType` | `"SWAP"` (only swap tx cancellations are supported today). |
-| `originalTxHash` | Hash of the tx being cancelled. |
-| `chainId` | Chain. |
-| `originalTx` | (if sent+) The original tx response. |
-| `replacementRequest` | (if sent+) The replacement (cancel) tx request. |
-| `replacementTxHash` | (if sent+) Hash of the cancel tx. |
-| `replacementTxReceipt` | (if confirmed) Receipt of the mined cancel tx. |
-| `error` | (if failed) Error object. |
+| Param                  | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `txType`               | `"SWAP"` (only swap tx cancellations are supported today). |
+| `originalTxHash`       | Hash of the tx being cancelled.                            |
+| `chainId`              | Chain.                                                     |
+| `originalTx`           | (if sent+) The original tx response.                       |
+| `replacementRequest`   | (if sent+) The replacement (cancel) tx request.            |
+| `replacementTxHash`    | (if sent+) Hash of the cancel tx.                          |
+| `replacementTxReceipt` | (if confirmed) Receipt of the mined cancel tx.             |
+| `error`                | (if failed) Error object.                                  |
 
 ---
 
@@ -323,14 +315,14 @@ Fires when the user cancels a Delta or OTC order.
 
 **Params:**
 
-| Param | Description |
-|---|---|
-| `orderType` | `"DELTA" \| "OTC"`. |
-| `orderSubType` | Subtype (varies by order type). |
-| `orderIds` | (Delta) Array of order IDs to cancel. |
-| `orderHash` | (OTC) Hash of the order. |
+| Param                            | Description                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------- |
+| `orderType`                      | `"DELTA" \| "OTC"`.                                                                         |
+| `orderSubType`                   | Subtype (varies by order type).                                                             |
+| `orderIds`                       | (Delta) Array of order IDs to cancel.                                                       |
+| `orderHash`                      | (OTC) Hash of the order.                                                                    |
 | `txHash`, `chainId`, `txReceipt` | (if sent/confirmed) Required for OTC; optional for Delta (only ETH Delta orders have a tx). |
-| `error` | (if failed) Error object. |
+| `error`                          | (if failed) Error object.                                                                   |
 
 ```tsx
 <Widget
@@ -394,13 +386,13 @@ Fires whenever any input changes in any trading form.
 
 Common to all variants:
 
-| Param | Description |
-|---|---|
-| `form` | `"swap" \| "limit" \| "otc" \| "twap"`. |
-| `tokenFrom` | `MinTradeFlowToken` — source token. |
-| `tokenTo` | `MinTradeFlowToken` — destination token (may be absent until selected). |
-| `srcChainId`, `destChainId` | Chain IDs (`destChainId` may be absent). |
-| `receiverAddress` | Optional — defaults to connected account. |
+| Param                       | Description                                                             |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `form`                      | `"swap" \| "limit" \| "otc" \| "twap"`.                                 |
+| `tokenFrom`                 | `MinTradeFlowToken` — source token.                                     |
+| `tokenTo`                   | `MinTradeFlowToken` — destination token (may be absent until selected). |
+| `srcChainId`, `destChainId` | Chain IDs (`destChainId` may be absent).                                |
+| `receiverAddress`           | Optional — defaults to connected account.                               |
 
 Variant-specific:
 
@@ -436,14 +428,14 @@ Fires when price info refreshes or the price-query state changes.
 
 **Params:**
 
-| Param | Description |
-|---|---|
-| `priceMode` | `"delta" \| "market"`. |
-| `price` | Price object (`DeltaPrice \| BridgePrice` for Delta, `OptimalRate` for market). |
-| `isLoading` | (`PriceQueryUpdate`) First-time fetch in progress. |
-| `isFetching` | (`PriceQueryUpdate`) Refetching. |
-| `isError` | (`PriceQueryUpdate`) Whether the query errored. |
-| `error` | (`PriceQueryUpdate`) Error or `null`. |
+| Param        | Description                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
+| `priceMode`  | `"delta" \| "market"`.                                                          |
+| `price`      | Price object (`DeltaPrice \| BridgePrice` for Delta, `OptimalRate` for market). |
+| `isLoading`  | (`PriceQueryUpdate`) First-time fetch in progress.                              |
+| `isFetching` | (`PriceQueryUpdate`) Refetching.                                                |
+| `isError`    | (`PriceQueryUpdate`) Whether the query errored.                                 |
+| `error`      | (`PriceQueryUpdate`) Error or `null`.                                           |
 
 ```tsx
 <Widget
