@@ -29,7 +29,9 @@
             "group": "Learn about Velora",
             "pages": [
               "overview/why-velora",
-              "overview/quickstart"
+              "overview/quickstart",
+              "overview/monetization",
+              "overview/pro-api-accounts"
             ]
           },
           {
@@ -50,15 +52,7 @@
             "group": "API",
             "pages": [
               "integrate/api",
-              {
-                "group": "Examples",
-                "pages": [
-                  "integrate/examples/typescript",
-                  "integrate/examples/go",
-                  "integrate/examples/python",
-                  "integrate/examples/rust"
-                ]
-              }
+              "integrate/rate-limits"
             ]
           },
           {
@@ -123,6 +117,15 @@
             ]
           },
           {
+            "group": "Examples",
+            "pages": [
+              "delta/examples/typescript",
+              "delta/examples/go",
+              "delta/examples/python",
+              "delta/examples/rust"
+            ]
+          },
+          {
             "group": "Reference",
             "pages": [
               "delta/order-lifecycle-and-status-codes",
@@ -139,6 +142,15 @@
             "pages": [
               "market/overview",
               "market/how-it-works"
+            ]
+          },
+          {
+            "group": "Examples",
+            "pages": [
+              "market/examples/typescript",
+              "market/examples/go",
+              "market/examples/python",
+              "market/examples/rust"
             ]
           }
         ]
@@ -221,9 +233,6 @@
             "pages": [
               "api-reference/introduction",
               "api-reference/authentication",
-              "api-reference/rate-limits",
-              "api-reference/error-reference",
-              "api-reference/versioning-policy",
               "api-reference/troubleshooting"
             ]
           },
@@ -374,6 +383,10 @@
     { "source": "/overview/security/audits/augustus-v6-2", "destination": "/resources/security/audits/augustus-v6-2", "permanent": true },
     { "source": "/overview/security/audits/augustus-v6-1", "destination": "/resources/security/audits/augustus-v6-1", "permanent": true },
     { "source": "/overview/security/audits/augustus-v5", "destination": "/resources/security/audits/augustus-v5", "permanent": true },
-    { "source": "/overview/security/audits/augustus-rfq", "destination": "/resources/security/audits/augustus-rfq", "permanent": true }
+    { "source": "/overview/security/audits/augustus-rfq", "destination": "/resources/security/audits/augustus-rfq", "permanent": true },
+    { "source": "/integrate/examples/typescript", "destination": "/market/examples/typescript", "permanent": true },
+    { "source": "/integrate/examples/go", "destination": "/market/examples/go", "permanent": true },
+    { "source": "/integrate/examples/python", "destination": "/market/examples/python", "permanent": true },
+    { "source": "/integrate/examples/rust", "destination": "/market/examples/rust", "permanent": true }
   ]
 }

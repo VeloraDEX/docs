@@ -1,0 +1,75 @@
+---
+title: "Python"
+description: "End-to-end Python example — call the Velora Delta API to quote a gasless 1 ETH → USDC intent via requests."
+keywords: ["api","delta","python","requests","example","intent"]
+---
+
+A minimal Python script that calls `GET /quote?mode=DELTA` and prints the indicative `destAmount`, `deadline`, and `hmac` from the returned `delta` payload. Uses `requests`.
+
+## File tree
+
+```text
+my-app/
+├─ requirements.txt
+└─ quote.py
+```
+
+## Install
+
+```bash
+mkdir my-app && cd my-app
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install requests
+```
+
+## `quote.py`
+
+```python
+import requests
+
+params = {
+    "srcToken":     "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # ETH
+    "destToken":    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",  # USDC
+    "amount":       "1000000000000000000",                          # 1 ETH
+    "srcDecimals":  18,
+    "destDecimals": 6,
+    "side":         "SELL",
+    "chainId":      1,
+    "mode":         "DELTA",
+    "userAddress":  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "partner":      "my-app-name",
+}
+
+res = requests.get("https://api.velora.xyz/quote", params=params, timeout=10)
+res.raise_for_status()
+
+delta = res.json()["delta"]
+
+print("destAmount:", delta["destAmount"])
+print("deadline:  ", delta["deadline"])
+print("hmac:      ", delta["hmac"])
+```
+
+## Run it
+
+```bash
+python quote.py
+```
+
+You should see the indicative `destAmount` (USDC, 6 decimals), the order `deadline` (unix seconds), and the `hmac` you must pass through verbatim when building the order.
+
+## Next: build, sign, submit
+
+Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` field) to get EIP-712 typed data. Sign it with an ERC-2098 compact signature, then `POST /delta/orders` with the order + signature. See [Delta → How it works](/delta/how-it-works).
+
+<Warning>
+  Pass the `delta` payload **verbatim** to `/delta/orders/build`. Mutating any field (including `hmac`) will cause the build call to reject.
+</Warning>
+
+## Related pages
+
+- [Delta overview](/delta/overview) — when to use Delta intents.
+- [Delta → How it works](/delta/how-it-works) — quote → build → sign → auction → settle.
+- [Delta API reference](/api-reference/delta/overview) — full parameter list.
+- [EIP-712 typed data reference](/delta/eip-712-typed-data-reference) — domain and types.

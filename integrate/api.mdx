@@ -26,19 +26,13 @@ See the **[API Reference →](/api-reference/introduction)** for endpoints, para
 
 ## Examples
 
-End-to-end snippets that call `GET /prices` for a 1 ETH → USDC quote on Ethereum mainnet.
+Language-specific end-to-end snippets live next to the API they target:
 
 <CardGroup cols={2}>
-  <Card title="TypeScript" icon="js" href="/integrate/examples/typescript">
-    Node.js or browser via `fetch`.
+  <Card title="Market API examples" icon="chart-line" href="/market/examples/typescript">
+    `GET /prices` quote for 1 ETH → USDC. TypeScript, Go, Python, Rust.
   </Card>
-  <Card title="Go" icon="golang" href="/integrate/examples/go">
-    `net/http` with `url.Values`.
-  </Card>
-  <Card title="Python" icon="python" href="/integrate/examples/python">
-    `requests` with kwargs.
-  </Card>
-  <Card title="Rust" icon="rust" href="/integrate/examples/rust">
-    `reqwest` with `tokio`.
+  <Card title="Delta API examples" icon="bolt" href="/delta/examples/typescript">
+    `GET /quote?mode=DELTA` for a gasless intent quote. TypeScript, Go, Python, Rust.
   </Card>
 </CardGroup>

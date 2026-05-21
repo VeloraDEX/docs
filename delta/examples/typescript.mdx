@@ -1,0 +1,97 @@
+---
+title: "TypeScript"
+description: "End-to-end TypeScript example — call the Velora Delta API to quote a gasless 1 ETH → USDC intent via plain fetch."
+keywords: ["api","delta","typescript","node","fetch","example","intent"]
+---
+
+A minimal Node script that calls `GET /quote?mode=DELTA` and prints the indicative `destAmount`, `deadline`, and `hmac` from the returned `delta` payload. No SDK — just `fetch`.
+
+## File tree
+
+```text
+my-app/
+├─ package.json
+├─ tsconfig.json
+└─ src/
+   └─ quote.ts
+```
+
+## Install
+
+<CodeGroup>
+
+```bash pnpm
+mkdir my-app && cd my-app
+pnpm init
+pnpm add -D typescript tsx @types/node
+pnpm tsc --init
+```
+
+```bash npm
+mkdir my-app && cd my-app
+npm init -y
+npm install -D typescript tsx @types/node
+npx tsc --init
+```
+
+```bash yarn
+mkdir my-app && cd my-app
+yarn init -y
+yarn add -D typescript tsx @types/node
+yarn tsc --init
+```
+
+</CodeGroup>
+
+## `src/quote.ts`
+
+```ts
+const params = new URLSearchParams({
+  srcToken:     '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
+  destToken:    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount:       '1000000000000000000', // 1 ETH
+  srcDecimals:  '18',
+  destDecimals: '6',
+  side:         'SELL',
+  chainId:      '1',
+  mode:         'DELTA',
+  userAddress:  '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  partner:      'my-app-name',
+});
+
+const res = await fetch(`https://api.velora.xyz/quote?${params}`);
+
+if (!res.ok) {
+  throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+}
+
+const { delta } = await res.json();
+
+console.log('destAmount:', delta.destAmount);
+console.log('deadline:  ', delta.deadline);
+console.log('hmac:      ', delta.hmac);
+```
+
+## Run it
+
+```bash
+pnpm tsx src/quote.ts
+```
+
+You should see the indicative `destAmount` (USDC, 6 decimals), the order `deadline` (unix seconds), and the `hmac` you must pass through verbatim when building the order.
+
+## Next: build, sign, submit
+
+Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` field) to get EIP-712 typed data. Sign it with an ERC-2098 compact signature, then `POST /delta/orders` with the order + signature. See [Delta → How it works](/delta/how-it-works).
+
+<Warning>
+  Pass the `delta` payload **verbatim** to `/delta/orders/build`. Mutating any field (including `hmac`) will cause the build call to reject.
+</Warning>
+
+## Related pages
+
+- [Delta overview](/delta/overview) — when to use Delta intents.
+- [Delta → How it works](/delta/how-it-works) — quote → build → sign → auction → settle.
+- [Delta API reference](/api-reference/delta/overview) — full parameter list.
+- [EIP-712 typed data reference](/delta/eip-712-typed-data-reference) — domain and types.
+- [SDK](/sdk/overview) — typed TypeScript wrapper if you'd rather not handle HTTP yourself.
