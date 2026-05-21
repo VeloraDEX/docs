@@ -40,21 +40,6 @@
               "overview/trading-concepts/twap",
               "overview/trading-concepts/otc"
             ]
-          },
-          {
-            "group": "Security",
-            "pages": [
-              {
-                "group": "Audits",
-                "pages": [
-                  "overview/security/audits",
-                  "overview/security/audits/augustus-v6-2",
-                  "overview/security/audits/augustus-v6-1",
-                  "overview/security/audits/augustus-v5",
-                  "overview/security/audits/augustus-rfq"
-                ]
-              }
-            ]
           }
         ]
       },
@@ -302,7 +287,17 @@
           {
             "group": "Reference",
             "pages": [
-              "resources/chains-and-contracts"
+              "resources/chains-and-contracts",
+              {
+                "group": "Audits",
+                "pages": [
+                  "resources/security/audits",
+                  "resources/security/audits/augustus-v6-2",
+                  "resources/security/audits/augustus-v6-1",
+                  "resources/security/audits/augustus-v5",
+                  "resources/security/audits/augustus-rfq"
+                ]
+              }
             ]
           },
           {
@@ -374,6 +369,11 @@
     { "source": "/api/velora-api/velora-market-api/master/api-v5", "destination": "/api-reference/market/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/velora-delta", "destination": "/delta/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/aggregation-protocol", "destination": "/market/overview", "permanent": true },
-    { "source": "/intro-to-velora/protocols/augustus-rfq", "destination": "/api-reference/rfq/overview", "permanent": true }
+    { "source": "/intro-to-velora/protocols/augustus-rfq", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/overview/security/audits", "destination": "/resources/security/audits", "permanent": true },
+    { "source": "/overview/security/audits/augustus-v6-2", "destination": "/resources/security/audits/augustus-v6-2", "permanent": true },
+    { "source": "/overview/security/audits/augustus-v6-1", "destination": "/resources/security/audits/augustus-v6-1", "permanent": true },
+    { "source": "/overview/security/audits/augustus-v5", "destination": "/resources/security/audits/augustus-v5", "permanent": true },
+    { "source": "/overview/security/audits/augustus-rfq", "destination": "/resources/security/audits/augustus-rfq", "permanent": true }
   ]
 }
