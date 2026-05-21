@@ -29,12 +29,11 @@
             "group": "Learn about Velora",
             "pages": [
               "overview/why-velora",
-              "overview/product-stack",
               "overview/quickstart"
             ]
           },
           {
-            "group": "Trading concepts",
+            "group": "Product stack",
             "pages": [
               "overview/trading-concepts/swaps",
               "overview/trading-concepts/limit-orders",
@@ -144,15 +143,8 @@
           {
             "group": "Get started",
             "pages": [
-              "market/overview"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "api-reference/market/overview",
-              "api-reference/market/prices",
-              "api-reference/market/transactions"
+              "market/overview",
+              "market/how-it-works"
             ]
           }
         ]
@@ -372,7 +364,7 @@
     { "source": "/api/augustusrfq/api-references/nft/:slug*", "destination": "/api-reference/rfq/overview", "permanent": true },
     { "source": "/api/velora-api/velora-market-api/master/api-v5", "destination": "/api-reference/market/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/velora-delta", "destination": "/delta/overview", "permanent": true },
-    { "source": "/intro-to-velora/protocols/aggregation-protocol", "destination": "/overview/product-stack", "permanent": true },
+    { "source": "/intro-to-velora/protocols/aggregation-protocol", "destination": "/market/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/augustus-rfq", "destination": "/api-reference/rfq/overview", "permanent": true }
   ]
 }

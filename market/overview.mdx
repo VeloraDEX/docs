@@ -42,11 +42,14 @@ curl -X POST "https://api.velora.xyz/transactions/:chainId" -d @price.json
 
 ## Next steps
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
+  <Card title="Quickstart" icon="play" href="/overview/quickstart">
+    cURL the full flow end-to-end.
+  </Card>
+  <Card title="How it works" icon="diagram-project" href="/market/how-it-works">
+    Price, build, approve, settle — the full Market lifecycle.
+  </Card>
   <Card title="API Reference" icon="book" href="/api-reference/market/overview">
     Endpoints, parameters, and response schemas.
-  </Card>
-  <Card title="SDK" icon="code" href="/sdk/overview">
-    Use `@velora-dex/sdk` to integrate quotes and swaps from JS/TS.
   </Card>
 </CardGroup>
