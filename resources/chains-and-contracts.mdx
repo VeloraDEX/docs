@@ -1,12 +1,18 @@
 ---
 title: "Chains & contracts"
 description: "Canonical reference for Augustus, Delta, Portikus, and AugustusRFQ contract addresses across every supported EVM chain."
-keywords: ["chains","contracts","addresses","deployments"]
+keywords: ["chains", "contracts", "addresses", "deployments"]
 ---
 
 This page is the single source of truth for contract addresses across Velora's stack. Every other page links here rather than inlining addresses, with one exception: failure-mode rows on API reference pages may cite a specific deployed address inline when the address is the actual diagnostic.
 
-<Note>This page is a stub. The full per-chain address table — Augustus v6.2, Augustus v6.1, Augustus v5, Delta, Portikus settlement, AugustusRFQ — will land before the v3 docs go live. For the up-to-date list today, see the [open-source contracts repo](https://github.com/VeloraDEX) or contact [support@velora.xyz](mailto:support@velora.xyz).</Note>
+<Note>
+  This page is a stub. The full per-chain address table — Augustus v6.2,
+  Augustus v6.1, Augustus v5, Delta, Portikus settlement, AugustusRFQ — will
+  land before the v3 docs go live. For the up-to-date list today, see the
+  [open-source contracts repo](https://github.com/VeloraDEX) or contact
+  [support@velora.xyz](mailto:support@velora.xyz).
+</Note>
 
 ## Supported chains
 
@@ -19,9 +25,8 @@ Velora supports the following EVM networks. Each chain has Augustus v6.2 (Market
 - Base (8453)
 - Arbitrum One (42161)
 - Avalanche (43114)
-- Polygon zkEVM (1101)
-- Sonic (146)
 - Unichain (130)
+- Gnosis (100)
 
 The authoritative supported-chain list is queryable at runtime via `GET /chains` on the Market API. Code should treat this page as a human-readable index and `/chains` as the runtime source of truth.
 

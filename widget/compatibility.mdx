@@ -1,13 +1,144 @@
 ---
 title: "Compatibility"
-description: "Tested environments and known caveats — Next.js, Remix, Vite, and more."
-keywords: ["widget","compatibility"]
+description: "Tested environments, peer-dependency ranges, SSR caveats, and performance tips for @velora-dex/widget."
+keywords: ["widget","compatibility","ssr","nextjs","vite","tailwind"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+## Peer dependencies
 
-## Parameters
+| Package | Version |
+|---|---|
+| `react` | `18.x` or `19.x` |
+| `react-dom` | `18.x` or `19.x` |
+| `@tanstack/react-query` | `^5.90` |
 
-## Examples
+A `QueryClientProvider` from `@tanstack/react-query` must wrap `<Widget />` somewhere above it in the tree.
+
+## Tested frameworks
+
+| Framework | Status | Notes |
+|---|---|---|
+| Vite + React | ✅ Works out of the box | See [examples/react](/widget/examples/react). |
+| Next.js (app router) | ✅ Works with client-only mount | Use `dynamic(... { ssr: false })`. See [examples/nextjs](/widget/examples/nextjs). |
+| Next.js (pages router) | ✅ Works with `dynamic` | Same dynamic-import pattern as app router. |
+| Create React App | ✅ Works | No special setup beyond `QueryClientProvider`. |
+
+## SSR caveat
+
+The widget reads `window`, `localStorage`, and `prefers-color-scheme` on mount. It does **not** support server-side rendering. In Next.js (or any SSR/SSG framework), gate the import:
+
+```tsx
+// Next.js app router
+import dynamic from "next/dynamic";
+
+const Widget = dynamic(
+  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
+  { ssr: false }
+);
+```
+
+## Tailwind v4
+
+The widget ships compiled Tailwind v4 styles scoped under the `.velora-widget` class. You don't need Tailwind in your host app — the bundled styles are self-contained.
+
+If your host app **does** use Tailwind, the widget's scoping prevents its variables from leaking into your global stylesheet, and vice versa. See [Customize](/widget/customize#css-scoping).
+
+## Stylesheet auto-injection
+
+The compiled stylesheet is auto-injected via `vite-plugin-lib-inject-css` when you import `Widget`. No explicit `.css` import is normally needed.
+
+If your bundler strips side-effect imports aggressively (some custom Webpack / Rollup setups), force-include the stylesheet:
+
+```tsx
+import "@velora-dex/widget/styles.css";
+```
+
+## Error boundaries
+
+Wrap the widget in an error boundary for production. A widget crash shouldn't take down your whole page.
+
+```tsx
+import { Component, type ReactNode } from "react";
+import { Widget } from "@velora-dex/widget";
+
+class WidgetErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div>The trading widget hit an error. Please refresh.</div>;
+    }
+    return this.props.children;
+  }
+}
+
+export function SafeWidget() {
+  return (
+    <WidgetErrorBoundary>
+      <Widget />
+    </WidgetErrorBoundary>
+  );
+}
+```
+
+## Performance tips
+
+### Memoize non-primitive config
+
+Passing inline arrays or objects forces re-mount on every render. Memoize them.
+
+```tsx
+import { useMemo } from "react";
+import { Widget } from "@velora-dex/widget";
+
+function MyWidget({ theme }) {
+  const config = useMemo(
+    () => ({
+      theme,
+      tradeModes: ["swap", "limit"],
+      partnerConfig: { partner: "my-app-name" },
+    }),
+    [theme]
+  );
+
+  return <Widget config={config} />;
+}
+```
+
+### Lazy-load when offscreen
+
+If the widget isn't above the fold, defer it.
+
+```tsx
+import { lazy, Suspense } from "react";
+
+const Widget = lazy(() =>
+  import("@velora-dex/widget").then((m) => ({ default: m.Widget }))
+);
+
+export function DeferredWidget() {
+  return (
+    <Suspense fallback={<div>Loading…</div>}>
+      <Widget />
+    </Suspense>
+  );
+}
+```
+
+### Bundle size
+
+The widget is large — it ships wallet connectors, EVM tooling, and the full trading UI. Lazy-loading and route-based code splitting keep the initial bundle small.
+
+## Known caveats
+
+- **Server-side rendering** is not supported (see SSR caveat above).
+- **Strict-mode double-mount** in dev triggers a brief double-fetch of price quotes — harmless and confined to development.
+- **Sandboxed iframes** without `allow-popups` and `allow-storage-access-by-user-activation` will break wallet-connection popups.
 
 ## Related pages
+
+- [Install](/widget/install) — install + render.
+- [examples/react](/widget/examples/react), [examples/nextjs](/widget/examples/nextjs) — concrete setups.
+- [Customize](/widget/customize) — CSS scoping details.

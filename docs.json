@@ -92,10 +92,8 @@
               "widget/install",
               "widget/configure",
               "widget/customize",
-              "widget/variants",
               "widget/wallet-management",
               "widget/events-and-callbacks",
-              "widget/internationalization",
               "widget/widget-api-reference",
               "widget/monetize",
               "widget/compatibility",
@@ -103,8 +101,7 @@
                 "group": "Examples",
                 "pages": [
                   "widget/examples/react",
-                  "widget/examples/nextjs",
-                  "widget/examples/vanilla-html-embed"
+                  "widget/examples/nextjs"
                 ]
               }
             ]

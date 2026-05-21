@@ -1,15 +1,118 @@
 ---
-title: "Monetize (fees, partner key)"
-description: "Configure partner fees on the widget and collect revenue per trade."
-keywords: ["widget","fees","monetization"]
+title: "Monetize"
+description: "Collect partner fees or surplus revenue from every swap routed through the widget."
+keywords: ["widget","fees","monetization","partner","referrer"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The widget supports two monetization surfaces:
 
-## When to use this
+- **`partnerConfig`** — fee or surplus share on every swap that completes through your integration.
+- **`referrerConfig`** — a referrer wallet that receives a share of protocol revenue.
 
-## Quickstart
+Both are optional and independent.
 
-## Examples
+## Partner fees
+
+Pass `partnerConfig` inside `config` to identify your integration and (optionally) take a cut of each swap.
+
+```tsx
+<Widget
+  config={{
+    partnerConfig: {
+      partner: "my-app-name",
+      partnerAddress: "0xYourFeeCollector",
+      partnerFeeBps: 25,
+    },
+  }}
+/>
+```
+
+### `PartnerConfig` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `partner` | `string` | Your partner-key string (e.g. `"my-app-name"`). Used for attribution and analytics. |
+| `partnerAddress` | `Address` | Optional. Ethereum address that receives the fee. Overrides the address derived from `partner`. |
+| `partnerFeeBps` | `number` | Optional. Fee in basis points. `25` = 0.25%. Max `200` (2%). |
+| `partnerTakesSurplus` | `boolean` | Optional. When `true`, you receive 50% of swap surplus instead of a fixed fee. Defaults to `false`. |
+
+<Note>
+**Precedence.** If both `partnerFeeBps` and `partnerTakesSurplus` are set, `partnerFeeBps` wins. To take surplus instead of a fixed fee, set `partnerTakesSurplus: true` and **omit** `partnerFeeBps`.
+</Note>
+
+Either `partner` or `partnerAddress` must be present for partner features to activate.
+
+### Fee vs surplus — which to pick
+
+| | Fixed fee (`partnerFeeBps`) | Surplus share (`partnerTakesSurplus`) |
+|---|---|---|
+| Revenue | Predictable per-trade cut | Variable — depends on routing edge |
+| User cost | Worse quotes (fee comes off the top) | Same quote as no-fee — surplus is the *better-than-quoted* portion |
+| Max | 2% (`partnerFeeBps: 200`) | 50% of surplus |
+| Best for | Mass-market integrations where a known cut matters | High-volume integrations that prioritize the user-facing rate |
+
+### Example — fixed-fee integration
+
+```tsx
+import { Widget } from "@velora-dex/widget";
+
+export function Swap() {
+  return (
+    <Widget
+      config={{
+        theme: "light",
+        partnerConfig: {
+          partner: "my-app-name",
+          partnerAddress: "0xYourFeeCollector",
+          partnerFeeBps: 25, // 0.25%
+        },
+      }}
+    />
+  );
+}
+```
+
+### Example — surplus-share integration
+
+```tsx
+<Widget
+  config={{
+    partnerConfig: {
+      partner: "my-app-name",
+      partnerAddress: "0xYourFeeCollector",
+      partnerTakesSurplus: true,
+    },
+  }}
+/>
+```
+
+## Referrer revenue
+
+Pass a `referrerConfig` to attribute swaps to a referrer wallet that receives a share of protocol revenue. This is independent of `partnerConfig` — you can set one, both, or neither.
+
+```tsx
+<Widget
+  config={{
+    referrerConfig: {
+      referrerAddress: "0xReferrerWallet",
+    },
+  }}
+/>
+```
+
+### `ReferrerConfig` fields
+
+| Field | Type | Description |
+|---|---|---|
+| `referrerAddress` | `Address` | Ethereum address that receives the referrer share. Required to activate referrer attribution. |
+
+## Production tips
+
+- **Never inline the partner key in source you publish unmodified.** Load `partner` from an environment variable so different builds (staging, production, white-label) can use different keys.
+- **Memoize `partnerConfig`.** Like every non-primitive config field, a new object every render forces re-mount. Move it to a module-level constant or `useMemo`.
+- **Audit the partner address.** Once a swap is routed, fees pay to `partnerAddress` on-chain. Treat it like any other treasury address.
 
 ## Related pages
+
+- [Configure](/widget/configure) — all other config fields.
+- [Widget API reference](/widget/widget-api-reference) — full `PartnerConfig` / `ReferrerConfig` types.

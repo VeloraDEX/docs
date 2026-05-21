@@ -1,15 +1,129 @@
 ---
-title: "React"
-description: "Working widget integration example for a plain React app."
-keywords: ["widget","react","example"]
+title: "React (Vite)"
+description: "End-to-end widget integration for a Vite + React app — full file tree, install, and mount."
+keywords: ["widget","react","vite","example"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+A minimal Vite + React app that mounts the Velora Widget. Copy each file and run `pnpm dev` (or `npm run dev`).
 
-## When to use this
+## File tree
 
-## Quickstart
+```text
+my-app/
+├─ index.html
+├─ package.json
+├─ vite.config.ts
+└─ src/
+   ├─ main.tsx
+   └─ App.tsx
+```
 
-## Examples
+## Install
+
+<CodeGroup>
+
+```bash pnpm
+pnpm create vite@latest my-app -- --template react-ts
+cd my-app
+pnpm add @velora-dex/widget @tanstack/react-query
+```
+
+```bash npm
+npm create vite@latest my-app -- --template react-ts
+cd my-app
+npm install @velora-dex/widget @tanstack/react-query
+```
+
+```bash yarn
+yarn create vite my-app --template react-ts
+cd my-app
+yarn add @velora-dex/widget @tanstack/react-query
+```
+
+</CodeGroup>
+
+## `src/App.tsx`
+
+```tsx
+import { useMemo } from "react";
+import { Widget } from "@velora-dex/widget";
+
+export default function App() {
+  const config = useMemo(
+    () => ({
+      theme: "light" as const,
+      partnerConfig: { partner: "my-app-name" },
+    }),
+    []
+  );
+
+  return (
+    <div style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+      <Widget config={config} />
+    </div>
+  );
+}
+```
+
+## `src/main.tsx`
+
+```tsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App";
+
+const queryClient = new QueryClient();
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </StrictMode>
+);
+```
+
+## Run it
+
+```bash
+pnpm dev
+```
+
+Open the printed `http://localhost:5173` URL. You should see the widget render with the **Connect Wallet** button and a swap form.
+
+## Next: wire in events and a partner key
+
+```tsx
+import { Widget } from "@velora-dex/widget";
+
+<Widget
+  config={{
+    theme: "light",
+    partnerConfig: {
+      partner: import.meta.env.VITE_PARTNER_KEY,
+      partnerFeeBps: 25,
+    },
+  }}
+  events={{
+    onSwap: ({ event }) => {
+      if (event.name === "Swap:confirmed") {
+        console.log("Swap confirmed", event.params.txHash);
+      }
+    },
+  }}
+/>;
+```
+
+Add the partner key to `.env`:
+
+```env
+VITE_PARTNER_KEY=my-app-name
+```
 
 ## Related pages
+
+- [Install](/widget/install) — package install and the basic setup.
+- [Configure](/widget/configure) — restrict chains, modes, hide UI.
+- [Monetize](/widget/monetize) — partner fees and referrer.
+- [Events & callbacks](/widget/events-and-callbacks) — every event you can subscribe to.

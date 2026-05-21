@@ -1,15 +1,191 @@
 ---
-title: "Next.js"
-description: "Working widget integration example for a Next.js app router project."
-keywords: ["widget","nextjs","example"]
+title: "Next.js (app router)"
+description: "End-to-end widget integration for Next.js app router — client-only mount, providers, and a /swap route."
+keywords: ["widget","nextjs","example","app-router"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+A Next.js 14+ app-router integration that mounts the Velora Widget at `/swap`. The widget reads `window` and `localStorage` on mount, so it must be client-only — we use `next/dynamic` with `ssr: false`.
 
-## When to use this
+## File tree
 
-## Quickstart
+```text
+my-app/
+├─ package.json
+├─ next.config.js
+└─ src/app/
+   ├─ layout.tsx
+   ├─ providers.tsx
+   ├─ page.tsx
+   └─ swap/
+      ├─ page.tsx
+      └─ widget.tsx
+```
 
-## Examples
+## Install
+
+<CodeGroup>
+
+```bash pnpm
+pnpm create next-app@latest my-app --typescript --app
+cd my-app
+pnpm add @velora-dex/widget @tanstack/react-query
+```
+
+```bash npm
+npx create-next-app@latest my-app --typescript --app
+cd my-app
+npm install @velora-dex/widget @tanstack/react-query
+```
+
+```bash yarn
+yarn create next-app my-app --typescript --app
+cd my-app
+yarn add @velora-dex/widget @tanstack/react-query
+```
+
+</CodeGroup>
+
+## `src/app/providers.tsx`
+
+A client-side wrapper for `QueryClientProvider`. The widget needs this in its parent tree.
+
+```tsx
+"use client";
+
+import { useState, type ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+export function Providers({ children }: { children: ReactNode }) {
+  const [queryClient] = useState(() => new QueryClient());
+  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+}
+```
+
+## `src/app/layout.tsx`
+
+```tsx
+import { Providers } from "./providers";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+## `src/app/swap/widget.tsx`
+
+The widget itself, wrapped in `dynamic(... { ssr: false })`.
+
+```tsx
+"use client";
+
+import dynamic from "next/dynamic";
+
+const Widget = dynamic(
+  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
+  { ssr: false, loading: () => <div>Loading widget…</div> }
+);
+
+export default function ClientWidget() {
+  return (
+    <Widget
+      config={{
+        theme: "light",
+        partnerConfig: {
+          partner: process.env.NEXT_PUBLIC_PARTNER_KEY,
+        },
+      }}
+    />
+  );
+}
+```
+
+## `src/app/swap/page.tsx`
+
+```tsx
+import ClientWidget from "./widget";
+
+export default function SwapPage() {
+  return (
+    <main style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+      <ClientWidget />
+    </main>
+  );
+}
+```
+
+## `.env.local`
+
+```env
+NEXT_PUBLIC_PARTNER_KEY=my-app-name
+```
+
+Restart `next dev` after creating or changing `.env.local`.
+
+## Run it
+
+```bash
+pnpm dev
+```
+
+Visit [http://localhost:3000/swap](http://localhost:3000/swap). You should see the widget render with **Connect Wallet** in the header.
+
+## Why `ssr: false`?
+
+The widget reads `window`, `localStorage`, and `prefers-color-scheme` on mount. None of those exist during server rendering. `dynamic(... { ssr: false })` defers the import to the browser, so the widget only ever runs client-side.
+
+If you forget `ssr: false`, you'll see a hydration-mismatch error or a `window is not defined` exception.
+
+## With dApp-mode wallet
+
+If your app already manages the wallet (wagmi, RainbowKit, or any other host-side wallet library), switch to dApp mode and pass the provider:
+
+```tsx
+"use client";
+
+import dynamic from "next/dynamic";
+import { useAccount, useWalletClient } from "wagmi";
+
+const Widget = dynamic(
+  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
+  { ssr: false }
+);
+
+export default function ClientWidget() {
+  const { connector } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  // Hand the EIP-1193 provider to the widget once a wallet is connected.
+  const provider = walletClient?.transport;
+
+  return (
+    <Widget
+      config={{
+        widgetMode: "dapp",
+        excludeUI: ["wallet-management"],
+      }}
+      provider={provider}
+      events={{
+        onConnectWalletClick: () => {
+          // host-app wallet modal
+          openConnectModal();
+        },
+      }}
+    />
+  );
+}
+```
+
+See [Wallet management](/widget/wallet-management) for the full pattern.
 
 ## Related pages
+
+- [Install](/widget/install) — package install and basic setup.
+- [Wallet management](/widget/wallet-management) — standalone vs dApp mode.
+- [Compatibility](/widget/compatibility) — full SSR notes.
+- [React example](/widget/examples/react) — same widget on a Vite stack.

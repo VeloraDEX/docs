@@ -1,13 +1,250 @@
 ---
 title: "Widget API reference"
-description: "Props, methods, event payloads, and theme schema for @velora-dex/widget."
-keywords: ["widget","api","reference"]
+description: "Props, exports, and TypeScript types for @velora-dex/widget."
+keywords: ["widget","api","reference","types","props"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+This page is the type-and-prop reference for `@velora-dex/widget`. For task-oriented walkthroughs, see [Configure](/widget/configure), [Wallet management](/widget/wallet-management), [Monetize](/widget/monetize), and [Events & callbacks](/widget/events-and-callbacks).
 
-## Parameters
+## Public exports
 
-## Examples
+Everything below can be imported from `@velora-dex/widget`:
+
+| Export | Kind | Purpose |
+|---|---|---|
+| `Widget` | component | The main widget React component. |
+| `defaults` | value | `{ tokenLists, chainIds, tradeModes }` — defaults the widget uses when the corresponding config option is omitted. |
+| `WidgetProps` | type | Props of `<Widget />`. |
+| `WidgetConfig` | type | Configuration object passed via the `config` prop. |
+| `WidgetTheme` | type | `"light" \| "dark"`. |
+| `WidgetElements` | type | Keys accepted by `config.excludeUI`. |
+| `EIP1193ProviderLax` | type | Provider shape accepted by the `provider` prop. |
+| `SupportedChainId` | type | Union of supported chain IDs. |
+| `SwapMode` | type | `"market" \| "delta"` — used in event payloads. |
+| `TradeMode` | type | `"swap" \| "limit" \| "otc" \| "twap"`. |
+| `FormInputProps` | type | Shape of the `input` prop. |
+| `MinTradeFlowToken` | type | Token shape used in event payload `tokenFrom` / `tokenTo`. |
+| `WidgetState`, `AccountState`, `SettingsState`, `SwapFormState`, `LimitOrderFormState`, `OTCOrderFormState`, `TwapFormState`, `TokenFormState` | type | Pieces of widget state passed to every event callback as `state`. |
+| `WidgetEventCallbacks` | type | Shape of the `events` prop. |
+| `OnConnectWallet`, `OnAllowToken`, `OnWrapETH`, `OnSwap`, `OnTwapOrder`, `OnLimitOrder`, `OnOTCOrder`, `OnSettingsChange`, `OnCancelOrder`, `OnCancelTx`, `OnFillOTCOrder`, `OnFormInputChange`, `OnPriceChange` | type | Individual event-callback types. |
+
+<Note>
+`ApiConfig` is not re-exported by name even though it's the shape of the `apiConfig` prop. Infer it via `WidgetProps["apiConfig"]` if you need a named type.
+</Note>
+
+## `<Widget />` props
+
+```ts
+interface WidgetProps {
+  config?: WidgetConfig;
+  apiConfig?: ApiConfig;
+  provider?: EIP1193ProviderLax;
+  events?: WidgetEventCallbacks;
+  input?: FormInputProps;
+}
+```
+
+| Prop | Type | Required | Purpose |
+|---|---|---|---|
+| `config` | `WidgetConfig` | No | Widget configuration. |
+| `apiConfig` | `ApiConfig` | No | API key and headers for backend requests. |
+| `provider` | `EIP1193ProviderLax` | No | EIP-1193 provider when using `widgetMode: "dapp"`. |
+| `events` | `WidgetEventCallbacks` | No | Event callbacks. |
+| `input` | `FormInputProps` | No | Initial form state (tokens, amounts, form type). |
+
+```tsx
+<Widget
+  config={{ theme: "dark", widgetMode: "dapp" }}
+  apiConfig={{ apiKey: "..." }}
+  provider={window.ethereum}
+  events={{ onSwap: ({ event }) => console.log(event.name) }}
+  input={{ selectedForm: "swap", tokenFromAddress: "0x..." }}
+/>
+```
+
+## `WidgetConfig`
+
+```ts
+interface WidgetConfig {
+  theme?: WidgetTheme;
+  enableDelta?: boolean;
+  enableCrossChain?: boolean;
+  partnerConfig?: PartnerConfig;
+  referrerConfig?: ReferrerConfig;
+  privyAppId?: string;
+  privyClientId?: string;
+  debug?: boolean;
+  widgetMode?: "dapp" | "standalone";
+  enableDegenMode?: boolean;
+  tokenLists?: string[];
+  srcChains?: SupportedChainId[];
+  destChains?: SupportedChainId[];
+  tradeModes?: TradeMode[];
+  excludeUI?: WidgetElements[];
+}
+```
+
+Field-by-field documentation lives on [Configure](/widget/configure). Monetization fields are documented on [Monetize](/widget/monetize). Wallet-related fields on [Wallet management](/widget/wallet-management).
+
+## `ApiConfig`
+
+```ts
+interface ApiConfig {
+  apiKey?: string;
+  headers?: Record<string, string>;
+}
+```
+
+Forwarded to the Velora SDK on every backend request (prices, swap construction, Delta order submission). Use when integrating against an authenticated tier or a partner-proxied endpoint.
+
+| Field | Type | Description |
+|---|---|---|
+| `apiKey` | `string` | API key sent with requests. |
+| `headers` | `Record<string, string>` | Extra HTTP headers (custom auth, metadata). |
+
+```tsx
+<Widget
+  apiConfig={{
+    apiKey: "your-api-key",
+    headers: { "X-Custom-Header": "value" },
+  }}
+/>
+```
+
+<Warning>
+This is client-side code. Don't embed secrets you wouldn't put in a public bundle.
+</Warning>
+
+## `EIP1193ProviderLax`
+
+A looser version of viem's `EIP1193Provider` — many wallets don't satisfy viem's strict signature, so the widget accepts the looser shape:
+
+```ts
+type EIP1193ProviderLax = {
+  request: (args: { method: any; params?: any }) => Promise<any>;
+  on: (event: any, callback: (arg: unknown) => void) => void;
+  removeListener: (event: any, callback: (arg: unknown) => void) => void;
+};
+```
+
+Used with `widgetMode: "dapp"`. See [Wallet management](/widget/wallet-management).
+
+## `FormInputProps`
+
+Pre-populate the form on mount — useful for deep links and programmatic control.
+
+```ts
+interface FormInputProps {
+  selectedForm?: "swap" | "limit" | "otc" | "twap";
+  tokenFromAddress?: Address;
+  srcChainId?: SupportedChainId;
+  tokenToAddress?: Address;
+  destChainId?: SupportedChainId;
+  sendAmount?: string;
+  receiveAmount?: string;
+  side?: "BUY" | "SELL";
+  orderDeadline?: string;
+}
+```
+
+### `selectedForm`
+
+`"swap" | "limit" | "otc" | "twap"` — defaults to `"swap"`. Corresponds to `tradeMode` in events.
+
+### `tokenFromAddress`
+
+`Address` — the source-token address to pre-select. Pair with `srcChainId`.
+
+### `srcChainId`
+
+`SupportedChainId` — chain for the source token. Required when `tokenFromAddress` is provided.
+
+### `tokenToAddress`
+
+`Address` — the destination-token address to pre-select. Pair with `destChainId` (or omit for same-chain).
+
+### `destChainId`
+
+`SupportedChainId` — chain for the destination token. Only functional when `selectedForm` is `"swap"` (crosschain). For limit and OTC, it's forced to match `srcChainId`.
+
+### `sendAmount`
+
+`string` — initial amount to send, in token units (not wei). Must parse as a number.
+
+### `receiveAmount`
+
+`string` — initial amount to receive, in token units. Mutually exclusive with `sendAmount` for the same trade-side.
+
+### `side`
+
+`"BUY" | "SELL"` — only for `selectedForm: "swap"` or `"twap"`. If omitted, defaults to `"SELL"` when `sendAmount` is set and `"BUY"` when `receiveAmount` is set. If both or neither amounts are present, the user's UI selection wins.
+
+### `orderDeadline`
+
+`string` — Unix timestamp (seconds), as a numeric string. Only functional when `selectedForm` is `"limit"` or `"otc"`. For Delta limit orders, the minimum recommended expiry is `now + 10 minutes`. For OTC, `"0"` means no expiry. The widget doesn't reject invalid values at prop time — they surface in the trade flow.
+
+```tsx
+<Widget
+  input={{
+    selectedForm: "swap",
+    tokenFromAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+    tokenToAddress: "0xdAC17F958D2ee523a2206206994597C13D831ec7",   // USDT
+    srcChainId: 1,
+    destChainId: 1,
+    sendAmount: "1000",
+  }}
+/>
+```
+
+<Note>
+For native ETH, pass the special address `"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"`.
+</Note>
+
+## `WidgetEventCallbacks`
+
+```ts
+interface WidgetEventCallbacks {
+  onConnectWallet?: OnConnectWallet;
+  onConnectWalletClick?: OnConnectWallet;
+  onAllowToken?: OnAllowToken;
+  onWrapETH?: OnWrapETH;
+  onSwap?: OnSwap;
+  onTwapOrder?: OnTwapOrder;
+  onCancelTx?: OnCancelTx;
+  onLimitOrder?: OnLimitOrder;
+  onOTCOrder?: OnOTCOrder;
+  onSettingsChange?: OnSettingsChange;
+  onCancelOrder?: OnCancelOrder;
+  onFillOTCOrder?: OnFillOTCOrder;
+  onFormInputChange?: OnFormInputChange;
+  onPriceChange?: OnPriceChange;
+}
+```
+
+Each callback receives `{ event, state }` where `event` is a discriminated union on `event.name` and `state` is a snapshot of the full widget state.
+
+Detailed sub-event names, params, and lifecycle ordering live on [Events & callbacks](/widget/events-and-callbacks).
+
+## `defaults`
+
+```ts
+import { defaults } from "@velora-dex/widget";
+
+defaults.chainIds;    // SupportedChainId[]
+defaults.tokenLists;  // string[]
+defaults.tradeModes;  // TradeMode[]
+```
+
+Use to compose custom values that include or exclude defaults:
+
+```tsx
+const srcChains = defaults.chainIds.filter((id) => id !== 1); // all except Ethereum
+const tokenLists = [...defaults.tokenLists, "https://example.com/my-tokens.json"];
+```
 
 ## Related pages
+
+- [Configure](/widget/configure) — `WidgetConfig` field walkthroughs.
+- [Wallet management](/widget/wallet-management) — `widgetMode`, `provider`, optional Privy connector.
+- [Monetize](/widget/monetize) — `partnerConfig`, `referrerConfig`.
+- [Events & callbacks](/widget/events-and-callbacks) — per-callback sub-events and params.

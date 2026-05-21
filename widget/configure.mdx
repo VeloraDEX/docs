@@ -1,15 +1,215 @@
 ---
 title: "Configure"
-description: "Configure chains, default tokens, partner key, and behavior."
-keywords: ["widget","configure"]
+description: "Restrict chains, pick trade modes, choose a theme, and hide UI elements via the config prop."
+keywords: ["widget","configure","chains","trade-modes"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The widget accepts a `config` prop of type `WidgetConfig`. Every field is optional — omit a field to fall back to its default.
 
-## When to use this
+```tsx
+import { Widget } from "@velora-dex/widget";
 
-## Quickstart
+<Widget
+  config={{
+    theme: "dark",
+    enableDelta: true,
+    enableCrossChain: true,
+    srcChains: [1, 137],
+    tradeModes: ["swap", "limit"],
+  }}
+/>;
+```
 
-## Examples
+<Warning>
+**Memoize non-primitive config values.** Arrays and objects passed inline (like `srcChains: [1, 137]`) get a new reference on every render and force the widget to re-mount its state. Move them to `useMemo` or to a module-level constant.
+</Warning>
+
+## Configuration options
+
+| Field | Type | Default | Purpose |
+|---|---|---|---|
+| `theme` | `"light" \| "dark"` | system preference | Color theme. See [Customize](/widget/customize). |
+| `enableDelta` | `boolean` | `true` | Enable [Delta](/delta/overview) intents (gasless, MEV-protected). |
+| `enableCrossChain` | `boolean` | `true` | Enable crosschain swaps. |
+| `srcChains` | `SupportedChainId[]` | all supported | Restrict source-chain picker. |
+| `destChains` | `SupportedChainId[]` | all supported | Restrict destination-chain picker. |
+| `tradeModes` | `TradeMode[]` | all four modes | Limit which forms appear (`"swap" \| "limit" \| "otc" \| "twap"`). |
+| `tokenLists` | `string[]` | curated defaults | Token-list URLs to populate token pickers. |
+| `excludeUI` | `WidgetElements[]` | `[]` | Hide UI chunks (`"wallet-management" \| "activities" \| "snackbars"`). |
+| `enableDegenMode` | `boolean` | `true` | Allow users to bypass high-price-impact warnings. |
+| `widgetMode` | `"standalone" \| "dapp"` | `"standalone"` | Who owns the wallet connection. See [Wallet management](/widget/wallet-management). |
+| `debug` | `boolean` | `false` | Verbose console logging. |
+| `partnerConfig` | `PartnerConfig` | — | Partner fee/revenue config. See [Monetize](/widget/monetize). |
+| `referrerConfig` | `ReferrerConfig` | — | Referrer revenue config. See [Monetize](/widget/monetize). |
+| `privyAppId` | `string` | — | Optional. Adds Privy to the connector list in `standalone` mode. See [Wallet management](/widget/wallet-management#optional-add-privy-as-a-connector). |
+| `privyClientId` | `string` | — | Optional. Only effective when `privyAppId` is set. |
+
+Each field is detailed below.
+
+---
+
+## Chains and routes
+
+### `srcChains`, `destChains`
+
+Restrict the chain dropdowns to a subset. Useful when your integration only services specific networks.
+
+```tsx
+import { useMemo } from "react";
+import { Widget, defaults } from "@velora-dex/widget";
+
+function MyWidget() {
+  const config = useMemo(
+    () => ({
+      srcChains: [1, 137],                       // Ethereum + Polygon
+      destChains: defaults.chainIds.filter((id) => id !== 1), // everywhere but Ethereum
+    }),
+    []
+  );
+  return <Widget config={config} />;
+}
+```
+
+<Note>
+**Chain-selection behavior:**
+- An empty array or one containing only invalid chain IDs falls back to **all default chains**.
+- Invalid IDs in an otherwise valid list are dropped (with `console.warn`).
+- Not all source chains can bridge to all destination chains — unsupported pairs are filtered out at runtime.
+- Same-chain swaps (source == destination) are always allowed for any chain in `srcChains`.
+</Note>
+
+### `enableCrossChain`
+
+```tsx
+<Widget config={{ enableCrossChain: false }} />
+```
+
+Disables the crosschain swap path entirely — users can only swap within a single chain.
+
+### `enableDelta`
+
+```tsx
+<Widget config={{ enableDelta: false }} />
+```
+
+When `false`, hides Delta-mode swaps and Delta-only trade modes (limit, TWAP). The widget falls back to Market-API swaps only.
+
+---
+
+## Trade modes
+
+### `tradeModes`
+
+```tsx
+const tradeModes = ["swap", "limit"];
+
+<Widget config={{ tradeModes }} />;
+```
+
+Restricts which trading forms are visible. Accepts any subset of `"swap" | "limit" | "otc" | "twap"`.
+
+<Note>
+**Trade-mode behavior:**
+- An empty array or one with only invalid modes falls back to **all default modes**.
+- If the currently selected mode becomes disabled, the widget switches to the first enabled mode.
+- `limit` and `twap` are Delta-only. If `enableDelta: false` (or the user disables Delta in Settings) and your `tradeModes` list contains only Delta-only modes, the widget falls back to `swap`.
+</Note>
+
+---
+
+## Theme
+
+### `theme`
+
+```tsx
+<Widget config={{ theme: "dark" }} />   // forced dark
+<Widget config={{ theme: "light" }} />  // forced light
+<Widget />                              // follows system preference
+```
+
+See [Customize](/widget/customize) for CSS scoping details.
+
+---
+
+## Hiding UI
+
+### `excludeUI`
+
+Hide specific UI chunks when your host app provides its own equivalents.
+
+| Key | Hides |
+|---|---|
+| `"wallet-management"` | The wallet button in the header |
+| `"activities"` | The activity / transaction history panel |
+| `"snackbars"` | In-widget toast notifications |
+
+```tsx
+const excludeUI = ["wallet-management", "snackbars"];
+
+<Widget config={{ excludeUI }} />;
+```
+
+---
+
+## Token lists
+
+### `tokenLists`
+
+Add custom token-list URLs. The widget merges them with curated defaults if you spread them.
+
+```tsx
+import { defaults } from "@velora-dex/widget";
+
+const tokenLists = [
+  ...defaults.tokenLists,
+  "https://example.com/my-tokens.json",
+];
+
+<Widget config={{ tokenLists }} />;
+```
+
+If you replace defaults entirely (omit the spread), users will only see your tokens.
+
+---
+
+## Behavior flags
+
+### `enableDegenMode`
+
+```tsx
+<Widget config={{ enableDegenMode: false }} />
+```
+
+When `true` (default), users can toggle Degen Mode in Trading Parameters to trade tokens with high price impact or missing USD price data. When `false`, the toggle is hidden and users can't bypass price-impact warnings.
+
+### `debug`
+
+```tsx
+<Widget config={{ debug: true }} />
+```
+
+Logs extra diagnostic info to the console. Don't ship enabled to production.
+
+---
+
+## Pre-filling the form
+
+Use the [`input` prop](/widget/widget-api-reference#forminputprops) (not `config`) to pre-select tokens, amounts, and form type — for example, to support deep links into a specific trade.
+
+```tsx
+<Widget
+  input={{
+    selectedForm: "swap",
+    tokenFromAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+    srcChainId: 1,
+    sendAmount: "100",
+  }}
+/>
+```
 
 ## Related pages
+
+- [Customize](/widget/customize) — theme details and CSS scoping.
+- [Wallet management](/widget/wallet-management) — `widgetMode`, `provider`, optional `privyAppId`.
+- [Monetize](/widget/monetize) — `partnerConfig` and `referrerConfig`.
+- [Widget API reference](/widget/widget-api-reference) — full type definitions.

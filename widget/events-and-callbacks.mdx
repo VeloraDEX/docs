@@ -1,15 +1,473 @@
 ---
 title: "Events & callbacks"
-description: "Listen to widget lifecycle events and respond to user actions."
-keywords: ["widget","events","callbacks"]
+description: "Listen to widget lifecycle events — wallet connections, approvals, swaps, orders, and form changes."
+keywords: ["widget", "events", "callbacks", "analytics", "lifecycle"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Pass an `events` object to subscribe to widget lifecycle events. Every callback receives `{ event, state }` where `state` is a snapshot of the full widget state and `event` is a discriminated union of named sub-events.
 
-## When to use this
+```tsx
+<Widget
+  events={{
+    onSwap: ({ event, state }) => {
+      if (event.name === "Swap:confirmed") {
+        analytics.track("swap_confirmed", { txHash: event.params.txHash });
+      }
+    },
+  }}
+/>
+```
 
-## Quickstart
+All callbacks are optional. Subscribe only to what you need.
 
-## Examples
+## Callback summary
+
+| Callback                                        | Fires when                                             |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| [`onConnectWallet`](#onconnectwallet)           | A wallet connects (or the Connect button is clicked).  |
+| [`onConnectWalletClick`](#onconnectwalletclick) | The Connect Wallet button is clicked (dApp-mode hook). |
+| [`onAllowToken`](#onallowtoken)                 | Token approval / permit lifecycle.                     |
+| [`onWrapETH`](#onwrapeth)                       | ETH → WETH wrap lifecycle (Delta pre-step).            |
+| [`onSwap`](#onswap)                             | Market or Delta swap lifecycle.                        |
+| [`onTwapOrder`](#ontwaporder)                   | TWAP order lifecycle.                                  |
+| [`onLimitOrder`](#onlimitorder)                 | Delta limit-order lifecycle.                           |
+| [`onOTCOrder`](#onotcorder)                     | OTC order lifecycle.                                   |
+| [`onCancelTx`](#oncanceltx)                     | User cancels a pending swap tx (replacement).          |
+| [`onCancelOrder`](#oncancelorder)               | User cancels a Delta or OTC order.                     |
+| [`onFillOTCOrder`](#onfillotcorder)             | User fills an existing OTC order.                      |
+| [`onSettingsChange`](#onsettingschange)         | User changes widget settings (slippage, gas, bridges). |
+| [`onFormInputChange`](#onforminputchange)       | Any input in any trading form changes.                 |
+| [`onPriceChange`](#onpricechange)               | Price quote refreshes or query state changes.          |
+
+---
+
+## `onConnectWallet`
+
+Fires when a wallet connects to the widget, and on the click that initiates connection.
+
+**Sub-events:**
+
+- `ConnectWallet:click` — Connect Wallet button clicked. Params: `{}`.
+- `ConnectWallet:connect` — A wallet actually connected (explicit click, eager auto-reconnect, or embedded provider).
+
+**`ConnectWallet:connect` params:**
+
+| Param             | Type                                             | Description                                   |
+| ----------------- | ------------------------------------------------ | --------------------------------------------- |
+| `connectorType`   | `string`                                         | Type of connector used.                       |
+| `connectorName`   | `string`                                         | Wallet name (from WalletConnect or EIP-6963). |
+| `connectorAction` | `"Click" \| "Eager" \| "Embedded" \| "External"` | How the connection happened.                  |
+| `provider`        | `EIP1193ProviderLax`                             | The underlying provider.                      |
+| `account`         | `Address`                                        | Connected account address.                    |
+| `walletName`      | `string \| null`                                 | Wallet display name.                          |
+| `walletIcon`      | `string \| null`                                 | Wallet icon URL.                              |
+| `chainId`         | `number`                                         | Chain the wallet is connected to.             |
+
+```tsx
+<Widget
+  events={{
+    onConnectWallet: ({ event }) => {
+      if (event.name === "ConnectWallet:connect") {
+        analytics.track("wallet_connected", {
+          connector: event.params.connectorType,
+          action: event.params.connectorAction,
+          account: event.params.account,
+        });
+      }
+    },
+  }}
+/>
+```
+
+<Note>
+  `ConnectWallet:click` carries no params. Check `event.name` before reading
+  connect-specific fields.
+</Note>
+
+---
+
+## `onConnectWalletClick`
+
+Fires when the Connect Wallet button is clicked. Same payload type as `onConnectWallet`, but only emits `ConnectWallet:click`.
+
+```tsx
+<Widget
+  config={{ widgetMode: "dapp" }}
+  events={{
+    onConnectWalletClick: () => {
+      openHostAppWalletModal();
+    },
+  }}
+/>
+```
+
+---
+
+## `onAllowToken`
+
+Token approval (`approve`) or signed-permit (`permit1` / `permit2`) lifecycle.
+
+**Sub-events:**
+
+- `AllowToken:request` — Approval or permit initiated.
+- `AllowToken:sent` — Transaction signed and broadcast.
+- `AllowToken:confirmed` — Transaction confirmed on-chain, or permit signed.
+- `AllowToken:failed` — Transaction failed or permit rejected.
+
+**Common params:**
+
+| Param            | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `token`          | Token being approved.                            |
+| `amountWei`      | Approval amount, in wei.                         |
+| `spenderAddress` | The contract receiving the allowance.            |
+| `chainId`        | Chain ID.                                        |
+| `tradeMode`      | `"swap" \| "limit" \| "otc" \| "twap"`.          |
+| `type`           | `"approve" \| "permit"`.                         |
+| `permitType`     | (if permit) `"permit1" \| "permit2"`.            |
+| `txHash`         | (if sent / confirmed / failed) Transaction hash. |
+| `txReceipt`      | (if confirmed / failed) Transaction receipt.     |
+| `error`          | (if failed) Error object.                        |
+
+```tsx
+<Widget
+  events={{
+    onAllowToken: ({ event }) => {
+      if (event.name === "AllowToken:confirmed") {
+        console.log("Approved", event.params.token.symbol);
+      } else if (event.name === "AllowToken:failed") {
+        console.error("Approval failed", event.params.error);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onWrapETH`
+
+Fires during ETH → WETH wrapping. Used as a pre-step for Delta swaps that start from native ETH.
+
+**Sub-events:** `WrapETH:click`, `WrapETH:request`, `WrapETH:sent`, `WrapETH:confirmed`, `WrapETH:failed`.
+
+**Params:** `ethAmountWei`, `wethAddress`, `chainId`, `tradeMode`, `txHash` (if sent+), `txReceipt` (if confirmed/failed), `error` (if failed).
+
+```tsx
+<Widget
+  events={{
+    onWrapETH: ({ event }) => {
+      if (event.name === "WrapETH:confirmed") {
+        console.log("ETH wrapped", event.params.txHash);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onSwap`
+
+The most common callback — fires for both market and Delta swap lifecycles.
+
+**Sub-events:**
+
+- `Swap:click` — Confirmation drawer opened.
+- `Swap:request` — Swap initiated.
+- `Swap:sent` — Tx signed and broadcast (market), or Delta order submitted.
+- `Swap:confirmed` — Tx confirmed (market), or Delta order filled.
+- `Swap:failed` — Tx failed or Delta order failed.
+- `Swap:cancelled` — User replaced / cancelled the pending tx, or the Delta order was cancelled.
+
+**Params common to all sub-events:**
+
+| Param                         | Description                              |
+| ----------------------------- | ---------------------------------------- |
+| `swapMode`                    | `"market" \| "delta"`.                   |
+| `price`                       | Quote info (shape varies by `swapMode`). |
+| `tokenFrom`, `tokenTo`        | Tokens involved.                         |
+| `sendAmount`, `receiveAmount` | Amounts.                                 |
+| `receiverAddress`             | Destination address.                     |
+| `srcChainId`, `destChainId`   | Chains involved.                         |
+| `connectedAccount`            | Connected wallet address.                |
+| `side`                        | `"BUY" \| "SELL"`.                       |
+
+**Sub-event-specific:** `txHash`, `callsId`, `order` (Delta), `txReceipt`, `callsReceipt`, `error`, `cancelTxDetails`.
+
+```tsx
+<Widget
+  events={{
+    onSwap: ({ event }) => {
+      if (event.name === "Swap:confirmed") {
+        if (event.params.swapMode === "market") {
+          console.log("Market swap confirmed", event.params.txHash);
+        } else {
+          console.log("Delta order filled", event.params.order);
+        }
+      } else if (event.name === "Swap:failed") {
+        console.error("Swap failed", event.params.error);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onTwapOrder`
+
+TWAP (Time-Weighted Average Price) order lifecycle. TWAP splits a large trade into smaller slices executed over a duration.
+
+**Sub-events:** `TwapOrder:click`, `TwapOrder:request`, `TwapOrder:sent`, `TwapOrder:confirmed`, `TwapOrder:failed`.
+
+**Params:** Delta or bridge price, `order` (if sent+), `error` (if failed), plus form-state fields (`tokenFrom`, `tokenTo`, `sendAmount`, `receiveAmount`, `receiverAddress`, `srcChainId`, `destChainId`, `connectedAccount`, `side`).
+
+```tsx
+<Widget
+  events={{
+    onTwapOrder: ({ event }) => {
+      if (event.name === "TwapOrder:sent") {
+        toast.success("TWAP order placed");
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onLimitOrder`
+
+Delta limit-order lifecycle.
+
+**Sub-events:** `LimitOrder:click`, `LimitOrder:request`, `LimitOrder:sent`, `LimitOrder:confirmed` (rare — orders typically fill later), `LimitOrder:failed`.
+
+**Params:** Delta `price`, `order`, `error` (if failed), plus form-state fields including `limitPrice` and `orderDeadline`.
+
+```tsx
+<Widget
+  events={{
+    onLimitOrder: ({ event }) => {
+      if (event.name === "LimitOrder:sent") {
+        toast.success("Limit order placed");
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onOTCOrder`
+
+OTC (Over-The-Counter) order lifecycle. Similar to limit orders but for OTC trades.
+
+**Sub-events:** `OTCOrder:click`, `OTCOrder:request`, `OTCOrder:sent`, `OTCOrder:confirmed` (rare), `OTCOrder:failed`.
+
+**Params:** OTC `price`, `order` (if not failed), `error` (if failed), plus form-state fields including `otcPrice` and `orderDeadline`.
+
+```tsx
+<Widget
+  events={{
+    onOTCOrder: ({ event }) => {
+      if (event.name === "OTCOrder:sent") {
+        console.log("OTC order submitted", event.params.order);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onCancelTx`
+
+Fires when the user replaces a pending swap tx with a "cancel" tx (same nonce, zero value) to drop it.
+
+**Sub-events:** `CancelTx:request`, `CancelTx:sent`, `CancelTx:confirmed`, `CancelTx:failed`.
+
+**Params:**
+
+| Param                  | Description                                                |
+| ---------------------- | ---------------------------------------------------------- |
+| `txType`               | `"SWAP"` (only swap tx cancellations are supported today). |
+| `originalTxHash`       | Hash of the tx being cancelled.                            |
+| `chainId`              | Chain.                                                     |
+| `originalTx`           | (if sent+) The original tx response.                       |
+| `replacementRequest`   | (if sent+) The replacement (cancel) tx request.            |
+| `replacementTxHash`    | (if sent+) Hash of the cancel tx.                          |
+| `replacementTxReceipt` | (if confirmed) Receipt of the mined cancel tx.             |
+| `error`                | (if failed) Error object.                                  |
+
+---
+
+## `onCancelOrder`
+
+Fires when the user cancels a Delta or OTC order.
+
+**Sub-events:**
+
+- `CancelOrder:request` — Cancel initiated (tx or typed-data signing).
+- `CancelOrder:sentTx` — Cancel tx signed and broadcast. Fires for OTC orders and for ETH Delta orders cancelled via `withdrawAndCancel`. Non-ETH Delta orders skip this stage (they cancel via signed typed-data).
+- `CancelOrder:confirmed` — Cancel tx mined, or typed-data posted.
+- `CancelOrder:failed` — Cancel failed.
+
+**Params:**
+
+| Param                            | Description                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------- |
+| `orderType`                      | `"DELTA" \| "OTC"`.                                                                         |
+| `orderSubType`                   | Subtype (varies by order type).                                                             |
+| `orderIds`                       | (Delta) Array of order IDs to cancel.                                                       |
+| `orderHash`                      | (OTC) Hash of the order.                                                                    |
+| `txHash`, `chainId`, `txReceipt` | (if sent/confirmed) Required for OTC; optional for Delta (only ETH Delta orders have a tx). |
+| `error`                          | (if failed) Error object.                                                                   |
+
+```tsx
+<Widget
+  events={{
+    onCancelOrder: ({ event }) => {
+      if (event.name === "CancelOrder:confirmed") {
+        if (event.params.orderType === "DELTA") {
+          console.log("Delta orders cancelled", event.params.orderIds);
+        } else {
+          console.log("OTC order cancelled", event.params.orderHash);
+        }
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onFillOTCOrder`
+
+Fires when the user fills an existing OTC order (acts as the taker).
+
+**Sub-events:** `FillOTCOrder:request`, `FillOTCOrder:sent`, `FillOTCOrder:confirmed`, `FillOTCOrder:failed`.
+
+**Params:** `orderHash`, `orderType: "OTC"`, `orderSubType`, `txHash` (if sent+), `callsId` (if sendCalls), `txReceipt` (if confirmed), `callsReceipt`, `error` (if failed).
+
+---
+
+## `onSettingsChange`
+
+Fires when the user changes widget settings.
+
+**Sub-events:**
+
+- `Settings:switchSwapMode` — Switched between Market and Delta. Params: `{ swapMode: "market" | "delta" }`.
+- `Settings:saveSettings` — User saved settings. Payload is the full `SettingsState`: `slippageTolerance`, `transactionSpeed` (`"slow" | "standard" | "fast" | "custom"`), `swapMode`, `eip1559Enabled`, `degenMode`, `disabledDexes`, `bridgePreference` (`"auto" | "fastest" | "bestReturn"`), `disabledBridges`.
+- `Settings:changeBridgePreferences` — Bridge preferences changed independently (e.g. from Compare Quotes). Params: `bridgePreference`, `disabledBridges`.
+
+```tsx
+<Widget
+  events={{
+    onSettingsChange: ({ event }) => {
+      if (event.name === "Settings:saveSettings") {
+        console.log("New slippage", event.params.slippageTolerance);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## `onFormInputChange`
+
+Fires whenever any input changes in any trading form.
+
+**Sub-event:** `FormInput:change`.
+
+**Params (discriminated by `form`):**
+
+Common to all variants:
+
+| Param                       | Description                                                             |
+| --------------------------- | ----------------------------------------------------------------------- |
+| `form`                      | `"swap" \| "limit" \| "otc" \| "twap"`.                                 |
+| `tokenFrom`                 | `MinTradeFlowToken` — source token.                                     |
+| `tokenTo`                   | `MinTradeFlowToken` — destination token (may be absent until selected). |
+| `srcChainId`, `destChainId` | Chain IDs (`destChainId` may be absent).                                |
+| `receiverAddress`           | Optional — defaults to connected account.                               |
+
+Variant-specific:
+
+- `form: "swap"` — adds `side: "SELL" | "BUY"`. When `side === "SELL"`, payload carries `sendAmount` (not `receiveAmount`); when `side === "BUY"`, `receiveAmount` (not `sendAmount`).
+- `form: "twap"` — adds `side`, `orderSplit` (slice count), `orderInterval` (seconds), `orderDeadline` (Unix seconds), `slippage`.
+- `form: "limit"` — adds `limitPrice`, `orderDeadline`. Both `sendAmount` and `receiveAmount` present.
+- `form: "otc"` — adds `otcPrice`, `orderDeadline`. Both `sendAmount` and `receiveAmount` present.
+
+```tsx
+<Widget
+  events={{
+    onFormInputChange: ({ event }) => {
+      console.log("Form changed", {
+        form: event.params.form,
+        from: event.params.tokenFrom?.symbol,
+        to: event.params.tokenTo?.symbol,
+      });
+    },
+  }}
+/>
+```
+
+---
+
+## `onPriceChange`
+
+Fires when price info refreshes or the price-query state changes.
+
+**Sub-events:**
+
+- `PriceUpdate` — Price was successfully (re)fetched.
+- `PriceQueryUpdate` — Price-query state changed (data, isLoading, error).
+
+**Params:**
+
+| Param        | Description                                                                     |
+| ------------ | ------------------------------------------------------------------------------- |
+| `priceMode`  | `"delta" \| "market"`.                                                          |
+| `price`      | Price object (`DeltaPrice \| BridgePrice` for Delta, `OptimalRate` for market). |
+| `isLoading`  | (`PriceQueryUpdate`) First-time fetch in progress.                              |
+| `isFetching` | (`PriceQueryUpdate`) Refetching.                                                |
+| `isError`    | (`PriceQueryUpdate`) Whether the query errored.                                 |
+| `error`      | (`PriceQueryUpdate`) Error or `null`.                                           |
+
+```tsx
+<Widget
+  events={{
+    onPriceChange: ({ event }) => {
+      if (event.name === "PriceUpdate") {
+        console.log("New price", event.params.priceMode, event.params.price);
+      }
+    },
+  }}
+/>
+```
+
+---
+
+## Lifecycle — a successful market swap
+
+For a wallet-connected market swap that requires token approval, events fire in this order:
+
+1. **`onConnectWallet`** — `ConnectWallet:click` (user clicks), then `ConnectWallet:connect` once a wallet attaches.
+2. **`onFormInputChange`** — `FormInput:change` for every field edit.
+3. **`onPriceChange`** — `PriceQueryUpdate` (loading / refetching) and `PriceUpdate` (successful fetch) as quotes refresh.
+4. **`onAllowToken`** — `AllowToken:request` → `AllowToken:sent` → `AllowToken:confirmed`. Skipped if allowance already covers the trade or the flow uses a permit signature only.
+5. **`onWrapETH`** — for Delta swaps with ETH as `tokenFrom`, the user is asked to wrap first: `WrapETH:click` → `WrapETH:request` → `WrapETH:sent` → `WrapETH:confirmed`.
+6. **`onSwap`** — `Swap:click` → `Swap:request` → `Swap:sent` → `Swap:confirmed`. Replace with `Swap:failed` or `Swap:cancelled` on the unhappy path.
+7. **`onCancelTx`** — only if the user explicitly cancels a pending market swap tx: `CancelTx:request` → `CancelTx:sent` → `CancelTx:confirmed`.
+
+**Delta swaps** replace step 4/5/6 with a single Delta order submission (`Swap:sent` with `swapMode: "delta"` and an `order` param). The order is filled off-band — `Swap:confirmed` may arrive minutes later, or be missed entirely if the user closes the widget.
+
+**Limit, OTC, and TWAP flows** replace step 6 with their respective callbacks (`onLimitOrder`, `onOTCOrder`, `onTwapOrder`).
 
 ## Related pages
+
+- [Wallet management](/widget/wallet-management) — `onConnectWallet` and `onConnectWalletClick` patterns.
+- [Widget API reference](/widget/widget-api-reference) — full callback type signatures.
