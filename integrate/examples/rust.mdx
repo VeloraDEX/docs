@@ -1,0 +1,92 @@
+---
+title: "Rust"
+description: "End-to-end Rust example — call the Velora Market API to quote 1 ETH → USDC via reqwest."
+keywords: ["api","rust","reqwest","tokio","example"]
+---
+
+A minimal Rust program that calls `GET /prices` and prints the quoted `destAmount`. Uses `reqwest` with `tokio`.
+
+## File tree
+
+```text
+my-app/
+├─ Cargo.toml
+└─ src/
+   └─ main.rs
+```
+
+## Install
+
+```bash
+cargo new my-app
+cd my-app
+cargo add reqwest --features json
+cargo add tokio --features full
+cargo add serde --features derive
+```
+
+## `src/main.rs`
+
+```rust
+use serde::Deserialize;
+
+#[derive(Deserialize, Debug)]
+struct PriceRoute {
+    #[serde(rename = "destAmount")]
+    dest_amount: String,
+    #[serde(rename = "gasCostUSD")]
+    gas_cost_usd: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct PricesResponse {
+    #[serde(rename = "priceRoute")]
+    price_route: PriceRoute,
+}
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let params = [
+        ("srcToken",     "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"), // ETH
+        ("destToken",    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"), // USDC
+        ("amount",       "1000000000000000000"),                       // 1 ETH
+        ("srcDecimals",  "18"),
+        ("destDecimals", "6"),
+        ("side",         "SELL"),
+        ("network",      "1"),
+        ("userAddress",  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"),
+        ("partner",      "my-app-name"),
+    ];
+
+    let res = reqwest::Client::new()
+        .get("https://api.velora.xyz/prices")
+        .query(&params)
+        .send()
+        .await?
+        .error_for_status()?
+        .json::<PricesResponse>()
+        .await?;
+
+    println!("destAmount: {}", res.price_route.dest_amount);
+    println!("gasCostUSD: {}", res.price_route.gas_cost_usd);
+
+    Ok(())
+}
+```
+
+## Run it
+
+```bash
+cargo run
+```
+
+You should see the quoted `destAmount` (USDC, 6 decimals) and `gasCostUSD` printed.
+
+## Next: build the transaction
+
+Feed the `priceRoute` into `POST /transactions/:network` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
+
+## Related pages
+
+- [API overview](/integrate/api) — when to reach for the REST API.
+- [Market API reference](/api-reference/market/overview) — full parameter list.

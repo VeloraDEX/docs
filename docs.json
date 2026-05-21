@@ -64,7 +64,16 @@
           {
             "group": "API",
             "pages": [
-              "integrate/api"
+              "integrate/api",
+              {
+                "group": "Examples",
+                "pages": [
+                  "integrate/examples/typescript",
+                  "integrate/examples/go",
+                  "integrate/examples/python",
+                  "integrate/examples/rust"
+                ]
+              }
             ]
           },
           {
@@ -234,20 +243,20 @@
             ]
           },
           {
-            "group": "Market API (v6.2)",
-            "pages": [
-              "api-reference/market/overview",
-              "api-reference/market/prices",
-              "api-reference/market/transactions"
-            ]
-          },
-          {
             "group": "Delta API",
             "pages": [
               "api-reference/delta/overview",
               "api-reference/delta/quote",
               "api-reference/delta/orders-build",
               "api-reference/delta/orders"
+            ]
+          },
+          {
+            "group": "Market API",
+            "pages": [
+              "api-reference/market/overview",
+              "api-reference/market/prices",
+              "api-reference/market/transactions"
             ]
           },
           {

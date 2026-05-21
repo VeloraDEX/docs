@@ -1,0 +1,89 @@
+---
+title: "Go"
+description: "End-to-end Go example — call the Velora Market API to quote 1 ETH → USDC via net/http."
+keywords: ["api","go","golang","net/http","example"]
+---
+
+A minimal Go program that calls `GET /prices` and prints the quoted `destAmount`. Standard library only.
+
+## File tree
+
+```text
+my-app/
+├─ go.mod
+└─ main.go
+```
+
+## Install
+
+```bash
+mkdir my-app && cd my-app
+go mod init example.com/my-app
+```
+
+## `main.go`
+
+```go
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/url"
+)
+
+func main() {
+	params := url.Values{
+		"srcToken":     {"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"}, // ETH
+		"destToken":    {"0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"}, // USDC
+		"amount":       {"1000000000000000000"},                       // 1 ETH
+		"srcDecimals":  {"18"},
+		"destDecimals": {"6"},
+		"side":         {"SELL"},
+		"network":      {"1"},
+		"userAddress":  {"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"},
+		"partner":      {"my-app-name"},
+	}
+
+	res, err := http.Get("https://api.velora.xyz/prices?" + params.Encode())
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		panic(fmt.Sprintf("HTTP %d", res.StatusCode))
+	}
+
+	var body struct {
+		PriceRoute struct {
+			DestAmount string  `json:"destAmount"`
+			GasCostUSD string  `json:"gasCostUSD"`
+		} `json:"priceRoute"`
+	}
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("destAmount:", body.PriceRoute.DestAmount)
+	fmt.Println("gasCostUSD:", body.PriceRoute.GasCostUSD)
+}
+```
+
+## Run it
+
+```bash
+go run .
+```
+
+You should see the quoted `destAmount` (USDC, 6 decimals) and `gasCostUSD` printed.
+
+## Next: build the transaction
+
+Feed the `priceRoute` into `POST /transactions/:network` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
+
+## Related pages
+
+- [API overview](/integrate/api) — when to reach for the REST API.
+- [Market API reference](/api-reference/market/overview) — full parameter list.

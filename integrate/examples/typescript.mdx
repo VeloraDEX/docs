@@ -1,0 +1,89 @@
+---
+title: "TypeScript"
+description: "End-to-end TypeScript example — call the Velora Market API to quote 1 ETH → USDC via plain fetch."
+keywords: ["api","typescript","node","fetch","example"]
+---
+
+A minimal Node script that calls `GET /prices` and prints the quoted `destAmount`. No SDK — just `fetch`.
+
+## File tree
+
+```text
+my-app/
+├─ package.json
+├─ tsconfig.json
+└─ src/
+   └─ quote.ts
+```
+
+## Install
+
+<CodeGroup>
+
+```bash pnpm
+mkdir my-app && cd my-app
+pnpm init
+pnpm add -D typescript tsx @types/node
+pnpm tsc --init
+```
+
+```bash npm
+mkdir my-app && cd my-app
+npm init -y
+npm install -D typescript tsx @types/node
+npx tsc --init
+```
+
+```bash yarn
+mkdir my-app && cd my-app
+yarn init -y
+yarn add -D typescript tsx @types/node
+yarn tsc --init
+```
+
+</CodeGroup>
+
+## `src/quote.ts`
+
+```ts
+const params = new URLSearchParams({
+  srcToken:     '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
+  destToken:    '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount:       '1000000000000000000', // 1 ETH
+  srcDecimals:  '18',
+  destDecimals: '6',
+  side:         'SELL',
+  network:      '1',
+  userAddress:  '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  partner:      'my-app-name',
+});
+
+const res = await fetch(`https://api.velora.xyz/prices?${params}`);
+
+if (!res.ok) {
+  throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+}
+
+const { priceRoute } = await res.json();
+
+console.log('destAmount:', priceRoute.destAmount);
+console.log('gasCostUSD:', priceRoute.gasCostUSD);
+```
+
+## Run it
+
+```bash
+pnpm tsx src/quote.ts
+```
+
+You should see the quoted `destAmount` (USDC, 6 decimals) and `gasCostUSD` printed.
+
+## Next: build the transaction
+
+Feed the `priceRoute` into `POST /transactions/:network` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
+
+## Related pages
+
+- [API overview](/integrate/api) — when to reach for the REST API.
+- [Market API reference](/api-reference/market/overview) — full parameter list.
+- [SDK](/sdk/overview) — typed TypeScript wrapper if you'd rather not handle HTTP yourself.

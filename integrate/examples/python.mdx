@@ -1,0 +1,67 @@
+---
+title: "Python"
+description: "End-to-end Python example — call the Velora Market API to quote 1 ETH → USDC via requests."
+keywords: ["api","python","requests","example"]
+---
+
+A minimal Python script that calls `GET /prices` and prints the quoted `destAmount`. Uses `requests`.
+
+## File tree
+
+```text
+my-app/
+├─ requirements.txt
+└─ quote.py
+```
+
+## Install
+
+```bash
+mkdir my-app && cd my-app
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install requests
+```
+
+## `quote.py`
+
+```python
+import requests
+
+params = {
+    "srcToken":     "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",  # ETH
+    "destToken":    "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",  # USDC
+    "amount":       "1000000000000000000",                          # 1 ETH
+    "srcDecimals":  18,
+    "destDecimals": 6,
+    "side":         "SELL",
+    "network":      1,
+    "userAddress":  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "partner":      "my-app-name",
+}
+
+res = requests.get("https://api.velora.xyz/prices", params=params, timeout=10)
+res.raise_for_status()
+
+price_route = res.json()["priceRoute"]
+
+print("destAmount:", price_route["destAmount"])
+print("gasCostUSD:", price_route["gasCostUSD"])
+```
+
+## Run it
+
+```bash
+python quote.py
+```
+
+You should see the quoted `destAmount` (USDC, 6 decimals) and `gasCostUSD` printed.
+
+## Next: build the transaction
+
+Feed the `priceRoute` into `POST /transactions/:network` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
+
+## Related pages
+
+- [API overview](/integrate/api) — when to reach for the REST API.
+- [Market API reference](/api-reference/market/overview) — full parameter list.

@@ -4,23 +4,9 @@ description: "Get a quote for 1 ETH → USDC in 60 seconds — cURL, SDK, or Wid
 keywords: ["quickstart","quote","swap","getting started"]
 ---
 
-Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Market route and the Delta intent side-by-side in a single response, and you pick which to execute.
+Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Delta intent and the Market route side-by-side in a single response, and you pick which to execute.
 
 <CodeGroup>
-
-```bash Market (cURL)
-curl -s "https://api.velora.xyz/prices" \
-  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
-  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
-  --data-urlencode "amount=1000000000000000000" \
-  --data-urlencode "srcDecimals=18" \
-  --data-urlencode "destDecimals=6" \
-  --data-urlencode "side=SELL" \
-  --data-urlencode "network=1" \
-  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-  --data-urlencode "partner=my-app-name" \
-  -G | jq
-```
 
 ```bash Delta (cURL)
 curl -s "https://api.velora.xyz/quote" \
@@ -32,6 +18,20 @@ curl -s "https://api.velora.xyz/quote" \
   --data-urlencode "side=SELL" \
   --data-urlencode "chainId=1" \
   --data-urlencode "mode=DELTA" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```bash Market (cURL)
+curl -s "https://api.velora.xyz/prices" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "network=1" \
   --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
   --data-urlencode "partner=my-app-name" \
   -G | jq
@@ -78,7 +78,7 @@ export default function SwapPage() {
 
 </CodeGroup>
 
-`GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /quote?mode=ALL` returns both — as `response.market` (Market route) and `response.delta` (Delta intent) — and you pick which to execute.
+`GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=ALL` returns both — as `response.delta` (Delta intent) and `response.market` (Market route) — and you pick which to execute.
 
 ## Pick your integration path
 

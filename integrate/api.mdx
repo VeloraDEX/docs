@@ -1,5 +1,5 @@
 ---
-title: "Overview"
+title: "API overview"
 description: "Velora's REST API is the most flexible way to integrate — works with any language, any stack, any wallet."
 keywords: ["api","rest","integration"]
 ---
@@ -23,3 +23,22 @@ The Velora REST API is the most flexible integration path. It works with any lan
 ## Get started
 
 See the **[API Reference →](/api-reference/introduction)** for endpoints, parameters, and schemas.
+
+## Examples
+
+End-to-end snippets that call `GET /prices` for a 1 ETH → USDC quote on Ethereum mainnet.
+
+<CardGroup cols={2}>
+  <Card title="TypeScript" icon="js" href="/integrate/examples/typescript">
+    Node.js or browser via `fetch`.
+  </Card>
+  <Card title="Go" icon="golang" href="/integrate/examples/go">
+    `net/http` with `url.Values`.
+  </Card>
+  <Card title="Python" icon="python" href="/integrate/examples/python">
+    `requests` with kwargs.
+  </Card>
+  <Card title="Rust" icon="rust" href="/integrate/examples/rust">
+    `reqwest` with `tokio`.
+  </Card>
+</CardGroup>
