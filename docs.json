@@ -309,16 +309,15 @@
     "dark": "/logo/dark.svg"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@velora.xyz"
-      }
-    ],
     "primary": {
       "type": "button",
       "label": "Launch app",
       "href": "https://app.velora.xyz"
+    }
+  },
+  "integrations": {
+    "intercom": {
+      "appId": "l8fmq3sh"
     }
   },
   "contextual": {
