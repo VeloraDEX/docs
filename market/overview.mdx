@@ -1,0 +1,52 @@
+---
+title: "Why Market API"
+description: "Velora's aggregation API — best-price routing across DEXs with atomic on-chain settlement in a single transaction."
+keywords: ["market api","aggregation","swap","routing"]
+---
+
+The Market API is Velora's classic swap aggregator. You request a quote, build a transaction, and your user signs and submits it on-chain — in one atomic call. It's the right choice when you need composability inside a larger transaction, when the swap is small, or when you want full control over execution.
+
+## What you get
+
+<CardGroup cols={3}>
+  <Card title="Best-price routing" icon="route">
+    Aggregates liquidity across major DEXs to find the optimal path.
+  </Card>
+  <Card title="Atomic execution" icon="bolt">
+    Swap settles in a single transaction — composable with any contract call.
+  </Card>
+  <Card title="Multi-chain" icon="layer-group">
+    Ethereum, Polygon, BNB, Arbitrum, Optimism, Base, Avalanche, Gnosis, Unichain.
+  </Card>
+</CardGroup>
+
+## When to use Market vs Delta
+
+- **Use Market API** when you need atomic on-chain execution inside a larger transaction (composability), when the swap is tiny and gas overhead doesn't matter, or when Delta returns no quote.
+- **Use [Delta](/delta/overview)** when MEV is a concern, gasless UX matters, or the swap is crosschain.
+- **Use `mode=ALL`** in the quote endpoint to get both responses and pick at runtime.
+
+## See it work
+
+The basic flow is two calls — get a price, build a transaction — then your user signs and submits it:
+
+```bash
+# 1. Get a price quote
+curl "https://api.velora.xyz/prices?...&partner=my-app-name"
+
+# 2. Build the transaction
+curl -X POST "https://api.velora.xyz/transactions/:chainId" -d @price.json
+
+# 3. User signs and submits the transaction with their wallet
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api-reference/market/overview">
+    Endpoints, parameters, and response schemas.
+  </Card>
+  <Card title="SDK" icon="code" href="/sdk/overview">
+    Use `@velora-dex/sdk` to integrate quotes and swaps from JS/TS.
+  </Card>
+</CardGroup>

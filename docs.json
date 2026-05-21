@@ -26,12 +26,11 @@
         "tab": "Overview",
         "groups": [
           {
-            "group": "Get oriented",
+            "group": "Learn about Velora",
             "pages": [
               "overview/why-velora",
-              "overview/how-velora-works",
               "overview/product-stack",
-              "overview/who-uses-velora"
+              "overview/quickstart"
             ]
           },
           {
@@ -39,9 +38,8 @@
             "pages": [
               "overview/trading-concepts/swaps",
               "overview/trading-concepts/limit-orders",
-              "overview/trading-concepts/crosschain-swaps",
-              "overview/trading-concepts/slippage-gas-and-mev",
-              "overview/trading-concepts/transaction-lifecycle"
+              "overview/trading-concepts/twap",
+              "overview/trading-concepts/otc"
             ]
           },
           {
@@ -64,6 +62,12 @@
       {
         "tab": "Integrate",
         "groups": [
+          {
+            "group": "API",
+            "pages": [
+              "integrate/api"
+            ]
+          },
           {
             "group": "SDK",
             "pages": [
@@ -109,7 +113,7 @@
         ]
       },
       {
-        "tab": "Delta",
+        "tab": "Delta API",
         "groups": [
           {
             "group": "Get started",
@@ -135,7 +139,26 @@
         ]
       },
       {
-        "tab": "For Agents",
+        "tab": "Market API",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "market/overview"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "api-reference/market/overview",
+              "api-reference/market/prices",
+              "api-reference/market/transactions"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "AI Agents",
         "groups": [
           {
             "group": "Get started",
@@ -236,15 +259,9 @@
             ]
           },
           {
-            "group": "Augustus RFQ API",
+            "group": "OTC API",
             "pages": [
               "api-reference/rfq/overview"
-            ]
-          },
-          {
-            "group": "Tokens & utilities",
-            "pages": [
-              "api-reference/tokens/overview"
             ]
           }
         ]

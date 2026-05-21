@@ -2,6 +2,10 @@ html[data-current-path="/"] div:has(> .nav-tabs) { display: none !important; }
 html[data-current-path="/"] #navbar { border-bottom: none !important; }
 html[data-current-path="/"] button.lg\:hidden { display: none !important; }
 
+html[data-current-path="/"] [aria-label*="more" i],
+html[data-current-path="/"] [data-contextual],
+html[data-current-path="/"] button:has(> svg.lucide-chevron-down) { display: none !important; }
+
 #background-color {
   background-image: url("/images/hero-bg-light.svg") !important;
   background-repeat: no-repeat !important;

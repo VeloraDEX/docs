@@ -1,0 +1,91 @@
+---
+title: "Quickstart"
+description: "Get a quote for 1 ETH → USDC in 60 seconds — cURL, SDK, or Widget. Then choose how to integrate."
+keywords: ["quickstart","quote","swap","getting started"]
+---
+
+Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Market route and the Delta intent side-by-side in a single response, and you pick which to execute.
+
+<CodeGroup>
+
+```bash Market (cURL)
+curl -s "https://api.velora.xyz/prices" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "network=1" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```bash Delta (cURL)
+curl -s "https://api.velora.xyz/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=DELTA" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```ts SDK (TypeScript)
+import { constructSimpleSDK } from '@velora-dex/sdk';
+
+const sdk = constructSimpleSDK({ chainId: 1, fetch });
+
+const quote = await sdk.quote.getQuote({
+  srcToken:    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
+  destToken:   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount:      '1000000000000000000', // 1 ETH
+  srcDecimals: 18,
+  destDecimals: 6,
+  side: 'SELL',
+  mode: 'ALL',
+  userAddress: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+  partner: 'my-app-name',
+});
+
+if ('delta' in quote) {
+  // gasless path — sign and submit via /delta/orders
+} else {
+  // calldata path — submit `market` to /transactions
+}
+```
+
+```tsx Widget (React)
+import { VeloraWidget } from '@velora-dex/widget';
+
+export default function SwapPage() {
+  return (
+    <VeloraWidget
+      chainId={1}
+      partner="my-app-name"
+      defaultSrcToken="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+      defaultDestToken="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    />
+  );
+}
+```
+
+</CodeGroup>
+
+`GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /quote?mode=ALL` returns both — as `response.market` (Market route) and `response.delta` (Delta intent) — and you pick which to execute.
+
+## Pick your integration path
+
+<Card title="Continue to Integrate →" icon="arrow-right" href="/integrate/api">
+  Compare API, SDK, and Widget — and choose the right surface for your stack.
+</Card>
+
+<Tip>
+  All endpoints work without a partner key for low-volume testing. To unlock production rate limits and fee-sharing, see [Authentication & partner key](/api-reference/authentication).
+</Tip>
