@@ -52,6 +52,7 @@
             "group": "API",
             "pages": [
               "integrate/api",
+              "integrate/trading-modes",
               "integrate/rate-limits"
             ]
           },

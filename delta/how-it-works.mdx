@@ -51,7 +51,7 @@ sequenceDiagram
 
 ### 1. Quote
 
-You call `GET /quote?mode=DELTA` (or `mode=ALL` to get both Market and Delta in one response). The API returns a `delta` payload containing the indicative price, the expected `destAmount`, the deadline, the partner-and-fee header, and an `hmac` you must pass through verbatim in step 2.
+You call `GET /quote?mode=DELTA` — or `mode=ALL` to let Velora pick the path (see [Trading modes](/integrate/trading-modes)). The API returns a `delta` payload containing the indicative price, the expected `destAmount`, the deadline, the partner-and-fee header, and an `hmac` you must pass through verbatim in step 2.
 
 ### 2. Build
 
