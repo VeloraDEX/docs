@@ -4,7 +4,7 @@ description: "Get a quote for 1 ETH → USDC in 60 seconds — cURL, SDK, or Wid
 keywords: ["quickstart","quote","swap","getting started"]
 ---
 
-Get a quote for 1 ETH → USDC on Ethereum mainnet. `mode=ALL` returns the Delta intent and the Market route side-by-side in a single response, and you pick which to execute.
+Get a quote for 1 ETH → USDC on Ethereum mainnet. With `mode=ALL`, Velora picks the best execution path server-side and returns one response shape — either a `delta` block (gasless, signed and submitted later) or a `market` block (calldata-ready, submitted immediately). See [Trading modes](/integrate/trading-modes).
 
 <CodeGroup>
 
@@ -78,7 +78,7 @@ export default function SwapPage() {
 
 </CodeGroup>
 
-`GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=ALL` returns both — as `response.delta` (Delta intent) and `response.market` (Market route) — and you pick which to execute.
+`GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /prices` returns a `priceRoute` (calldata-ready against Augustus v6.2). `GET /quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route) — never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Pick your integration path
 

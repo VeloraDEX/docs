@@ -11,7 +11,7 @@ Velora is a DEX aggregator and intents protocol. One integration gives you:
 - **Crosschain** — Delta orders that resolve across chains via bridge-aware solvers.
 - **Augustus RFQ** — on-chain limit orders and OTC for ERC-20, with optional partial fills.
 
-You can pick a single surface or run them side by side. The Market API exposes `GET /prices` for direct aggregator routing; the Delta API exposes `GET /quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and can return a `delta` block, a `market` block (same shape as `/prices`'s `priceRoute`), or both — letting you pick which to execute from a single call.
+You can pick a single surface or run them side by side. The Market API exposes `GET /prices` for direct aggregator routing; the Delta API exposes `GET /quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and returns either a `delta` block or a `market` block (same shape as `/prices`'s `priceRoute`) — Velora picks the winner server-side. See [Trading modes](/integrate/trading-modes).
 
 ## Choose your integration
 

@@ -20,11 +20,7 @@ The Market API is Velora's classic swap aggregator. You request a quote, build a
   </Card>
 </CardGroup>
 
-## When to use Market vs Delta
-
-- **Use Market API** when you need atomic on-chain execution inside a larger transaction (composability), when the swap is tiny and gas overhead doesn't matter, or when Delta returns no quote.
-- **Use [Delta](/delta/overview)** when MEV is a concern, gasless UX matters, or the swap is crosschain.
-- **Use `mode=ALL`** in the quote endpoint to get both responses and pick at runtime.
+For a side-by-side breakdown of when to pick `mode=DELTA`, `mode=MARKET`, or `mode=ALL`, see [Trading modes](/integrate/trading-modes).
 
 ## See it work
 

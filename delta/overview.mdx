@@ -19,17 +19,6 @@ Delta is Velora's intent protocol. Instead of building, signing, and submitting 
   </Card>
 </CardGroup>
 
-## Delta vs a normal swap
-
-|  | Normal swap (Market API) | Delta intent |
-|---|---|---|
-| User signs | A transaction (on-chain tx) | An EIP-712 order (off-chain message) |
-| User pays gas | Yes | No |
-| MEV exposure | Public mempool — sandwichable | Private auction — solver competition |
-| Crosschain | Separate tx per chain | One signature, multi-chain settlement |
-| Fill guarantee | Best-effort routing | Solver commits at quote time |
-| Failure mode | Tx reverts | Order expires or is rejected — no funds lost |
-
 ## See it work
 
 The full lifecycle is four calls — quote, build, sign, submit — and then you poll for status:
@@ -52,11 +41,7 @@ curl "https://api.velora.xyz/delta/orders/:id"
 
 Walk through the full flow in the **[Quickstart →](/overview/quickstart)**
 
-## When to use Delta vs Market
-
-- **Use Delta** when the user is swapping at meaningful size, when MEV is a concern, when gasless UX matters (mobile, social, wallet onboarding), or when the swap is Crosschain.
-- **Use the Market API** when you need atomic on-chain execution inside a larger transaction (composability), when the swap is tiny and the gas overhead doesn't matter, or when `mode=DELTA` returns no quote (Delta is BUY-side and native-source restricted).
-- **Use `mode=ALL`** in the quote endpoint to get both responses and pick at runtime.
+For a side-by-side breakdown of when to pick `mode=DELTA`, `mode=MARKET`, or `mode=ALL`, see [Trading modes](/integrate/trading-modes).
 
 ## Next steps
 

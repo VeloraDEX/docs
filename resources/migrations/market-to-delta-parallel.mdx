@@ -13,7 +13,7 @@ Nothing. This migration is opt-in. Your existing Market integration keeps workin
 ## Why migrate
 
 - **Better UX** — Delta intents are gasless and MEV-protected. Users sign once; the solver network fills.
-- **No code rewrite** — `GET /quote` with `mode=ALL` returns both a Market `market` block (same shape as `/prices`'s `priceRoute`) and a Delta `delta` block in a single response. You pick which to execute per-quote.
+- **No code rewrite** — `GET /quote` with `mode=ALL` returns either a Market `market` block (same shape as `/prices`'s `priceRoute`) or a Delta `delta` block — Velora picks the winner server-side and you branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Steps
 
@@ -23,4 +23,4 @@ Nothing. This migration is opt-in. Your existing Market integration keeps workin
 
 ## End-state check
 
-Run a quote with `mode=ALL`. Confirm both `market` and `delta` are present. Pick one and complete a swap end-to-end.
+Run a quote with `mode=ALL`. Confirm the response carries either a `market` or `delta` block (the server-picked winner) and complete a swap end-to-end.
