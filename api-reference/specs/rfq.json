@@ -8,6 +8,10 @@
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
+  "externalDocs": {
+    "description": "AugustusRFQ — overview and integration guide.",
+    "url": "https://new-docs.velora.xyz/api-reference/rfq/overview"
+  },
   "paths": {
     "/rfq/orders": {
       "post": {

@@ -8,6 +8,10 @@
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
+  "externalDocs": {
+    "description": "Delta — how it works (quote → build → sign → submit → poll).",
+    "url": "https://new-docs.velora.xyz/delta/how-it-works"
+  },
   "paths": {
     "/quote": {
       "get": {

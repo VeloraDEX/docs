@@ -8,6 +8,10 @@
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
+  "externalDocs": {
+    "description": "Market — how it works (prices → calldata → broadcast).",
+    "url": "https://new-docs.velora.xyz/market/how-it-works"
+  },
   "paths": {
     "/prices": {
       "get": {
