@@ -1,15 +1,111 @@
 ---
 title: "Composable SDK"
-description: "Use the tree-shakeable, modular SDK when bundle size matters."
-keywords: ["sdk","composable","tree-shaking"]
+description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, sdk.quote) over a fetcher and contract caller you construct yourself, with a typed transaction-response generic."
+keywords: ["sdk", "composable", "constructFullSDK", "full"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+`constructFullSDK` returns the same namespaced API as the [Simple SDK](/sdk/simple-sdk) — `sdk.swap.*`, `sdk.delta.*`, `sdk.quote` — but you construct the fetcher and contract caller yourself. That extra wiring buys you a typed `<TxResponse>` generic and the freedom to share one caller across multiple SDK instances or chains.
 
 ## When to use this
 
-## Quickstart
+- You want write methods to return your wallet library's native response type (e.g., viem `Hex` or `ethers.ContractTransaction`) instead of a bare transaction hash.
+- You need one `contractCaller` to back several SDKs — for example, the same signer on mainnet (`chainId: 1`) and on Optimism (`chainId: 10`).
+- You're building infrastructure that abstracts the fetcher (custom retry, caching, logging) and don't want the Simple SDK to wrap it.
 
-## Examples
+If none of those apply, prefer the [Simple SDK](/sdk/simple-sdk) — fewer moving parts.
+
+## Construct it
+
+```ts
+import axios from "axios";
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+import {
+  constructFullSDK,
+  constructAxiosFetcher,
+  constructViemContractCaller,
+} from "@velora-dex/sdk";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const contractCaller = constructViemContractCaller(walletClient, account);
+const fetcher = constructAxiosFetcher(axios);
+
+const sdk = constructFullSDK({
+  chainId: 1,
+  fetcher,
+  contractCaller,
+});
+```
+
+Swap the contract-caller line for `constructEthersContractCaller`, `constructEthersV6ContractCaller`, or `constructWeb3ContractCaller` to use a different wallet library — see [Configure providers](/sdk/configure-providers) for each variant.
+
+## Typed transaction responses
+
+The `<TxResponse>` generic is the type that every write method returns. It's inferred from the contract caller you pass.
+
+| Contract caller                      | `<TxResponse>`                           |
+| ------------------------------------ | ---------------------------------------- |
+| `constructViemContractCaller`        | viem `Hex` (the transaction hash)        |
+| `constructEthersContractCaller` (v5) | `ethers.ContractTransaction`             |
+| `constructEthersV6ContractCaller`    | ethers v6 `ContractTransactionResponse`  |
+| `constructWeb3ContractCaller`        | web3.js `PromiEvent<TransactionReceipt>` |
+
+So with the viem caller above:
+
+```ts
+// type Promise<Hex>
+const hash = await sdk.swap.approveToken("1000000000000000000", DAI);
+console.log("approval submitted:", hash);
+```
+
+## What's available
+
+The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
+
+- `sdk.quote` — `getQuote`
+- `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx
+- `sdk.delta` — full Delta order lifecycle, partner fee, contract resolver
+- `sdk.limitOrders` — deprecated; see [Limit orders module](/sdk/modules/limit-orders)
+
+See [Modules → Swap](/sdk/modules/swap) and [Modules → Delta](/sdk/modules/delta) for end-to-end flows.
+
+## Sharing one caller across chains
+
+Because you own the caller, you can reuse it:
+
+```ts
+const baseConfig = { fetcher, contractCaller };
+
+const mainnet = constructFullSDK({ ...baseConfig, chainId: 1 });
+const optimism = constructFullSDK({ ...baseConfig, chainId: 10 });
+```
 
 ## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Partial SDK" icon="scissors" href="/sdk/partial-sdk">
+    Drop unused modules entirely with `constructPartialSDK`.
+  </Card>
+  <Card
+    title="Configure providers"
+    icon="sliders"
+    href="/sdk/configure-providers"
+  >
+    All four contract callers and both fetchers, with examples.
+  </Card>
+  <Card title="Modules → Delta" icon="bolt" href="/sdk/modules/delta">
+    The full Delta order lifecycle, including the split build/sign/post flow.
+  </Card>
+  <Card
+    title="Modules → Swap"
+    icon="arrows-left-right"
+    href="/sdk/modules/swap"
+  >
+    Market-swap walkthrough using the namespaced SDK.
+  </Card>
+</CardGroup>
