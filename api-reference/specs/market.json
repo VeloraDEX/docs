@@ -14,24 +14,24 @@
         "summary": "Get a Market route for a token pair",
         "operationId": "marketPrices",
         "parameters": [
-          { "name": "srcToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }, "description": "Source token address. A token symbol listed in /tokens can be used instead. Example uses ETH." },
-          { "name": "srcDecimals", "in": "query", "required": false, "schema": { "type": "integer", "example": 18 }, "description": "Source token decimals. Can be omitted if a token symbol is used in srcToken." },
-          { "name": "destToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }, "description": "Destination token address. A token symbol listed in /tokens can be used instead. Example uses USDC." },
-          { "name": "destDecimals", "in": "query", "required": false, "schema": { "type": "integer", "example": 6 }, "description": "Destination token decimals. Can be omitted if a token symbol is used in destToken." },
-          { "name": "amount", "in": "query", "required": true, "schema": { "type": "string", "example": "1000000000000000000" }, "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
+          { "name": "srcToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "description": "Source token address. A token symbol listed in /tokens can be used instead. Example uses ETH." },
+          { "name": "srcDecimals", "in": "query", "required": false, "schema": { "type": "integer" }, "example": 18, "description": "Source token decimals. Can be omitted if a token symbol is used in srcToken." },
+          { "name": "destToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "description": "Destination token address. A token symbol listed in /tokens can be used instead. Example uses USDC." },
+          { "name": "destDecimals", "in": "query", "required": false, "schema": { "type": "integer" }, "example": 6, "description": "Destination token decimals. Can be omitted if a token symbol is used in destToken." },
+          { "name": "amount", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/TokenAmount" }, "example": "1000000000000000000", "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
           { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
-          { "name": "network", "in": "query", "required": false, "schema": { "type": "integer", "default": 1 }, "description": "Network ID. Default: 1 (Mainnet)." },
+          { "name": "network", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/ChainId" }, "example": 1, "description": "EVM chain ID. Default: 1 (Mainnet). Market uses `network` for this parameter; Delta uses `chainId` — both are EVM chain IDs." },
           { "name": "otherExchangePrices", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "If true, the response includes price quotes from other exchanges in an `others` object." },
           { "name": "includeDEXS", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of DEXs to include." },
           { "name": "excludeDEXS", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of DEXs to exclude." },
           { "name": "excludeRFQ", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Exclude all RFQ liquidity from pricing." },
           { "name": "includeContractMethods", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of contract methods to include." },
           { "name": "excludeContractMethods", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of contract methods to exclude." },
-          { "name": "userAddress", "in": "query", "required": false, "schema": { "type": "string", "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }, "description": "End-user wallet address." },
+          { "name": "userAddress", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "End-user wallet address." },
           { "name": "route", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Dash-separated list of tokens for the price route. Max 4 tokens." },
-          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon", "example": "my-app-name" }, "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
+          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon" }, "example": "my-app-name", "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
           { "name": "maxImpact", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Bypass API price-impact check (default = 15%). Value in %." },
-          { "name": "receiver", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Receiver wallet address. Omit when swapping from/to the same account." },
+          { "name": "receiver", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "description": "Receiver wallet address. Omit when swapping from/to the same account." },
           { "name": "srcTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on srcToken transfers." },
           { "name": "destTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on destToken transfers." },
           { "name": "srcTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in BPS charged only on DEX swaps for srcToken." },
@@ -42,46 +42,37 @@
         ],
         "responses": {
           "200": {
-            "description": "Market route. Calldata-ready against Augustus v6.2 when version=6.2.",
+            "description": "Market route. Calldata-ready against Augustus v6.2 when `version=6.2`.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "priceRoute": {
-                      "type": "object",
-                      "properties": {
-                        "blockNumber": { "type": "integer" },
-                        "network": { "type": "integer" },
-                        "srcToken": { "type": "string" },
-                        "srcDecimals": { "type": "integer" },
-                        "srcAmount": { "type": "string" },
-                        "destToken": { "type": "string" },
-                        "destDecimals": { "type": "integer" },
-                        "destAmount": { "type": "string" },
-                        "bestRoute": { "type": "array", "items": { "type": "object" } },
-                        "gasCostUSD": { "type": "string" },
-                        "gasCost": { "type": "string" },
-                        "side": { "type": "string", "enum": ["SELL", "BUY"] },
-                        "version": { "type": "string" },
-                        "contractAddress": { "type": "string" },
-                        "tokenTransferProxy": { "type": "string" },
-                        "contractMethod": { "type": "string" },
-                        "partnerFee": { "type": "number" },
-                        "srcUSD": { "type": "string" },
-                        "destUSD": { "type": "string" },
-                        "partner": { "type": "string" },
-                        "maxImpactReached": { "type": "boolean" },
-                        "hmac": { "type": "string" }
-                      }
-                    }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/MarketPricesResponse" }
               }
             }
           },
-          "400": { "description": "Invalid request" },
-          "422": { "description": "Unsupported chain or token" }
+          "400": {
+            "description": "Invalid request. Documented examples: `InvalidInput`, `PricingError`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported chain or token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
       }
     },
@@ -90,35 +81,135 @@
         "summary": "Build calldata for a Market swap",
         "operationId": "marketTransactions",
         "parameters": [
-          { "name": "network", "in": "path", "required": true, "schema": { "type": "integer" } }
+          { "name": "network", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID. Market uses `network`; Delta uses `chainId`." }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "priceRoute":   { "type": "object", "description": "The `priceRoute` block returned by GET /prices, passed verbatim." },
-                  "srcToken":     { "type": "string" },
-                  "destToken":    { "type": "string" },
-                  "srcAmount":    { "type": "string" },
-                  "destAmount":   { "type": "string" },
-                  "userAddress":  { "type": "string" },
-                  "slippage":     { "type": "integer" }
-                },
-                "required": ["priceRoute", "userAddress"]
-              }
+              "schema": { "$ref": "#/components/schemas/MarketTransactionRequest" }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Augustus calldata + tx fields",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "description": "Augustus calldata + tx fields.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarketTransactionResponse" }
+              }
+            }
           },
-          "400": { "description": "Invalid input or stale priceRoute" }
+          "400": {
+            "description": "Invalid input or stale priceRoute. Documented examples: `InvalidInput`, `StalePriceRoute`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "type": "string",
+        "description": "EVM address (20 bytes, hex-encoded with `0x` prefix). Use the mixed-case placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native ETH.",
+        "pattern": "^0x[a-fA-F0-9]{40}$",
+        "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+      },
+      "ChainId": {
+        "type": "integer",
+        "description": "EVM chain ID. Supported values today include 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), 100 (Gnosis). The set is open — call GET /chains for the live list.",
+        "example": 1
+      },
+      "TokenAmount": {
+        "type": "string",
+        "description": "Token amount in WEI / raw units (no decimal point). Serialized as a string to preserve precision for amounts that exceed JavaScript Number range.",
+        "example": "1000000000000000000"
+      },
+      "ErrorCode": {
+        "type": "string",
+        "description": "Documented Velora error code (e.g. `PricingError`, `InvalidInput`, `UnsupportedChain`, `StalePriceRoute`, `InvalidSignature`). The set is open — handle codes you recognize and fall back to a generic error path for everything else. See /api-reference/troubleshooting for known codes.",
+        "example": "PricingError"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Standard Velora error envelope.",
+        "required": ["errorType"],
+        "properties": {
+          "errorType": { "$ref": "#/components/schemas/ErrorCode" },
+          "details": { "type": "string", "description": "Human-readable description of the failure." }
+        },
+        "example": {
+          "errorType": "PricingError",
+          "details": "Error getting price data"
+        }
+      },
+      "MarketPriceRoute": {
+        "type": "object",
+        "description": "Market route block. Calldata-ready against Augustus v6.2 when `version=6.2`.",
+        "properties": {
+          "blockNumber": { "type": "integer" },
+          "network": { "$ref": "#/components/schemas/ChainId" },
+          "srcToken": { "$ref": "#/components/schemas/Address" },
+          "srcDecimals": { "type": "integer" },
+          "srcAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "destToken": { "$ref": "#/components/schemas/Address" },
+          "destDecimals": { "type": "integer" },
+          "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "bestRoute": { "type": "array", "items": { "type": "object" } },
+          "gasCostUSD": { "type": "string" },
+          "gasCost": { "type": "string" },
+          "side": { "type": "string", "enum": ["SELL", "BUY"] },
+          "version": { "type": "string" },
+          "contractAddress": { "$ref": "#/components/schemas/Address" },
+          "tokenTransferProxy": { "$ref": "#/components/schemas/Address" },
+          "contractMethod": { "type": "string" },
+          "partnerFee": { "type": "number" },
+          "srcUSD": { "type": "string" },
+          "destUSD": { "type": "string" },
+          "partner": { "type": "string" },
+          "maxImpactReached": { "type": "boolean" },
+          "hmac": { "type": "string" }
+        }
+      },
+      "MarketPricesResponse": {
+        "type": "object",
+        "description": "GET /prices envelope.",
+        "properties": {
+          "priceRoute": { "$ref": "#/components/schemas/MarketPriceRoute" }
+        }
+      },
+      "MarketTransactionRequest": {
+        "type": "object",
+        "required": ["priceRoute", "userAddress"],
+        "properties": {
+          "priceRoute": {
+            "allOf": [{ "$ref": "#/components/schemas/MarketPriceRoute" }],
+            "description": "The `priceRoute` block returned by GET /prices, passed verbatim — do not recompute or re-encode."
+          },
+          "srcToken": { "$ref": "#/components/schemas/Address" },
+          "destToken": { "$ref": "#/components/schemas/Address" },
+          "srcAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "userAddress": { "$ref": "#/components/schemas/Address" },
+          "slippage": { "type": "integer", "description": "Slippage tolerance in basis points (e.g. `100` = 1%)." }
+        }
+      },
+      "MarketTransactionResponse": {
+        "type": "object",
+        "description": "Augustus calldata + tx envelope ready to broadcast."
       }
     }
   }
