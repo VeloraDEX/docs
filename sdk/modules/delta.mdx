@@ -1,15 +1,154 @@
 ---
 title: "Delta module"
-description: "Submit and track Delta intents from the SDK."
-keywords: ["sdk","delta","intents"]
+description: "Submit, sign, and track Delta intents from sdk.delta — gasless swaps where solvers execute on the user's behalf."
+keywords: ["sdk", "delta", "intents", "gasless", "submitDeltaOrder"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Delta module wraps the [Delta API](/delta/overview) — gasless, MEV-protected swaps where the user signs an off-chain order and a network of solvers (Portikus) competes to fill it. The user pays no gas; the solver covers execution cost out of their margin.
 
 ## When to use this
 
-## Quickstart
+- The user shouldn't pay gas, or doesn't have gas on the source chain.
+- You want MEV protection — orders fill via private auction, not the public mempool.
+- You want a single signature to settle crosschain — see [Crosschain Delta](/delta/crosschain-delta).
 
-## Examples
+For swaps where the user submits the transaction themselves, see [Modules → Swap](/sdk/modules/swap).
+
+## The flow
+
+<Steps>
+  <Step title="Get a Delta price">
+    Call `sdk.delta.getDeltaPrice` (or `sdk.quote.getQuote` with `mode: 'delta'`
+    / `mode: 'all'`) to determine source/destination tokens, amount, and partner
+    fee.
+  </Step>
+  <Step title="Approve the source token (or sign a Permit)">
+    Call `sdk.delta.approveTokenForDelta`, or sign a Permit / Permit2 message
+    with the Delta contract as the verifying contract. Native tokens skip this
+    step.
+  </Step>
+  <Step title="Build, sign, and post the order">
+    Either call the one-shot orchestrator `sdk.delta.submitDeltaOrder`, or run
+    the three steps (`buildDeltaOrder` → `signDeltaOrder` → `postDeltaOrder`)
+    yourself when you need control over signing.
+  </Step>
+  <Step title="Poll for execution">
+    Use `sdk.delta.getDeltaOrderById` (or `getDeltaOrderByHash`) on a timer
+    until status is `EXECUTED`. For crosschain orders, also wait for
+    `bridgeStatus === 'filled'`.
+  </Step>
+</Steps>
+
+## One-call submit
+
+`submitDeltaOrder` runs build → sign → post in a single call. This is the recommended path for most flows.
+
+```ts
+const slippagePercent = 0.5;
+const destAmount = BigInt(
+  +(+deltaPrice.destAmount * (1 - slippagePercent / 100)).toFixed(0),
+).toString(10);
+
+const auction = await sdk.delta.submitDeltaOrder({
+  deltaPrice,
+  owner: account,
+  srcToken: DAI,
+  destToken: USDC,
+  srcAmount: "1000000000000000000",
+  destAmount, // minimum acceptable destAmount
+  partner: "my-app-name",
+  // beneficiary: anotherAccount, // optional, default = owner
+  // permit: "0x...",             // optional, if you signed a Permit instead of approving
+  // partiallyFillable: true,     // optional, default = fill-or-kill
+});
+
+console.log("auction id:", auction.id);
+```
+
+## Split flow
+
+Use the three-step flow when you need to customize signing — for example, a hardware wallet that prompts on each call, a multisig that signs asynchronously, or batched signing across orders.
+
+```ts
+const signableOrderData = await sdk.delta.buildDeltaOrder({
+  deltaPrice,
+  owner: account,
+  srcToken: DAI,
+  destToken: USDC,
+  srcAmount: "1000000000000000000",
+  destAmount,
+  partner: "my-app-name",
+});
+
+const signature = await sdk.delta.signDeltaOrder(signableOrderData);
+
+const auction = await sdk.delta.postDeltaOrder({
+  order: signableOrderData.data,
+  signature,
+  partner: "my-app-name",
+});
+```
+
+If your signer is a smart contract (e.g., a multisig or 4337 wallet) that can't produce an off-chain EIP-712 signature, use `sdk.delta.preSignDeltaOrder` to register the order hash on-chain instead.
+
+## Poll for execution
+
+```ts
+import { OrderHelpers } from "@velora-dex/sdk";
+
+const intervalId = setInterval(async () => {
+  const updated = await sdk.delta.getDeltaOrderById(auction.id);
+  if (OrderHelpers.checks.isExecutedAuction(updated)) {
+    clearInterval(intervalId);
+    console.log("filled");
+  }
+}, 3000);
+
+// stop polling after 5 minutes
+setTimeout(() => clearInterval(intervalId), 60_000 * 5);
+```
+
+`OrderHelpers.checks.isExecutedAuction` returns `true` only when same-chain orders show `status === "EXECUTED"`, and crosschain orders also have their destination-chain leg filled.
+
+Order status codes and their meaning are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+
+## Partner fee
+
+Add `partner` (and optionally override `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to `buildDeltaOrder` and `submitDeltaOrder`. The SDK resolves the default fee from your registered partner config; you can override per-call.
+
+```ts
+const { partnerAddress, partnerFee, takeSurplus } =
+  await sdk.delta.getPartnerFee({
+    partner: "my-app-name",
+  });
+```
+
+See [Monetize](/sdk/monetize) for the full field reference and the fee-vs-surplus tradeoffs.
+
+## Cancel an order
+
+```ts
+await sdk.delta.cancelLimitDeltaOrders([auction.id]);
+```
+
+This signs and posts a cancellation request. It only succeeds for orders that are still open in the auction.
+
+## Crosschain Delta
+
+Pass a `destChainId` to `getDeltaPrice` / `buildDeltaOrder` to settle on a different chain than the source. One signature, bridge-aware solver routing, no second transaction. See [Crosschain Delta](/delta/crosschain-delta) for the full design.
+
+## External and TWAP orders
+
+The SDK also supports two advanced order families that share the same build/sign/post pattern:
+
+- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/EXTERNAL_ORDERS.md) in the SDK repo.
+- **TWAP Delta orders** — split a large order into time-weighted chunks. See [`DELTA.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/DELTA.md) in the SDK repo.
+
+Method names mirror the standard flow: `constructBuildExternalDeltaOrder` / `constructBuildTWAPDeltaOrder`, etc. — see the [Partial SDK reference](/sdk/partial-sdk#available-constructors).
 
 ## Related pages
+
+- [Why Delta](/delta/overview) — the protocol design.
+- [Quickstart](/overview/quickstart) — Delta end-to-end via cURL.
+- [Monetize](/sdk/monetize) — partner-fee fields.
+- [API reference → Delta](/api-reference/delta/overview) — the HTTP endpoints.
