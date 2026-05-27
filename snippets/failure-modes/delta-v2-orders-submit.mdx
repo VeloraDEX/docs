@@ -1,0 +1,10 @@
+| Symptom | Root cause | Fix |
+|---|---|---|
+| 400 `Invalid signature`                                          | Signed payload doesn't match `order` byte-for-byte                              | Sign `toSign` from `POST /delta/v2/orders/build` exactly; pass `order: toSign.value` to submit (not the whole `toSign` object) |
+| 400 `Order expired`                                              | Long pause between build and submit; `deadline` already passed when relayer validated      | Rebuild on submit-time, or pass a longer `deadline` (seconds since epoch) at build |
+| 400 `InsufficientAllowance`                                       | User approved the wrong spender — usually the Augustus router instead of the Delta contract | Approve `route.spender` (returned by `GET /delta/v2/prices`) — the Delta contract, not Augustus |
+| 400 `InsufficientBalance`                                         | Source-token balance dropped between price and submit                               | Re-quote and rebuild; show the user a fresh balance before signing |
+| 200 OK then stuck at `PENDING`                                    | No agent bid the auction (size, pair, or chain) within the window                | Poll [GET /delta/v2/orders/{orderId}](/api-reference/delta-v2/orders-get-by-id); cancel via [POST /delta/v2/orders/cancel](/api-reference/delta-v2/orders-cancel) and re-quote if past your SLA |
+| Order transitions to `SUSPENDED`                                  | Allowance was revoked or balance moved post-submission                          | Re-approve and the relayer will pick the order back up; see [Order lifecycle](/delta/order-lifecycle-and-status-codes) |
+
+<Note>Updated from support tickets at each release. Last updated: 2026-05-27.</Note>

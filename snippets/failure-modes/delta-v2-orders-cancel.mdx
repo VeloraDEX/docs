@@ -1,0 +1,8 @@
+| Symptom | Root cause | Fix |
+|---|---|---|
+| 400 `Invalid signature`                                          | Cancellation EIP-712 typed data assembled wrong (wrong chainId or wrong domain)               | Sign the relayer's cancel payload — the SDK's `signCancelDeltaOrderRequestV2` handles this for you |
+| 400 `Order already settled`                                     | One or more `orderIds` are in a terminal state (`COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`) | Pre-filter `orderIds` to those with status in `PENDING` / `AWAITING_SIGNATURE` / `ACTIVE` / `SUSPENDED` |
+| 200 OK but order doesn't move to `CANCELLING`                    | An auction had already started for that order — cancellation queues but won't kill an in-flight fill | Wait one polling interval; the order moves to `CANCELLED` once the relayer confirms |
+| 400 `orderIds.length > 100`                                      | Tried to batch-cancel too many in one call                                  | Chunk into batches of ≤ 100 |
+
+<Note>Updated from support tickets at each release. Last updated: 2026-05-27.</Note>
