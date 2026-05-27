@@ -262,8 +262,21 @@
             "pages": [
               "api-reference/delta/overview",
               "api-reference/delta/quote",
+              "api-reference/delta/prices",
+              "api-reference/delta/bridge-info",
+              "api-reference/delta/bridge-protocols",
+              "api-reference/delta/strategies",
+              "api-reference/delta/is-token-supported",
+              "api-reference/delta/partner-fee",
               "api-reference/delta/orders-build",
-              "api-reference/delta/orders"
+              "api-reference/delta/orders",
+              "api-reference/delta/orders-cancel",
+              "api-reference/delta/orders-list",
+              "api-reference/delta/orders-get-by-id",
+              "api-reference/delta/orders-get-by-hash",
+              "api-reference/delta/orders-fillable-balance",
+              "api-reference/delta/orderbook",
+              "api-reference/delta/agents-list"
             ]
           },
           {
