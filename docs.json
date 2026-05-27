@@ -320,6 +320,7 @@
             "group": "Migrations",
             "pages": [
               "resources/migrations/index",
+              "resources/migrations/delta-v1-to-v2",
               "resources/migrations/market-to-delta-parallel",
               "resources/migrations/market-to-delta-replace",
               "resources/migrations/augustus-v5-to-v6-2",
