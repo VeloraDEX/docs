@@ -1,15 +1,197 @@
 ---
 title: "Simple SDK"
-description: "Use the all-in-one entry point for the common quote-and-swap flow."
-keywords: ["sdk","simple"]
+description: "constructSimpleSDK auto-wires the fetcher and contract caller so one constructor returns a working SDK for quotes, swaps, Delta orders, and approvals."
+keywords: ["sdk", "simple", "constructSimpleSDK", "quickstart"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+`constructSimpleSDK` is the recommended entry point for most integrators. You pass it a `chainId`, an HTTP client, and (optionally) a wallet — it returns an SDK with every Velora method available under flat namespaces.
 
 ## When to use this
 
-## Quickstart
+- You want one import that exposes the whole API surface.
+- You're fine with the SDK returning transaction hashes (`string`) for write calls, instead of library-typed responses.
+- You don't need to share a single contract caller across multiple SDK instances.
 
-## Examples
+For tighter control over the transaction-response type or bundle size, use the [Composable](/sdk/composable-sdk) or [Partial](/sdk/partial-sdk) constructors instead.
+
+## Construct it
+
+Pick your HTTP client. `fetch` keeps the bundle smaller; `axios` is convenient if you already use it.
+
+<CodeGroup>
+
+```ts axios
+import axios from "axios";
+import { constructSimpleSDK } from "@velora-dex/sdk";
+
+const simpleSDK = constructSimpleSDK({ chainId: 1, axios });
+```
+
+```ts fetch
+import { constructSimpleSDK } from "@velora-dex/sdk";
+
+const simpleSDK = constructSimpleSDK({ chainId: 1, fetch });
+```
+
+</CodeGroup>
+
+Without a wallet, the SDK is **read-only** — quotes, prices, order status, supported tokens — but cannot approve, sign, or submit.
+
+## Add a wallet
+
+Pass a second argument with your provider to enable write methods (`approveToken`, `signDeltaOrder`, `submitDeltaOrder`, `buildTx`-then-send).
+
+<CodeGroup>
+
+```ts viem
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  { viemClient: walletClient, account },
+);
+```
+
+```ts ethers v5
+import { ethers } from "ethers";
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  {
+    ethersProviderOrSigner: signer, // JsonRpcProvider or Wallet
+    EthersContract: ethers.Contract,
+    account,
+  },
+);
+```
+
+```ts ethers v6
+import { ethers } from "ethers";
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  {
+    ethersV6ProviderOrSigner: signer,
+    EthersV6Contract: ethers.Contract,
+    account,
+  },
+);
+```
+
+```ts web3
+import Web3 from "web3";
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  { web3: new Web3(window.ethereum), account },
+);
+```
+
+</CodeGroup>
+
+<Note>
+Write calls always resolve to a **transaction hash** (`string`). If you need the library-typed response object (viem's `Hex`, `ethers.ContractTransaction`, etc.), use [`constructFullSDK`](/sdk/composable-sdk) with the `<TxResponse>` generic.
+</Note>
+
+## Available methods
+
+The returned SDK is namespaced by feature:
+
+| Namespace         | What's inside                                                                                                                                                                                                                                                        | Module page                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `sdk.quote`       | `getQuote` — unified Delta-with-fallback-to-Market price                                                                                                                                                                                                             | [API → Delta /quote](/api-reference/delta/quote) |
+| `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx`                                                                                                                                                              | [Swap module](/sdk/modules/swap)                 |
+| `sdk.delta`       | `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelLimitDeltaOrders`, `getPartnerFee` | [Delta module](/sdk/modules/delta)               |
+| `sdk.limitOrders` | Deprecated. Build/sign/post/cancel limit orders.                                                                                                                                                                                                                     | [Limit orders module](/sdk/modules/limit-orders) |
+
+## End-to-end example
+
+Quote, approve, and submit a Delta order in one flow. (Falls back to a Market swap if Delta isn't available for the pair.)
+
+```ts
+import axios from "axios";
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+import { constructSimpleSDK, txParamsToViemTxParams } from "@velora-dex/sdk";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  { viemClient: walletClient, account },
+);
+
+const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const amount = "1000000000000000000"; // 1 DAI
+
+const quote = await sdk.quote.getQuote({
+  srcToken: DAI,
+  destToken: USDC,
+  amount,
+  userAddress: account,
+  srcDecimals: 18,
+  destDecimals: 6,
+  mode: "all",
+  side: "SELL",
+  partner: "my-app-name",
+});
+
+if ("delta" in quote) {
+  await sdk.delta.approveTokenForDelta(amount, DAI);
+
+  const slippagePercent = 0.5;
+  const destAmount = BigInt(
+    +(+quote.delta.destAmount * (1 - slippagePercent / 100)).toFixed(0),
+  ).toString(10);
+
+  const auction = await sdk.delta.submitDeltaOrder({
+    deltaPrice: quote.delta,
+    owner: account,
+    srcToken: DAI,
+    destToken: USDC,
+    srcAmount: amount,
+    destAmount,
+    partner: "my-app-name",
+  });
+
+  console.log("Delta auction id:", auction.id);
+} else {
+  await sdk.swap.approveToken(amount, DAI);
+
+  const tx = await sdk.swap.buildTx({
+    srcToken: DAI,
+    destToken: USDC,
+    srcAmount: amount,
+    slippage: 250, // 2.5%
+    priceRoute: quote.market,
+    userAddress: account,
+    partner: "my-app-name",
+  });
+
+  await walletClient.sendTransaction({
+    ...txParamsToViemTxParams(tx),
+    account,
+  });
+}
+```
+
+See [Modules → Delta](/sdk/modules/delta) for the split build/sign/post flow and order-status polling, and [Modules → Swap](/sdk/modules/swap) for the full Market-swap walkthrough.
 
 ## Related pages
+
+- [Modules → Swap](/sdk/modules/swap)
+- [Modules → Delta](/sdk/modules/delta)
+- [Configure providers](/sdk/configure-providers)
+- [Monetize](/sdk/monetize)
