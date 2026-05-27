@@ -1,15 +1,117 @@
 ---
 title: "Swap module"
-description: "Build, sign, and execute swaps through the SDK swap module."
-keywords: ["sdk","swap"]
+description: "Build, approve, and execute Market swaps through sdk.swap — the user submits the transaction themselves."
+keywords: ["sdk", "swap", "market", "buildTx", "getRate"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Swap module wraps the [Market API](/market/overview) — rates, allowances, and transaction-building for swaps that the **user** signs and submits. For gasless swaps where solvers settle on the user's behalf, see [Modules → Delta](/sdk/modules/delta).
 
 ## When to use this
 
-## Quickstart
+- The user has gas on the source chain and is happy to submit a transaction.
+- You need the cheapest path across DEX aggregation (no auction, no off-chain settlement).
+- You want full control over slippage, gas, and recipient.
 
-## Examples
+## The flow
+
+<Steps>
+  <Step title="Get a price route">
+    Call `sdk.swap.getRate` (or `sdk.quote.getQuote` with `mode: 'market'`) to choose source token, destination token, amount, and side. The response includes the routed path and expected output.
+  </Step>
+  <Step title="Approve the source token (or sign a Permit)">
+    Call `sdk.swap.approveToken` so the `TokenTransferProxy` can pull the source token, or sign a Permit / Permit2 message with `TokenTransferProxy` as the verifying contract.
+  </Step>
+  <Step title="Build the transaction">
+    Call `sdk.swap.buildTx` with the price route, slippage (or `destAmount`), user address, and `partner`. The response is a fully-populated `TransactionRequest`.
+  </Step>
+  <Step title="Send it from the wallet">
+    Pass the result of `buildTx` to your signer's `sendTransaction`. The SDK is no longer in the loop after this — you own the broadcast.
+  </Step>
+</Steps>
+
+## Full example
+
+```ts
+import axios from "axios";
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+import { constructSimpleSDK, txParamsToViemTxParams } from "@velora-dex/sdk";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, axios },
+  { viemClient: walletClient, account }
+);
+
+const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
+const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const amount = "1000000000000000000"; // 1 DAI
+
+// 1. Quote
+const priceRoute = await sdk.swap.getRate({
+  srcToken: DAI,
+  destToken: USDC,
+  amount,
+  userAddress: account,
+  side: "SELL",
+  options: { partner: "my-app-name" },
+});
+
+// 2. Approve
+await sdk.swap.approveToken(amount, DAI);
+
+// 3. Build the swap transaction
+const tx = await sdk.swap.buildTx({
+  srcToken: DAI,
+  destToken: USDC,
+  srcAmount: amount,
+  slippage: 250, // 2.5% in basis points
+  priceRoute,
+  userAddress: account,
+  partner: "my-app-name",
+  // receiver: "0x..." // optional, if the recipient differs from userAddress
+});
+
+// 4. Send it
+const hash = await walletClient.sendTransaction({
+  ...txParamsToViemTxParams(tx),
+  account,
+});
+console.log("swap submitted:", hash);
+```
+
+### Sign a Permit instead of approving
+
+If the source token supports EIP-2612 (or Permit2), skip the on-chain approval and sign a typed-data message with the `TokenTransferProxy` as the verifying contract.
+
+```ts
+const tokenTransferProxy = await sdk.swap.getSpender();
+// build EIP-712 typed data with verifyingContract = tokenTransferProxy
+// pass the signature as `permit` to buildTx
+```
+
+See the [Build parameters for transaction](/api-reference/market/transactions) endpoint for the supported permit variants.
+
+## Other methods
+
+- `sdk.swap.getSpender()` — the `TokenTransferProxy` address you approve.
+- `sdk.swap.getBalances(userAddress)` — token balances and allowances in one call.
+- `sdk.swap.getTokens()` — Velora-supported tokens on the active chain.
+- `sdk.swap.getAdapters()` — the DEX adapters available to the router.
+- `sdk.swap.swapTx(params)` — one-call orchestrator: rate + build + send. Convenience over the four-step flow.
+
+## Partner fee
+
+Add `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to every `getRate`, `buildTx`, and `getQuote` call to capture revenue. See [Monetize](/sdk/monetize) for the full field reference.
 
 ## Related pages
+
+- [Modules → Delta](/sdk/modules/delta) — gasless intent-based swaps.
+- [Monetize](/sdk/monetize) — partner-fee fields and tradeoffs.
+- [Configure providers](/sdk/configure-providers) — set up your wallet library.
+- [API reference → Market](/api-reference/market/overview) — the underlying HTTP endpoints.
