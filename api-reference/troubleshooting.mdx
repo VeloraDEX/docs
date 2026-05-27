@@ -8,6 +8,10 @@ import MarketTransactionsFailureModes from "/snippets/failure-modes/market-trans
 import DeltaQuoteFailureModes from "/snippets/failure-modes/delta-quote.mdx";
 import DeltaOrdersBuildFailureModes from "/snippets/failure-modes/delta-orders-build.mdx";
 import DeltaOrdersFailureModes from "/snippets/failure-modes/delta-orders.mdx";
+import DeltaV2PricesFailureModes from "/snippets/failure-modes/delta-v2-prices.mdx";
+import DeltaV2OrdersBuildFailureModes from "/snippets/failure-modes/delta-v2-orders-build.mdx";
+import DeltaV2OrdersSubmitFailureModes from "/snippets/failure-modes/delta-v2-orders-submit.mdx";
+import DeltaV2OrdersCancelFailureModes from "/snippets/failure-modes/delta-v2-orders-cancel.mdx";
 
 Each table covers a single endpoint and is updated from support tickets at each release. Jump straight to the endpoint you're calling.
 
@@ -21,7 +25,25 @@ Each table covers a single endpoint and is updated from support tickets at each 
 
 <MarketTransactionsFailureModes />
 
-## Delta API
+## Delta V2 API
+
+### GET /delta/v2/prices
+
+<DeltaV2PricesFailureModes />
+
+### POST /delta/v2/orders/build
+
+<DeltaV2OrdersBuildFailureModes />
+
+### POST /delta/v2/orders
+
+<DeltaV2OrdersSubmitFailureModes />
+
+### POST /delta/v2/orders/cancel
+
+<DeltaV2OrdersCancelFailureModes />
+
+## Delta V1 API
 
 ### GET /quote
 
