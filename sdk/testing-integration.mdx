@@ -95,7 +95,10 @@ const mockFetcher: FetcherFunction = async ({ url, method }) => {
 const sdk = constructSimpleSDK({ chainId: 1, fetcher: mockFetcher });
 
 const rate = await sdk.swap.getRate({
-  /* fill in srcToken/destToken/amount/userAddress */
+  srcToken: "0x...",
+  destToken: "0x...",
+  amount: "1000",
+  userAddress: "0x...",
 });
 expect(rate.destAmount).toBe("999");
 ```
