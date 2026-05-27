@@ -239,7 +239,26 @@
             ]
           },
           {
-            "group": "Delta API",
+            "group": "Delta API V2",
+            "pages": [
+              "api-reference/delta-v2/overview",
+              "api-reference/delta-v2/prices",
+              "api-reference/delta-v2/bridge-routes",
+              "api-reference/delta-v2/bridge-protocols",
+              "api-reference/delta-v2/strategies",
+              "api-reference/delta-v2/is-token-supported",
+              "api-reference/delta-v2/orders-build",
+              "api-reference/delta-v2/orders-submit",
+              "api-reference/delta-v2/orders-cancel",
+              "api-reference/delta-v2/orders-list",
+              "api-reference/delta-v2/orders-get-by-id",
+              "api-reference/delta-v2/orders-get-by-hash",
+              "api-reference/delta-v2/orders-fillable-balance",
+              "api-reference/delta-v2/agents-list"
+            ]
+          },
+          {
+            "group": "Delta API V1",
             "pages": [
               "api-reference/delta/overview",
               "api-reference/delta/quote",
