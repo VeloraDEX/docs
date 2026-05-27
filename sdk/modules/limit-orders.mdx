@@ -1,15 +1,41 @@
 ---
 title: "Limit orders module"
-description: "Create, sign, and manage limit orders from the SDK."
-keywords: ["sdk","limit orders"]
+description: "The SDK limit-orders module is deprecated. New integrations should use Delta limit orders, which are gasless and MEV-protected."
+keywords: ["sdk", "limit orders", "deprecated", "delta"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+<Warning>
+**The SDK `limitOrders` module is deprecated** and will be removed in a future major version. New integrations should use **Delta limit orders** — they are gasless, MEV-protected, and use the same Portikus solver network as Delta market orders.
+</Warning>
 
-## When to use this
+## Migrate to Delta
 
-## Quickstart
+Limit-order behavior is now expressed through Delta with a `LIMIT` order type. You sign once and the solver network competes to fill at or better than your limit price; you pay no gas.
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Why Delta" icon="bolt" href="/delta/overview">
+    What Delta gives you over a classic limit order — gasless, MEV-protected, crosschain.
+  </Card>
+  <Card title="Delta SDK module" icon="code" href="/sdk/modules/delta">
+    Build, sign, and submit a Delta order from the SDK.
+  </Card>
+</CardGroup>
+
+## The deprecated module
+
+For existing integrations, the `sdk.limitOrders` namespace still exposes:
+
+- `buildLimitOrder` — assemble an EIP-712 typed-data payload.
+- `signLimitOrder` — sign that payload with the connected wallet.
+- `postLimitOrder` — submit the signed order to the API.
+- `cancelLimitOrder` — sign and post a cancellation.
+- `getLimitOrders` — query open and filled orders for a maker.
+- `approveTokenForLimitOrder`, `getLimitOrdersContract`, `buildLimitOrderTx`, `fillOrderDirectly` — supporting on-chain methods.
+
+Full signatures, parameter shapes, and return types are generated from source into the [SDK typedoc reference](https://github.com/VeloraDEX/sdk/tree/main/docs/md).
 
 ## Related pages
+
+- [Why Delta](/delta/overview)
+- [Modules → Delta](/sdk/modules/delta)
+- [API reference → Delta](/api-reference/delta/overview)
