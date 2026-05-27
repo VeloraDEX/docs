@@ -1,15 +1,79 @@
 ---
-title: "Monetize (fee config)"
-description: "Configure partner fees on SDK calls and collect revenue per trade."
-keywords: ["sdk","fees","monetization"]
+title: "Monetize"
+description: "Add partner fees or surplus share to every SDK call — same partner key works across Market swaps, Delta orders, and quotes."
+keywords: ["sdk", "fees", "monetization", "partner", "partnerFee", "takeSurplus"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Every quote, swap, and Delta call accepts a `partner` string and optional fee overrides. The fee is collected on-chain at settlement and routed to your partner address — no extra integration needed.
 
-## When to use this
+## Quick setup
 
-## Quickstart
+If you've registered your partner key with Velora, the SDK can resolve the fee config for you:
 
-## Examples
+```ts
+const { partnerAddress, partnerFee, takeSurplus } = await sdk.delta.getPartnerFee({
+  partner: "my-app-name",
+});
+```
+
+This is cached internally per partner string, so subsequent calls don't hit the API again.
+
+To override the registered defaults per call, pass the fee fields directly:
+
+```ts
+const auction = await sdk.delta.submitDeltaOrder({
+  deltaPrice,
+  owner: account,
+  srcToken: DAI,
+  destToken: USDC,
+  srcAmount: amount,
+  destAmount,
+  partner: "my-app-name",
+  partnerAddress: "0xYourFeeCollector",
+  partnerFeeBps: 25,           // 0.25%
+  partnerTakesSurplus: false,
+});
+```
+
+## Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `partner` | `string` | Your partner-key string (e.g. `"my-app-name"`). Used for attribution; required for partner features. |
+| `partnerAddress` | `string` | Optional. Ethereum address that receives the fee. Overrides the address registered for `partner`. |
+| `partnerFeeBps` | `number` | Optional. Fee in basis points. `25` = 0.25%. Max `200` (2%). |
+| `partnerTakesSurplus` | `boolean` | Optional. When `true`, you receive a share of swap surplus instead of a fixed fee. Defaults to `false`. |
+
+<Note>
+**Precedence.** If both `partnerFeeBps` and `partnerTakesSurplus` are set, `partnerFeeBps` wins. To take surplus instead, set `partnerTakesSurplus: true` and **omit** `partnerFeeBps`.
+</Note>
+
+## Fee vs surplus — which to pick
+
+| | Fixed fee (`partnerFeeBps`) | Surplus share (`partnerTakesSurplus`) |
+|---|---|---|
+| Revenue | Predictable per-trade cut | Variable — depends on routing edge |
+| User cost | Worse quotes (fee comes off the top) | Same quote as no-fee — surplus is the *better-than-quoted* portion |
+| Max | 2% (`partnerFeeBps: 200`) | 50% of surplus |
+| Best for | Mass-market integrations where a known cut matters | High-volume integrations that prioritize the user-facing rate |
+
+## Where it applies
+
+- **Market swap** — pass `partner` to `sdk.swap.getRate` and `sdk.swap.buildTx`. Fee is taken from the destination token at settlement.
+- **Delta** — pass `partner` (and overrides) to `sdk.delta.buildDeltaOrder` or `sdk.delta.submitDeltaOrder`. Fee is encoded into the signed order's `partnerAndFee` field.
+- **Quote** — pass `partner` to `sdk.quote.getQuote`. The returned `priceRoute` / `deltaPrice` already accounts for the fee, so the `destAmount` you show users is the net amount.
+
+The fee is collected on-chain at settlement; there is no off-chain accounting step on your side.
+
+## Production tips
+
+- **Load `partner` from an environment variable.** Different builds (staging, production, white-label) can use different keys without code changes.
+- **Audit `partnerAddress`.** Once a swap settles, fees pay to that address on-chain. Treat it like any treasury address.
+- **Don't ship per-call overrides** unless you genuinely vary fees by route or user tier — registering defaults with Velora keeps your client code simpler and lets you adjust fees without redeploying.
 
 ## Related pages
+
+- [Pro API accounts](/overview/pro-api-accounts) — register a partner key and set defaults.
+- [Widget → Monetize](/widget/monetize) — same fee mechanics for the embeddable widget.
+- [Modules → Delta](/sdk/modules/delta) — full Delta order flow with partner attribution.
+- [Modules → Swap](/sdk/modules/swap) — full Market-swap flow with partner attribution.
