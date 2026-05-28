@@ -63,7 +63,7 @@
               "sdk/install",
               "sdk/choose-a-variant",
               "sdk/simple-sdk",
-              "sdk/composable-sdk",
+              "sdk/full-sdk",
               "sdk/partial-sdk",
               {
                 "group": "Modules",

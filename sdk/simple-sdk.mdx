@@ -12,7 +12,7 @@ keywords: ["sdk", "simple", "constructSimpleSDK", "quickstart"]
 - You're fine with the SDK returning transaction hashes (`string`) for write calls, instead of library-typed responses.
 - You don't need to share a single contract caller across multiple SDK instances.
 
-For tighter control over the transaction-response type or bundle size, use the [Composable](/sdk/composable-sdk) or [Partial](/sdk/partial-sdk) constructors instead.
+For tighter control over the transaction-response type or bundle size, use the [Full](/sdk/full-sdk) or [Partial](/sdk/partial-sdk) constructors instead.
 
 ## Construct it
 
@@ -97,7 +97,7 @@ const sdk = constructSimpleSDK(
 </CodeGroup>
 
 <Note>
-Write calls always resolve to a **transaction hash** (`string`). If you need the library-typed response object (viem's `Hex`, `ethers.ContractTransaction`, etc.), use [`constructFullSDK`](/sdk/composable-sdk) with the `<TxResponse>` generic.
+Write calls always resolve to a **transaction hash** (`string`). If you need the library-typed response object (viem's `Hex`, `ethers.ContractTransaction`, etc.), use [`constructFullSDK`](/sdk/full-sdk) with the `<TxResponse>` generic.
 </Note>
 
 ## Available methods

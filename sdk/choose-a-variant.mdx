@@ -1,7 +1,7 @@
 ---
 title: "Choose a variant"
 description: "Pick between Simple, Full, and Partial SDK constructors based on bundle size, API shape, and how much wiring you want to do."
-keywords: ["sdk", "simple", "full", "partial", "composable", "tree-shaking"]
+keywords: ["sdk", "simple", "full", "partial", "tree-shaking"]
 ---
 
 The SDK ships three constructors that wrap the same per-method `construct*` primitives. They differ in how much of the SDK comes pre-wired and what the resulting API surface looks like.
@@ -38,7 +38,7 @@ Every variant ultimately calls the same `construct*` factories under [`@velora-d
   <Card title="Simple SDK" icon="bolt" href="/sdk/simple-sdk">
     `constructSimpleSDK` — one constructor, sensible defaults.
   </Card>
-  <Card title="Composable SDK" icon="cubes" href="/sdk/composable-sdk">
+  <Card title="Full SDK" icon="cubes" href="/sdk/full-sdk">
     `constructFullSDK` — namespaced, typed transaction responses.
   </Card>
   <Card title="Partial SDK" icon="scissors" href="/sdk/partial-sdk">
