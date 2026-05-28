@@ -141,8 +141,8 @@ Pass a `destChainId` to `getDeltaPrice` / `buildDeltaOrder` to settle on a diffe
 
 The SDK also supports two advanced order families that share the same build/sign/post pattern:
 
-- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/EXTERNAL_ORDERS.md) in the SDK repo.
-- **TWAP Delta orders** — split a large order into time-weighted chunks. See [`DELTA.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/DELTA.md) in the SDK repo.
+- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/master/docs/EXTERNAL_ORDERS.md) in the SDK repo.
+- **TWAP Delta orders** — split a large order into time-weighted chunks.
 
 Method names mirror the standard flow: `constructBuildExternalDeltaOrder` / `constructBuildTWAPDeltaOrder`, etc. — see the [Partial SDK reference](/sdk/partial-sdk#available-constructors).
 
