@@ -66,18 +66,15 @@ const hash = await sdk.approveToken(
 
 ## Example: Delta V2 signing only
 
-A front-end that signs Delta V2 orders but does no other reads or writes:
+A front-end that signs Delta V2 orders but does no other reads or writes. V2 constructors live under the `DeltaV2` namespace at the package root:
 
 ```ts
 import {
   constructPartialSDK,
   constructAxiosFetcher,
   constructViemContractCaller,
-  constructGetDeltaPriceV2,
-  constructBuildDeltaOrderV2,
-  constructSignDeltaOrderV2,
-  constructPostDeltaOrderV2,
   constructApproveTokenForDelta,
+  DeltaV2,
 } from "@velora-dex/sdk";
 
 const fetcher = constructAxiosFetcher(axios);
@@ -85,18 +82,18 @@ const contractCaller = constructViemContractCaller(walletClient, account);
 
 const deltaSDK = constructPartialSDK(
   { chainId: 1, fetcher, contractCaller },
-  constructGetDeltaPriceV2,
-  constructBuildDeltaOrderV2,
-  constructSignDeltaOrderV2,
-  constructPostDeltaOrderV2,
-  constructApproveTokenForDelta,
+  DeltaV2.constructGetDeltaPrice,
+  DeltaV2.constructBuildDeltaOrder,
+  DeltaV2.constructSignDeltaOrder,
+  DeltaV2.constructPostDeltaOrder,
+  constructApproveTokenForDelta, // reused from V1 — same contract
 );
 
 const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const amount = "1000000000000000000";
 
-const price = await deltaSDK.getDeltaPriceV2({
+const price = await deltaSDK.getDeltaPrice({
   srcToken: DAI,
   destToken: USDC,
   amount,
@@ -108,7 +105,7 @@ const price = await deltaSDK.getDeltaPriceV2({
 
 await deltaSDK.approveTokenForDelta(amount, DAI);
 
-const built = await deltaSDK.buildDeltaOrderV2({
+const built = await deltaSDK.buildDeltaOrder({
   route: price.route,
   side: price.side,
   owner: account,
@@ -116,23 +113,25 @@ const built = await deltaSDK.buildDeltaOrderV2({
   slippage: 50, // 0.5% in bps
 });
 
-const signature = await deltaSDK.signDeltaOrderV2(built);
-const auction = await deltaSDK.postDeltaOrderV2({
+const signature = await deltaSDK.signDeltaOrder(built);
+const auction = await deltaSDK.postDeltaOrder({
   order: built.toSign.value as any,
   signature,
   partner: "my-app-name",
 });
 ```
 
+The `DeltaV2` namespace doubles as a runtime object — bundlers tree-shake whichever members you don't reference, so this example pulls in only the four V2 constructors above.
+
 ## Available constructors
 
-Pass any combination of these. Methods on the resulting SDK match the names listed in [Simple SDK → Available methods](/sdk/simple-sdk#available-methods).
+Pass any combination of these. Methods on the resulting SDK match the names listed in [Simple SDK → Available methods](/sdk/simple-sdk#available-methods). V2 constructors are accessed through the `DeltaV2` namespace (`DeltaV2.constructBuildDeltaOrder`, etc.); V1 constructors are exported bare from the package root.
 
 | Module                    | Constructors                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Delta V2** (recommended)| `constructGetDeltaPriceV2`, `constructBuildDeltaOrderV2`, `constructSignDeltaOrderV2`, `constructPostDeltaOrderV2`, `constructSubmitDeltaOrderV2` (orchestrator), `constructGetDeltaOrdersV2`, `constructCancelDeltaOrderV2`, `constructGetBridgeRoutes`, `constructIsTokenSupportedInDeltaV2`, `constructGetAgentsListV2`, plus reused: `constructApproveTokenForDelta`, `constructPreSignDeltaOrder`, `constructDeltaTokenModule`, `constructGetDeltaContract`, `constructGetPartnerFee` |
-| External Delta V2         | `constructBuildExternalDeltaOrderV2`, `constructPostExternalDeltaOrderV2`, `constructSubmitExternalDeltaOrderV2`                                                                                                                                                                                                                                                                                                                |
-| TWAP Delta V2             | `constructBuildTWAPDeltaOrderV2`, `constructPostTWAPDeltaOrderV2`, `constructSubmitTWAPDeltaOrderV2`                                                                                                                                                                                                                                                                                                                            |
+| **Delta V2** (recommended)| `DeltaV2.constructGetDeltaPrice`, `DeltaV2.constructBuildDeltaOrder`, `DeltaV2.constructSignDeltaOrder`, `DeltaV2.constructPostDeltaOrder`, `DeltaV2.constructSubmitDeltaOrder` (orchestrator), `DeltaV2.constructGetDeltaOrders`, `DeltaV2.constructCancelDeltaOrder`, `DeltaV2.constructGetBridgeRoutes`, `DeltaV2.constructIsTokenSupportedInDelta`, `DeltaV2.constructGetAgentsList`, plus reused from V1: `constructApproveTokenForDelta`, `constructPreSignDeltaOrder`, `constructDeltaTokenModule`, `constructGetDeltaContract`, `constructGetPartnerFee` |
+| External Delta V2         | `DeltaV2.constructBuildExternalDeltaOrder`, `DeltaV2.constructPostExternalDeltaOrder`, `DeltaV2.constructSubmitExternalDeltaOrder`                                                                                                                                                                                                                                                                                              |
+| TWAP Delta V2             | `DeltaV2.constructBuildTWAPDeltaOrder`, `DeltaV2.constructPostTWAPDeltaOrder`, `DeltaV2.constructSubmitTWAPDeltaOrder`                                                                                                                                                                                                                                                                                                          |
 | Delta V1                  | `constructGetDeltaPrice`, `constructBuildDeltaOrder`, `constructSignDeltaOrder`, `constructPostDeltaOrder`, `constructSubmitDeltaOrder`, `constructApproveTokenForDelta`, `constructPreSignDeltaOrder`, `constructDeltaTokenModule`, `constructGetDeltaContract`, `constructGetDeltaOrders`, `constructCancelDeltaOrder`, `constructGetPartnerFee`, `constructGetBridgeInfo`, `constructIsTokenSupportedInDelta`               |
 | External Delta V1         | `constructBuildExternalDeltaOrder`, `constructSignExternalDeltaOrder`, `constructPostExternalDeltaOrder`, `constructPreSignExternalDeltaOrder`                                                                                                                                                                                                                                                                                  |
 | TWAP Delta V1             | `constructBuildTWAPDeltaOrder`, `constructSignTWAPDeltaOrder`, `constructPostTWAPDeltaOrder`, `constructPreSignTWAPDeltaOrder`                                                                                                                                                                                                                                                                                                  |
@@ -140,14 +139,15 @@ Pass any combination of these. Methods on the resulting SDK match the names list
 | Quote                     | `constructGetQuote`                                                                                                                                                                                                                                                                                                                                                                                                             |
 | Limit orders (deprecated) | `constructBuildLimitOrder`, `constructSignLimitOrder`, `constructPostLimitOrder`, `constructCancelLimitOrder`, `constructGetLimitOrders`, `constructApproveTokenForLimitOrder`, `constructGetLimitOrdersContract`, `constructBuildLimitOrderTx`, `constructFillOrderDirectly`                                                                                                                                                   |
 
-The full list lives in [`src/index.ts`](https://github.com/VeloraDEX/sdk/blob/main/src/index.ts).
+Note that V1 and V2 expose the same constructor names (`constructBuildDeltaOrder`, etc.) — V2 is just nested inside the `DeltaV2` namespace, which is what lets the two ship side-by-side without collision. The full list lives in [`src/index.ts`](https://github.com/VeloraDEX/sdk/blob/main/src/index.ts).
 
 <Tip>
-  Several constructors come in pairs — for example, `constructBuildDeltaOrderV2`
-  + `constructSignDeltaOrderV2` + `constructPostDeltaOrderV2`, or
-  `constructSubmitDeltaOrderV2` (which orchestrates all three). Use the
-  orchestrator when you want one call; use the individual constructors when you
-  need custom signing (hardware wallet, multisig, deferred submission).
+  Several constructors come in pairs — for example,
+  `DeltaV2.constructBuildDeltaOrder` + `DeltaV2.constructSignDeltaOrder` +
+  `DeltaV2.constructPostDeltaOrder`, or `DeltaV2.constructSubmitDeltaOrder`
+  (which orchestrates all three). Use the orchestrator when you want one call;
+  use the individual constructors when you need custom signing (hardware
+  wallet, multisig, deferred submission).
 </Tip>
 
 ## Related pages

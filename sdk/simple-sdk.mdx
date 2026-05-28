@@ -39,7 +39,7 @@ Without a wallet, the SDK is **read-only** — quotes, prices, order status, sup
 
 ## Add a wallet
 
-Pass a second argument with your provider to enable write methods (`approveToken`, `signDeltaOrderV2`, `submitDeltaOrderV2`, `buildTx`-then-send).
+Pass a second argument with your provider to enable write methods (`approveToken`, `signDeltaOrder`, `submitDeltaOrder`, `buildTx`-then-send).
 
 <CodeGroup>
 
@@ -106,7 +106,7 @@ The returned SDK is namespaced by feature:
 
 | Namespace         | What's inside                                                                                                                                                                                                                                                        | Module page                                          |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `sdk.deltaV2`     | **Recommended.** `getDeltaPriceV2`, `buildDeltaOrderV2`, `signDeltaOrderV2`, `postDeltaOrderV2`, `submitDeltaOrderV2`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderByIdV2`, `getDeltaOrderByHashV2`, `getDeltaOrdersV2`, `cancelDeltaOrdersV2`, `getBridgeRoutes`, `isTokenSupportedInDeltaV2` | [Delta module](/sdk/modules/delta)                   |
+| `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta module](/sdk/modules/delta)                   |
 | `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/modules/delta#delta-v1).                                                                                                                                                                         | [Delta module](/sdk/modules/delta#delta-v1)          |
 | `sdk.quote`       | `getQuote` — V1 Delta-with-fallback-to-Market price (no V2 equivalent yet)                                                                                                                                                                                           | [API → Delta /quote](/api-reference/delta/quote)     |
 | `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx`                                                                                                                                                              | [Swap module](/sdk/modules/swap)                     |
