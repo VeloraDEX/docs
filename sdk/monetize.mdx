@@ -11,7 +11,7 @@ Every quote, swap, and Delta call accepts a `partner` string and optional fee ov
 If you've registered your partner key with Velora, just pass `partner` and the server resolves the fee config:
 
 ```ts
-const auction = await sdk.deltaV2.submitDeltaOrderV2({
+const auction = await sdk.deltaV2.submitDeltaOrder({
   route: price.route,
   side: price.side,
   owner: account,
@@ -23,7 +23,7 @@ const auction = await sdk.deltaV2.submitDeltaOrderV2({
 To override the registered defaults per call, pass the fee fields directly:
 
 ```ts
-const auction = await sdk.deltaV2.submitDeltaOrderV2({
+const auction = await sdk.deltaV2.submitDeltaOrder({
   route: price.route,
   side: price.side,
   owner: account,
@@ -70,7 +70,7 @@ const { partnerAddress, partnerFee, takeSurplus } =
 
 ## Where it applies
 
-- **Delta V2** (recommended) — pass `partner` (and overrides) to `sdk.deltaV2.getDeltaPriceV2`, `sdk.deltaV2.submitDeltaOrderV2`, `sdk.deltaV2.buildDeltaOrderV2`, and `sdk.deltaV2.postDeltaOrderV2`. The server encodes the fee into the on-chain order.
+- **Delta V2** (recommended) — pass `partner` (and overrides) to `sdk.deltaV2.getDeltaPrice`, `sdk.deltaV2.submitDeltaOrder`, `sdk.deltaV2.buildDeltaOrder`, and `sdk.deltaV2.postDeltaOrder`. The server encodes the fee into the on-chain order.
 - **Delta V1** — pass `partner` to `sdk.delta.buildDeltaOrder` or `sdk.delta.submitDeltaOrder`. The SDK resolves the fee locally via `getPartnerFee` and encodes it into the signed order's `partnerAndFee` field.
 - **Market swap** — pass `partner` to `sdk.swap.getRate` (inside `options: { partner }`) and `sdk.swap.buildTx` (top-level). Fee is taken from the destination token at settlement.
 - **Quote** — pass `partner` to `sdk.quote.getQuote`. The returned `priceRoute` / `deltaPrice` already accounts for the fee, so the `destAmount` you show users is the net amount.
