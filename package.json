@@ -4,7 +4,8 @@
   "private": true,
   "packageManager": "pnpm@10.13.1",
   "scripts": {
-    "dev": "mint dev --port 3001",
+    "dev": "node dev.mjs",
+    "dev:mint": "mint dev --port 3001",
     "build": "mint dev --port 0",
     "check:links": "mint broken-links --check-anchors --check-snippets",
     "check:build": "mint validate",

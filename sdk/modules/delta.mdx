@@ -178,14 +178,14 @@ This signs and posts a cancellation request. It only succeeds for orders that ar
 
 ## Crosschain Delta
 
-Pass `destChainId` to `getDeltaPrice` to settle on a different chain than the source. The returned `route` is bridge-aware; submitting the order is identical to same-chain. See [Crosschain Delta](/delta/crosschain-delta) for the full design and [`getBridgeRoutes`](https://github.com/VeloraDEX/sdk/blob/main/src/methods/deltaV2/getBridgeRoutes.ts) for advanced route inspection.
+Pass `destChainId` to `getDeltaPrice` to settle on a different chain than the source. The returned `route` is bridge-aware; submitting the order is identical to same-chain. See [Crosschain Delta](/delta/crosschain-delta) for the full design and [`getBridgeRoutes`](https://github.com/VeloraDEX/sdk/blob/master/src/methods/deltaV2/getBridgeRoutes.ts) for advanced route inspection.
 
 ## External and TWAP orders
 
 The SDK supports two advanced order families on V2 that share the same build/sign/post pattern:
 
-- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. Use `buildExternalDeltaOrder` / `submitExternalDeltaOrder`. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/EXTERNAL_ORDERS.md) in the SDK repo.
-- **TWAP Delta orders** — split a large order into time-weighted chunks (sell-side or buy-side). Use `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`. See [`DELTA.md`](https://github.com/VeloraDEX/sdk/blob/main/docs/DELTA.md) in the SDK repo.
+- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. Use `buildExternalDeltaOrder` / `submitExternalDeltaOrder`. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/master/docs/EXTERNAL_ORDERS.md) in the SDK repo.
+- **TWAP Delta orders** — split a large order into time-weighted chunks (sell-side or buy-side). Use `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`.
 
 Both reuse the generic `signDeltaOrder` and the V2 polling endpoints.
 
