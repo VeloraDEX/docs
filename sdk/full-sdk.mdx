@@ -1,7 +1,7 @@
 ---
-title: "Composable SDK"
-description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, sdk.quote) over a fetcher and contract caller you construct yourself, with a typed transaction-response generic."
-keywords: ["sdk", "composable", "constructFullSDK", "full"]
+title: "Full SDK"
+description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, sdk.deltaV2, sdk.quote) over a fetcher and contract caller you construct yourself, with a typed transaction-response generic."
+keywords: ["sdk", "full", "constructFullSDK"]
 ---
 
 `constructFullSDK` returns the same namespaced API as the [Simple SDK](/sdk/simple-sdk) — `sdk.swap.*`, `sdk.delta.*`, `sdk.quote` — but you construct the fetcher and contract caller yourself. That extra wiring buys you a typed `<TxResponse>` generic and the freedom to share one caller across multiple SDK instances or chains.

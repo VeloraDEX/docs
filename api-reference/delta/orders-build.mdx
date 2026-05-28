@@ -3,3 +3,7 @@ title: "/delta/orders/build"
 description: "Build a signable Delta order — EIP-712 typed data — from a Delta quote."
 openapi: "/api-reference/specs/delta.json POST /delta/orders/build"
 ---
+
+<Note>
+  The response is EIP-712 typed data: a domain, a `types` map, and a `message` (the order to sign). See [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) for the exact domain, types, and struct layout.
+</Note>

@@ -10,7 +10,7 @@ The SDK separates **what** (the Velora methods) from **how it talks to the chain
 - A **contract caller** — bridges between the SDK's `transactCall` / `signTypedDataCall` / `staticCall` interface and your wallet library.
 - A **fetcher** — bridges between the SDK's `FetcherFunction` and your HTTP client.
 
-[Simple SDK](/sdk/simple-sdk) builds both for you from a single options object. [Composable](/sdk/composable-sdk) and [Partial](/sdk/partial-sdk) SDKs take them as constructor arguments.
+[Simple SDK](/sdk/simple-sdk) builds both for you from a single options object. [Full SDK](/sdk/full-sdk) and [Partial](/sdk/partial-sdk) SDKs take them as constructor arguments.
 
 ## Contract callers
 
@@ -190,5 +190,5 @@ Memoize the result (with `useMemo` on the wallet client and address) to avoid re
 
 - [Install](/sdk/install) — peer dependencies for each wallet library.
 - [Simple SDK](/sdk/simple-sdk) — uses these callers and fetchers via a single options object.
-- [Composable SDK](/sdk/composable-sdk) — takes the caller and fetcher you construct here.
+- [Full SDK](/sdk/full-sdk) — takes the caller and fetcher you construct here.
 - [Partial SDK](/sdk/partial-sdk) — same wiring, smallest bundle.

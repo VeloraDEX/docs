@@ -39,7 +39,7 @@ const auction = await sdk.deltaV2.submitDeltaOrder({
 **Delta V2 vs V1.** V2 sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them — no extra round-trip. V1 calls `getPartnerFee(partner)` locally inside `buildDeltaOrder` (response is cached per partner). Either way the fee lands on-chain at settlement; the V2 path is just one fewer network call.
 </Note>
 
-If you need the registered defaults programmatically (e.g., to show "0.25% fee" in your UI), call `getPartnerFee` directly:
+If you need to obtain the registered defaults programmatically (e.g., to show "0.25% fee" in your UI), call `getPartnerFee` directly:
 
 ```ts
 const { partnerAddress, partnerFee, takeSurplus } =

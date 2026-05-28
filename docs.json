@@ -12,6 +12,29 @@
     "body": { "family": "Inter" }
   },
   "favicon": "/favicon.png",
+  "thumbnails": {
+    "background": "/images/hero-bg-dark.svg",
+    "appearance": "dark"
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Velora Docs",
+      "og:type": "website",
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@veloradex"
+    }
+  },
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found",
+      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta/quote) · [Market API](/api-reference/market/prices)."
+    }
+  },
   "api": {
     "playground": { "display": "interactive" },
     "examples": { "prefill": true }
@@ -63,7 +86,7 @@
               "sdk/install",
               "sdk/choose-a-variant",
               "sdk/simple-sdk",
-              "sdk/composable-sdk",
+              "sdk/full-sdk",
               "sdk/partial-sdk",
               {
                 "group": "Modules",
