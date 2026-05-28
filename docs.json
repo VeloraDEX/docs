@@ -12,6 +12,19 @@
     "body": { "family": "Inter" }
   },
   "favicon": "/favicon.png",
+  "thumbnails": {
+    "background": "/images/hero-bg-dark.svg",
+    "appearance": "dark"
+  },
+  "seo": {
+    "indexing": "navigable",
+    "metatags": {
+      "og:site_name": "Velora Docs",
+      "og:type": "website",
+      "twitter:card": "summary_large_image",
+      "twitter:site": "@veloradex"
+    }
+  },
   "api": {
     "playground": { "display": "interactive" },
     "examples": { "prefill": true }
