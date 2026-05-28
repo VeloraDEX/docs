@@ -16,6 +16,9 @@
     "background": "/images/hero-bg-dark.svg",
     "appearance": "dark"
   },
+  "metadata": {
+    "timestamp": true
+  },
   "seo": {
     "indexing": "navigable",
     "metatags": {
@@ -23,6 +26,13 @@
       "og:type": "website",
       "twitter:card": "summary_large_image",
       "twitter:site": "@veloradex"
+    }
+  },
+  "errors": {
+    "404": {
+      "redirect": false,
+      "title": "Page not found",
+      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta/quote) · [Market API](/api-reference/market/prices)."
     }
   },
   "api": {
