@@ -8,94 +8,61 @@
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
+  "externalDocs": {
+    "description": "Delta — how it works (quote → build → sign → submit → poll).",
+    "url": "https://new-docs.velora.xyz/delta/how-it-works"
+  },
   "paths": {
     "/quote": {
       "get": {
         "summary": "Retrieve a Delta price, with optional fallback to Market",
         "operationId": "deltaQuote",
         "parameters": [
-          { "name": "srcToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" }, "description": "Source token address. Example uses ETH." },
-          { "name": "srcDecimals", "in": "query", "required": true, "schema": { "type": "integer", "example": 18 }, "description": "Source token decimals." },
-          { "name": "destToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }, "description": "Destination token address. For cross-chain quotes, the destination token on the destination chain. Example uses USDC." },
-          { "name": "destDecimals", "in": "query", "required": true, "schema": { "type": "integer", "example": 6 }, "description": "Destination token decimals." },
-          { "name": "amount", "in": "query", "required": true, "schema": { "type": "string", "example": "1000000000000000000" }, "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
+          { "name": "srcToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "description": "Source token address. Example uses ETH." },
+          { "name": "srcDecimals", "in": "query", "required": true, "schema": { "type": "integer" }, "example": 18, "description": "Source token decimals." },
+          { "name": "destToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "description": "Destination token address. For cross-chain quotes, the destination token on the destination chain. Example uses USDC." },
+          { "name": "destDecimals", "in": "query", "required": true, "schema": { "type": "integer" }, "example": 6, "description": "Destination token decimals." },
+          { "name": "amount", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/TokenAmount" }, "example": "1000000000000000000", "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
           { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
-          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 }, "description": "Source chain ID. Supported values: 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), 100 (Gnosis)." },
+          { "name": "chainId", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "example": 1, "description": "Source chain ID. Supported values: 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), 100 (Gnosis)." },
           { "name": "mode", "in": "query", "required": false, "schema": { "type": "string", "enum": ["ALL", "DELTA", "MARKET"], "default": "ALL" }, "description": "Controls which execution path Velora returns. `ALL` (default) lets Velora pick the winner server-side and returns exactly one of a `delta` or `market` block — never both. `DELTA` / `MARKET` request a specific path; if no route exists for the requested mode, the API may return the other path's block as fallback. See /integrate/trading-modes for full semantics including the 400 PricingError fallback envelope." },
-          { "name": "userAddress", "in": "query", "required": false, "schema": { "type": "string", "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" }, "description": "End-user wallet address." },
-          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon", "example": "my-app-name" }, "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
-          { "name": "destChainId", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Destination chain ID for cross-chain quotes. Omit for same-chain quotes." }
+          { "name": "userAddress", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "End-user wallet address." },
+          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon" }, "example": "my-app-name", "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
+          { "name": "destChainId", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "Destination chain ID for cross-chain quotes. Omit for same-chain quotes." }
         ],
         "responses": {
           "200": {
             "description": "Delta quote, optionally with a Market block depending on `mode`.",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "delta": {
-                      "type": "object",
-                      "description": "Delta intent. Sign and submit via /delta/orders/build then /delta/orders. Includes `hmac`.",
-                      "properties": {
-                        "srcToken": { "type": "string" },
-                        "destToken": { "type": "string" },
-                        "srcAmount": { "type": "string" },
-                        "destAmount": { "type": "string" },
-                        "destAmountBeforeFee": { "type": "string" },
-                        "gasCostUSD": { "type": "string" },
-                        "gasCost": { "type": "string" },
-                        "srcUSD": { "type": "string" },
-                        "destUSD": { "type": "string" },
-                        "destUSDBeforeFee": { "type": "string" },
-                        "gasCostBeforeFee": { "type": "string" },
-                        "gasCostUSDBeforeFee": { "type": "string" },
-                        "partner": { "type": "string" },
-                        "partnerFee": { "type": "number" },
-                        "bridge": {
-                          "type": "object",
-                          "properties": {
-                            "outputToken": { "type": "string" },
-                            "protocolData": { "type": "string" },
-                            "scalingFactor": { "type": "string" },
-                            "destinationChainId": { "type": "integer" },
-                            "protocolSelector": { "type": "string" }
-                          }
-                        },
-                        "bridgeInfo": {
-                          "type": "object",
-                          "properties": {
-                            "protocolName": { "type": "string" },
-                            "destAmountAfterBridge": { "type": "string" },
-                            "destUSDAfterBridge": { "type": "string" },
-                            "estimatedTimeMs": { "type": "integer" },
-                            "fees": { "type": "array", "items": { "type": "object" } }
-                          }
-                        },
-                        "availableBridges": { "type": "array", "items": { "type": "object" } },
-                        "hmac": { "type": "string" }
-                      }
-                    },
-                    "market": {
-                      "type": "object",
-                      "description": "Market route block. Same shape as the GET /prices `priceRoute` field. Present when `mode` is ALL or MARKET."
-                    },
-                    "deltaAddress": { "type": "string", "description": "The Delta settlement contract address for the source chain." },
-                    "fallbackReason": {
-                      "type": "object",
-                      "description": "Set when Delta couldn't price and the response fell back to Market.",
-                      "properties": {
-                        "errorType": { "type": "string" },
-                        "details": { "type": "string" }
-                      }
-                    }
-                  }
-                }
+                "schema": { "$ref": "#/components/schemas/DeltaQuoteResponse" }
               }
             }
           },
-          "400": { "description": "Invalid parameters" },
-          "422": { "description": "Unsupported chain or token" }
+          "400": {
+            "description": "Invalid parameters. Documented examples: `InvalidInput`, `PricingError` (no route for requested mode — see /integrate/trading-modes).",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported chain or token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
       }
     },
@@ -107,23 +74,35 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "price": { "type": "object", "description": "The `delta` block returned by GET /quote, passed verbatim." },
-                  "hmac":  { "type": "string", "description": "The `hmac` from the `delta` block, passed verbatim." }
-                },
-                "required": ["price", "hmac"]
-              }
+              "schema": { "$ref": "#/components/schemas/DeltaOrderBuildRequest" }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Order with EIP-712 typed data ready to sign",
-            "content": { "application/json": { "schema": { "type": "object" } } }
+            "description": "Order with EIP-712 typed data ready to sign.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeltaOrderBuildResponse" }
+              }
+            }
           },
-          "400": { "description": "Invalid input or stale price" }
+          "400": {
+            "description": "Invalid input or stale price. Documented examples: `InvalidInput`, `StalePriceRoute`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
       }
     },
@@ -135,21 +114,232 @@
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "order":     { "type": "object" },
-                  "signature": { "type": "string" }
-                },
-                "required": ["order", "signature"]
-              }
+              "schema": { "$ref": "#/components/schemas/DeltaOrderSubmitRequest" }
             }
           }
         },
         "responses": {
-          "200": { "description": "Order accepted; returns order id and status URL." },
-          "400": { "description": "Invalid signature or order shape" }
+          "200": {
+            "description": "Order accepted; returns order id and status URL.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeltaOrderSubmitResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid signature or order shape. Documented examples: `InvalidSignature`, `InvalidInput`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
         }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "type": "string",
+        "description": "EVM address (20 bytes, hex-encoded with `0x` prefix). Use the mixed-case placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for native ETH.",
+        "pattern": "^0x[a-fA-F0-9]{40}$",
+        "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+      },
+      "ChainId": {
+        "type": "integer",
+        "description": "EVM chain ID. Supported values today include 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), 100 (Gnosis). The set is open — call GET /chains for the live list.",
+        "example": 1
+      },
+      "TokenAmount": {
+        "type": "string",
+        "description": "Token amount in WEI / raw units (no decimal point). Serialized as a string to preserve precision for amounts that exceed JavaScript Number range.",
+        "example": "1000000000000000000"
+      },
+      "ErrorCode": {
+        "type": "string",
+        "description": "Documented Velora error code (e.g. `PricingError`, `InvalidInput`, `UnsupportedChain`, `StalePriceRoute`, `InvalidSignature`). The set is open — handle codes you recognize and fall back to a generic error path for everything else. See /api-reference/troubleshooting for known codes.",
+        "example": "PricingError"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Standard Velora error envelope.",
+        "required": ["errorType"],
+        "properties": {
+          "errorType": { "$ref": "#/components/schemas/ErrorCode" },
+          "details": { "type": "string", "description": "Human-readable description of the failure." }
+        },
+        "example": {
+          "errorType": "PricingError",
+          "details": "Error getting price data"
+        }
+      },
+      "Eip712TypedData": {
+        "type": "object",
+        "description": "EIP-712 typed data ready to sign. See /delta/eip-712-typed-data-reference for the Velora-specific Order primaryType.",
+        "required": ["domain", "types", "primaryType", "message"],
+        "properties": {
+          "domain": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "example": "Velora Delta" },
+              "version": { "type": "string", "example": "1.0" },
+              "chainId": { "$ref": "#/components/schemas/ChainId" },
+              "verifyingContract": { "$ref": "#/components/schemas/Address" }
+            }
+          },
+          "types": {
+            "type": "object",
+            "description": "Type definitions keyed by struct name. Each value is an array of `{ name, type }` fields.",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["name", "type"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            }
+          },
+          "primaryType": { "type": "string", "example": "Order" },
+          "message": {
+            "type": "object",
+            "description": "Order field values matching the `primaryType` struct."
+          }
+        }
+      },
+      "MarketPriceRoute": {
+        "type": "object",
+        "description": "Market route block. Calldata-ready against Augustus v6.2 when `version=6.2`. Same shape as the `priceRoute` field returned by GET /prices on the Market API.",
+        "properties": {
+          "blockNumber": { "type": "integer" },
+          "network": { "$ref": "#/components/schemas/ChainId" },
+          "srcToken": { "$ref": "#/components/schemas/Address" },
+          "srcDecimals": { "type": "integer" },
+          "srcAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "destToken": { "$ref": "#/components/schemas/Address" },
+          "destDecimals": { "type": "integer" },
+          "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "bestRoute": { "type": "array", "items": { "type": "object" } },
+          "gasCostUSD": { "type": "string" },
+          "gasCost": { "type": "string" },
+          "side": { "type": "string", "enum": ["SELL", "BUY"] },
+          "version": { "type": "string" },
+          "contractAddress": { "$ref": "#/components/schemas/Address" },
+          "tokenTransferProxy": { "$ref": "#/components/schemas/Address" },
+          "contractMethod": { "type": "string" },
+          "partnerFee": { "type": "number" },
+          "srcUSD": { "type": "string" },
+          "destUSD": { "type": "string" },
+          "partner": { "type": "string" },
+          "maxImpactReached": { "type": "boolean" },
+          "hmac": { "type": "string" }
+        }
+      },
+      "DeltaQuote": {
+        "type": "object",
+        "description": "Delta intent block. Sign and submit via POST /delta/orders/build then POST /delta/orders. Pass the block verbatim — including `hmac` — on the build call.",
+        "properties": {
+          "srcToken": { "$ref": "#/components/schemas/Address" },
+          "destToken": { "$ref": "#/components/schemas/Address" },
+          "srcAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "destAmountBeforeFee": { "$ref": "#/components/schemas/TokenAmount" },
+          "gasCostUSD": { "type": "string" },
+          "gasCost": { "type": "string" },
+          "srcUSD": { "type": "string" },
+          "destUSD": { "type": "string" },
+          "destUSDBeforeFee": { "type": "string" },
+          "gasCostBeforeFee": { "type": "string" },
+          "gasCostUSDBeforeFee": { "type": "string" },
+          "partner": { "type": "string" },
+          "partnerFee": { "type": "number" },
+          "bridge": {
+            "type": "object",
+            "properties": {
+              "outputToken": { "$ref": "#/components/schemas/Address" },
+              "protocolData": { "type": "string" },
+              "scalingFactor": { "type": "string" },
+              "destinationChainId": { "$ref": "#/components/schemas/ChainId" },
+              "protocolSelector": { "type": "string" }
+            }
+          },
+          "bridgeInfo": {
+            "type": "object",
+            "properties": {
+              "protocolName": { "type": "string" },
+              "destAmountAfterBridge": { "$ref": "#/components/schemas/TokenAmount" },
+              "destUSDAfterBridge": { "type": "string" },
+              "estimatedTimeMs": { "type": "integer" },
+              "fees": { "type": "array", "items": { "type": "object" } }
+            }
+          },
+          "availableBridges": { "type": "array", "items": { "type": "object" } },
+          "hmac": { "type": "string", "description": "Server-signed integrity envelope; pass back verbatim on POST /delta/orders/build." }
+        }
+      },
+      "DeltaQuoteResponse": {
+        "type": "object",
+        "description": "GET /quote envelope. Under `mode=ALL` Velora returns exactly one of `delta` or `market`; under `mode=DELTA` or `mode=MARKET`, the other block may be present as fallback (see /integrate/trading-modes).",
+        "properties": {
+          "delta": { "$ref": "#/components/schemas/DeltaQuote" },
+          "market": { "$ref": "#/components/schemas/MarketPriceRoute" },
+          "deltaAddress": {
+            "allOf": [{ "$ref": "#/components/schemas/Address" }],
+            "description": "The Delta settlement contract address for the source chain."
+          },
+          "fallbackReason": {
+            "allOf": [{ "$ref": "#/components/schemas/ErrorResponse" }],
+            "description": "Set when the requested mode couldn't price and the response fell back to the other path. Same shape as a 400 PricingError envelope."
+          }
+        }
+      },
+      "DeltaOrderBuildRequest": {
+        "type": "object",
+        "required": ["price", "hmac"],
+        "properties": {
+          "price": {
+            "allOf": [{ "$ref": "#/components/schemas/DeltaQuote" }],
+            "description": "The `delta` block returned by GET /quote, passed verbatim — do not recompute or re-encode amounts."
+          },
+          "hmac": {
+            "type": "string",
+            "description": "The `hmac` value from the `delta` block, passed verbatim."
+          }
+        }
+      },
+      "DeltaOrderBuildResponse": {
+        "type": "object",
+        "description": "Order with EIP-712 typed data ready to sign. See /delta/eip-712-typed-data-reference for the Order primaryType shape."
+      },
+      "DeltaOrderSubmitRequest": {
+        "type": "object",
+        "required": ["order", "signature"],
+        "properties": {
+          "order": {
+            "type": "object",
+            "description": "The order body returned by POST /delta/orders/build."
+          },
+          "signature": {
+            "type": "string",
+            "description": "EIP-712 signature of the typed data — hex-encoded with `0x` prefix."
+          }
+        }
+      },
+      "DeltaOrderSubmitResponse": {
+        "type": "object",
+        "description": "Order acceptance envelope. Returns an order id and status URL."
       }
     }
   }

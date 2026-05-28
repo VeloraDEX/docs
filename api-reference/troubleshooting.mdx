@@ -1,6 +1,15 @@
 ---
 title: "Troubleshooting"
 description: "Common failure modes across the Velora Market and Delta APIs — symptom, root cause, and fix."
+keywords:
+  - troubleshooting
+  - errors
+  - 400
+  - 422
+  - failure modes
+  - invalid srcToken
+  - stale priceRoute
+  - invalid signature
 ---
 
 import MarketPricesFailureModes from "/snippets/failure-modes/market-prices.mdx";
@@ -10,6 +19,10 @@ import DeltaOrdersBuildFailureModes from "/snippets/failure-modes/delta-orders-b
 import DeltaOrdersFailureModes from "/snippets/failure-modes/delta-orders.mdx";
 
 Each table covers a single endpoint and is updated from support tickets at each release. Jump straight to the endpoint you're calling.
+
+<Tip>
+  Building error-handling logic or LLM tools? Read [`/resources/errors.json`](/resources/errors.json) — it mirrors every row on this page in machine-readable form, with `endpoint`, `status`, `match`, `cause`, `fix`, and `docs` fields per error.
+</Tip>
 
 ## Market API
 

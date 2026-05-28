@@ -1,0 +1,242 @@
+{
+  "_meta": {
+    "description": "Machine-readable mirror of the Velora API troubleshooting tables. Each row maps a documented symptom on a specific endpoint to its root cause, fix, and the human-readable docs anchor.",
+    "source": "https://docs.velora.xyz/api-reference/troubleshooting",
+    "lastUpdated": "2026-05-27",
+    "note": "Documented examples — not an exhaustive enumeration of every possible error string. Updated from support tickets at each release."
+  },
+  "errors": [
+    {
+      "endpoint": "GET /prices",
+      "status": 400,
+      "match": "Invalid srcToken or Invalid destToken",
+      "cause": "Native ETH sent as 0x0 or lowercase 0xeee...e.",
+      "fix": "Use the mixed-case placeholder 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE.",
+      "docs": "/api-reference/troubleshooting#get-prices"
+    },
+    {
+      "endpoint": "GET /prices",
+      "status": 422,
+      "match": "Unsupported chain",
+      "cause": "network not in the supported-chain list for the current API host.",
+      "fix": "Hit GET /chains to confirm the live list; see /resources/chains-and-contracts.",
+      "docs": "/api-reference/troubleshooting#get-prices"
+    },
+    {
+      "endpoint": "GET /prices",
+      "status": 200,
+      "match": "priceRoute.maxImpactReached: true",
+      "cause": "Price impact exceeds the configured ceiling for this route.",
+      "fix": "Reduce trade size, split into hops, or pass an explicit higher maxImpact if your product accepts the risk.",
+      "docs": "/api-reference/troubleshooting#get-prices"
+    },
+    {
+      "endpoint": "GET /prices",
+      "status": 400,
+      "match": "Stale priceRoute",
+      "cause": "More than ~30s elapsed between quote and tx-build; route became invalid.",
+      "fix": "Re-quote and pass the fresh priceRoute verbatim; never cache across user gestures.",
+      "docs": "/api-reference/troubleshooting#get-prices"
+    },
+    {
+      "endpoint": "GET /prices",
+      "status": 429,
+      "match": "Too Many Requests",
+      "cause": "Rate-limited without a partner key, or partner-key tier exceeded.",
+      "fix": "Attach a partner key (see /api-reference/authentication), or back off and retry.",
+      "docs": "/api-reference/troubleshooting#get-prices"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": 400,
+      "match": "Invalid priceRoute or Stale priceRoute",
+      "cause": "priceRoute modified between quote and tx-build, or older than ~30s.",
+      "fix": "Pass the priceRoute block from GET /prices verbatim; re-quote if more than ~30s elapsed.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": null,
+      "match": "INSUFFICIENT_OUTPUT (on-chain revert)",
+      "cause": "Slippage tolerance too tight for current market depth.",
+      "fix": "Increase slippage (in bps) on the rebuild, or surface a higher tolerance to the user before retrying.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": null,
+      "match": "TransferHelper: TRANSFER_FROM_FAILED (on-chain revert)",
+      "cause": "ERC-20 allowance to the v6.2 router insufficient, or allowance pointed at the legacy v5 router.",
+      "fix": "Approve the Augustus v6.2 router address — see /resources/chains-and-contracts; if migrating off v5, see /resources/migrations/augustus-v5-to-v6-2.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": null,
+      "match": "RPC gas estimate fails",
+      "cause": "RPC gas estimation can't simulate the exact block conditions.",
+      "fix": "Use the gas field returned in the response as a baseline + 15-25% headroom.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": null,
+      "match": "Calldata builds for the wrong chain",
+      "cause": "network path parameter mismatched against priceRoute.network.",
+      "fix": "Always derive :network from priceRoute.network, not from a client-side variable.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "POST /transactions/:network",
+      "status": 422,
+      "match": "Partner not allowed",
+      "cause": "Partner-key tier doesn't permit the requested fee/surplus configuration.",
+      "fix": "Drop the disallowed param, or contact partnerships to upgrade the tier.",
+      "docs": "/api-reference/troubleshooting#post-transactions-network"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 400,
+      "match": "Invalid srcToken",
+      "cause": "Native ETH sent as 0x0 or lowercase 0xeee...e.",
+      "fix": "Use the mixed-case placeholder 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE.",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 200,
+      "match": "Response has market instead of delta",
+      "cause": "mode=ALL and Market won the routing decision.",
+      "fix": "Force mode=DELTA if Delta is required, or branch on response.delta vs response.market. See /integrate/trading-modes.",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 400,
+      "match": "Slippage required",
+      "cause": "slippage omitted on a Delta quote.",
+      "fix": "Pass slippage in basis points (e.g. 100 = 1%).",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 422,
+      "match": "Unsupported chain",
+      "cause": "chainId is supported by Market but Delta hasn't shipped on that chain yet.",
+      "fix": "Check GET /chains for the Delta-enabled subset; see /resources/chains-and-contracts.",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 200,
+      "match": "delta.partiallyFillable: false (unexpected)",
+      "cause": "The pair / size combination doesn't have partial-fill liquidity from solvers.",
+      "fix": "Reduce size, or design the UX around all-or-nothing fills for this pair.",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "GET /quote",
+      "status": 400,
+      "match": "Invalid price (on subsequent /orders/build)",
+      "cause": "delta block mutated between calls (recomputed amounts, decoded/re-encoded).",
+      "fix": "Pass the delta object verbatim as price; hmac unchanged from the quote response.",
+      "docs": "/api-reference/troubleshooting#get-quote"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": 400,
+      "match": "Invalid price",
+      "cause": "The delta block from GET /quote was mutated, re-encoded, or re-stringified before submit.",
+      "fix": "Pass the delta object verbatim as price. Don't run it through JSON normalizers, sorters, or schema validators.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": 400,
+      "match": "Invalid hmac",
+      "cause": "The hmac from the quote response was dropped, modified, or paired with a different delta.",
+      "fix": "Always send the hmac paired with the exact delta returned from the same quote response.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": null,
+      "match": "EIP-712 signature rejected",
+      "cause": "Wallet signed against a different chain id, verifying contract, or version.",
+      "fix": "Verify domain.chainId, domain.verifyingContract, and domain.name/version match what POST /delta/orders/build returned. See /delta/eip-712-typed-data-reference.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": null,
+      "match": "Approval reverts before signing",
+      "cause": "Token approval granted to the Augustus router instead of the Delta contract.",
+      "fix": "Approve the Delta contract as spender — it's the spender on Delta flows, not Augustus. See /resources/chains-and-contracts.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": null,
+      "match": "Build succeeds but downstream /delta/orders returns expired",
+      "cause": "Long delay between build and signature (user wandered off, app backgrounded).",
+      "fix": "Re-quote and rebuild when the user returns; treat order-server expiry as a hard ceiling, surface a countdown in your UI.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders/build",
+      "status": 400,
+      "match": "Permit / Permit2 required",
+      "cause": "The token requires Permit or Permit2 and the build request didn't include the payload.",
+      "fix": "Detect Permit/Permit2 capability up front; see /guides/permit-and-permit2-patterns.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 400,
+      "match": "Invalid signature",
+      "cause": "Signed payload doesn't match the order field byte-for-byte.",
+      "fix": "Sign the exact order returned by POST /delta/orders/build. Don't re-sort, re-stringify, or re-encode.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 400,
+      "match": "Order expired immediately",
+      "cause": "More than ~30s elapsed between build and submit.",
+      "fix": "Submit the signed order within the validity window; if the user pauses, re-quote and rebuild.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 200,
+      "match": "Order stays at pending indefinitely",
+      "cause": "Solver auction returned no fill (size, pair, or chain conditions).",
+      "fix": "Poll GET /delta/orders/:id; if still pending past your SLA, cancel and re-quote. See /delta/order-lifecycle-and-status-codes.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 200,
+      "match": "Order transitions to failed post-acceptance",
+      "cause": "Allowance revoked, balance moved, or token-approval points at the wrong spender.",
+      "fix": "Confirm allowance to the Delta contract spender persists for the order's full lifecycle. See /resources/chains-and-contracts.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 200,
+      "match": "partialFill order settles partial then stalls",
+      "cause": "Solver network couldn't source the remainder at the signed price.",
+      "fix": "Decide whether to cancel and re-quote the remainder, or wait for the full validity window.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /delta/orders",
+      "status": 200,
+      "match": "No order id returned",
+      "cause": "Client treated empty response as success; gateway response was actually a 5xx.",
+      "fix": "Always check status and presence of id; retry on 5xx with idempotent re-submission of the same signed payload.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders"
+    }
+  ]
+}

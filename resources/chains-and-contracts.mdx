@@ -6,43 +6,53 @@ keywords: ["chains", "contracts", "addresses", "deployments"]
 
 This page is the single source of truth for contract addresses across Velora's stack. Every other page links here rather than inlining addresses, with one exception: failure-mode rows on API reference pages may cite a specific deployed address inline when the address is the actual diagnostic.
 
-<Note>
-  This page is a stub. The full per-chain address table — Augustus v6.2,
-  Augustus v6.1, Augustus v5, Delta, Portikus settlement, AugustusRFQ — will
-  land before the v3 docs go live. For the up-to-date list today, see the
-  [open-source contracts repo](https://github.com/VeloraDEX) or contact
-  [support@velora.xyz](mailto:support@velora.xyz).
-</Note>
+<Tip>
+  Building integrations that need addresses at runtime? Read [`/resources/contracts.json`](/resources/contracts.json) — it mirrors the table on this page in machine-readable form, keyed by `chainId`.
+</Tip>
 
 ## Supported chains
 
-Velora supports the following EVM networks. Each chain has Augustus v6.2 (Market routing) deployed; Delta and AugustusRFQ availability varies — see the per-chain table below when populated.
+Velora supports the following EVM networks. Each chain has Augustus v6.2 (Market routing) deployed; Delta availability is a subset.
 
 - Ethereum (1)
 - Optimism (10)
 - BNB Chain (56)
+- Gnosis (100)
+- Unichain (130)
 - Polygon (137)
 - Base (8453)
 - Arbitrum One (42161)
 - Avalanche (43114)
-- Unichain (130)
-- Gnosis (100)
 
 The authoritative supported-chain list is queryable at runtime via `GET /chains` on the Market API. Code should treat this page as a human-readable index and `/chains` as the runtime source of truth.
+
+## Addresses by chain
+
+| ID | Chain | Augustus v6.2 | Delta | AugustusRFQ |
+|---|---|---|---|---|
+| 1 | Ethereum | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xe92b586627ccA7a83dC919cc7127196d70f55a06` |
+| 10 | Optimism | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| 56 | BNB Chain | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x8DcDfe88EF0351f27437284D0710cD65b20288bb` |
+| 100 | Gnosis | `0x6a000f20005980200259b80c5102003040001068` | — | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
+| 130 | Unichain | `0x6a000f20005980200259b80c5102003040001068` | — | — |
+| 137 | Polygon | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043` |
+| 8453 | Base | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd` |
+| 42161 | Arbitrum One | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| 43114 | Avalanche | `0x6a000f20005980200259b80c5102003040001068` | — | `0x34302c4267d0dA0A8c65510282Cc22E9e39df51f` |
 
 ## Contracts
 
 ### Augustus v6.2
 
-The Market router. All Market `POST /transactions` calldata targets the Augustus v6.2 contract on the requested chain.
+The Market router. All Market [`POST /transactions/:network`](/api-reference/market/transactions) calldata targets the Augustus v6.2 contract on the requested chain. Deployed at the same address across every supported chain.
 
 ### Augustus v6.1, v5
 
-Legacy router versions. Still operational but new integrations should target v6.2. Calldata returned by the Market API automatically uses v6.2 unless overridden.
+Legacy router versions. Still operational but new integrations should target v6.2. Calldata returned by the Market API automatically uses v6.2 unless overridden. Migration: [Augustus v5 → v6.2](/resources/migrations/augustus-v5-to-v6-2).
 
 ### Delta contract
 
-On-chain entry point that validates signed Delta orders and dispatches settlement to Portikus solvers. The Delta contract is the spender on EIP-712 typed-data approvals — token approvals for Delta flows must be granted to this address (not Augustus).
+On-chain entry point that validates signed Delta orders and dispatches settlement to Portikus solvers. The Delta contract is the spender on EIP-712 typed-data approvals — token approvals for Delta flows must be granted to this address, **not** to Augustus. Deployed at the same address across every Delta-enabled chain.
 
 ### Portikus settlement
 
@@ -57,3 +67,4 @@ On-chain limit-order and OTC contract. Supports partial fills and bilateral sign
 - [Market API → Overview](/api-reference/market/overview)
 - [Delta → How it works](/delta/how-it-works)
 - [Security → Audits](/resources/security/audits)
+- Machine-readable: [`/resources/contracts.json`](/resources/contracts.json)

@@ -85,7 +85,7 @@ You should see the indicative `destAmount` (USDC, 6 decimals), the order `deadli
 
 ## Next: build, sign, submit
 
-Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` field) to get EIP-712 typed data. Sign it with an ERC-2098 compact signature, then `POST /delta/orders` with the order + signature. See [Delta → How it works](/delta/how-it-works).
+Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` field) to get EIP-712 typed data — its exact shape is documented in [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference). Sign it with an ERC-2098 compact signature, then `POST /delta/orders` with the order + signature. See [Delta → How it works](/delta/how-it-works).
 
 <Warning>
   Pass the `delta` payload **verbatim** to `/delta/orders/build`. Mutating any field (including `hmac`) will cause the build call to reject.
@@ -96,4 +96,4 @@ Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` fi
 - [Delta overview](/delta/overview) — when to use Delta intents.
 - [Delta → How it works](/delta/how-it-works) — quote → build → sign → auction → settle.
 - [Delta API reference](/api-reference/delta/overview) — full parameter list.
-- [EIP-712 typed data reference](/delta/eip-712-typed-data-reference) — domain and types.
+- [The EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) — domain and types.

@@ -1,0 +1,55 @@
+{
+  "_meta": {
+    "description": "Canonical per-chain deployment addresses for Velora's contract stack. Keyed by EVM chainId. Roles not deployed on a given chain are omitted.",
+    "source": "https://new-docs.velora.xyz/resources/chains-and-contracts",
+    "lastUpdated": "2026-05-27",
+    "runtimeSource": "GET /chains on the Market API is the runtime source of truth for the supported-chain list.",
+    "unverifiedRoles": {
+      "note": "The plan-specified roles below are not yet sourced from a canonical Velora developer-docs page. Backfill when an authoritative source is published.",
+      "roles": ["augustusV6_1", "augustusV5", "portikus"]
+    }
+  },
+  "chains": {
+    "1": {
+      "name": "Ethereum",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0xe92b586627ccA7a83dC919cc7127196d70f55a06"    },
+    "10": {
+      "name": "Optimism",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D"    },
+    "56": {
+      "name": "BNB Chain",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0x8DcDfe88EF0351f27437284D0710cD65b20288bb"    },
+    "100": {
+      "name": "Gnosis",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "augustusRFQ": "0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241"    },
+    "130": {
+      "name": "Unichain",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068"    },
+    "137": {
+      "name": "Polygon",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043"    },
+    "8453": {
+      "name": "Base",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd"    },
+    "42161": {
+      "name": "Arbitrum One",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "augustusRFQ": "0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D"    },
+    "43114": {
+      "name": "Avalanche",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "augustusRFQ": "0x34302c4267d0dA0A8c65510282Cc22E9e39df51f"    }
+  }
+}
