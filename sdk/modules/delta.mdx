@@ -31,7 +31,7 @@ import { DeltaV2 } from "@velora-dex/sdk";
 // values: DeltaV2.constructBuildDeltaOrder, DeltaV2.constructPostDeltaOrder,
 //         DeltaV2.constructSubmitDeltaOrder, DeltaV2.constructAllDeltaOrdersHandlers, ...
 // types:  DeltaV2.DeltaPrice, DeltaV2.DeltaRoute, DeltaV2.BuiltDeltaOrder,
-//         DeltaV2.DeltaOrderResponse, DeltaV2.BridgeRoute, ...
+//         DeltaV2.DeltaAuction, DeltaV2.BridgeRoute, ...
 ```
 
 `import type { DeltaV2 }` works the same way for type-only consumers. Types live *inside* the namespace — alias with `type DeltaPrice = DeltaV2.DeltaPrice;` if you want a short local name; you can't destructure a type at the import site.
@@ -148,7 +148,7 @@ const { data, page, limit, total } = await sdk.deltaV2.getDeltaOrders({
 });
 ```
 
-Each entry is a `DeltaV2.DeltaOrderResponse`. The list may include a fifth `onChainOrderType` value — `'ProductiveOrder'` — that has no SDK builder; see [Productive orders](#productive-orders-read-only) below.
+Each entry is a `DeltaV2.DeltaAuction<T>`, generic over `onChainOrderType` (the same shape as V1's `DeltaAuction`). The list may include `'ProductiveOrder'` — a family with no SDK builder; see [Productive orders](#productive-orders-read-only) below. It may also report `'FillableOrder'` for a `partiallyFillable` Standard order — treat it exactly like `'Order'` (identical shape).
 
 ## Partner fee
 
@@ -201,7 +201,8 @@ function describe(order: DeltaAuctionUnion) {
     // order: DeltaAuctionProductive — read-only, no SDK builder
     return `productive: ${order.order.srcToken}`;
   }
-  // ... handle Order / ExternalOrder / TWAPOrder / TWAPBuyOrder
+  // "Order" and "FillableOrder" share the same shape (DeltaAuctionFillable)
+  // ... handle Order / FillableOrder / ExternalOrder / TWAPOrder / TWAPBuyOrder
 }
 ```
 
@@ -288,7 +289,7 @@ V2 method names are the same as V1's at the property level (`buildDeltaOrder`, `
 + });
 ```
 
-V2 returns a `PaginatedResponse<DeltaV2.DeltaOrderResponse>` envelope. `userAddress` is required; iterate `data` and increment `page` until you've consumed `total`.
+V2 returns a `PaginatedResponse<DeltaV2.DeltaAuction>` envelope. `userAddress` is required; iterate `data` and increment `page` until you've consumed `total`.
 
 ### Cancelling
 
@@ -302,7 +303,7 @@ V2 returns a `PaginatedResponse<DeltaV2.DeltaOrderResponse>` envelope. `userAddr
 ```diff
 - import type { DeltaPriceV2, BuiltDeltaOrderV2, DeltaOrderV2Response } from "@velora-dex/sdk";
 + import { DeltaV2 } from "@velora-dex/sdk";
-+ // then: DeltaV2.DeltaPrice, DeltaV2.BuiltDeltaOrder, DeltaV2.DeltaOrderResponse
++ // then: DeltaV2.DeltaPrice, DeltaV2.BuiltDeltaOrder, DeltaV2.DeltaAuction
 ```
 
 V2 types live inside the `DeltaV2` namespace; the old `*V2`-suffixed bare names are no longer exported.

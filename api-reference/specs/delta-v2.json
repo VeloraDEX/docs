@@ -231,7 +231,7 @@
             "description": "Order accepted.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/OrderV2" }
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
               }
             }
           },
@@ -258,7 +258,7 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/OrderV2" } },
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/DeltaAuction" } },
                     "total": { "type": "integer" },
                     "page": { "type": "integer" },
                     "limit": { "type": "integer" },
@@ -350,7 +350,7 @@
             "description": "Order details.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/OrderV2" }
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
               }
             }
           },
@@ -370,7 +370,7 @@
             "description": "Order details.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/OrderV2" }
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
               }
             }
           },
@@ -548,15 +548,15 @@
           "excludeAgents": { "type": "array", "items": { "type": "string" } }
         }
       },
-      "OrderV2": {
+      "DeltaAuction": {
         "type": "object",
-        "description": "V2 order shape returned by every order endpoint. `input` and `output` carry the *expected* + *executed* amounts so you don't need to compute fill-percent yourself.",
+        "description": "V2 order shape returned by every order endpoint (reads and posts). `input` and `output` carry the *expected* + *executed* amounts so you don't need to compute fill-percent yourself. `onChainOrderType` selects the family the `order` struct belongs to.",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
           "status": { "type": "string", "enum": ["PENDING", "AWAITING_SIGNATURE", "ACTIVE", "SUSPENDED", "CANCELLING", "BRIDGING", "COMPLETED", "FAILED", "EXPIRED", "CANCELLED", "REFUNDED"] },
           "side": { "type": "string", "enum": ["SELL", "BUY"] },
           "type": { "type": "string", "enum": ["MARKET", "LIMIT"] },
-          "onChainOrderType": { "type": "string", "enum": ["Order", "FillableOrder", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"], "nullable": true },
+          "onChainOrderType": { "type": "string", "enum": ["Order", "FillableOrder", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] },
           "input": {
             "type": "object",
             "description": "Source-side token movement. SELL: `{ chainId, token, amount }`. BUY: `{ chainId, token, expectedAmount, executedAmount }`.",
@@ -581,7 +581,7 @@
           },
           "owner": { "type": "string" },
           "beneficiary": { "type": "string" },
-          "orderHash": { "type": "string", "nullable": true },
+          "orderHash": { "type": "string" },
           "partner": { "type": "string" },
           "order": { "type": "object", "description": "The signed on-chain Order struct." },
           "transactions": {
@@ -597,9 +597,9 @@
               }
             }
           },
-          "createdAt": { "type": "string", "format": "date-time", "nullable": true },
-          "updatedAt": { "type": "string", "format": "date-time", "nullable": true },
-          "expiresAt": { "type": "string", "format": "date-time", "nullable": true }
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" }
         }
       }
     }

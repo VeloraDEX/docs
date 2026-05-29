@@ -1143,11 +1143,13 @@
             "type": "string",
             "enum": [
               "Order",
+              "FillableOrder",
               "ProductiveOrder",
               "ExternalOrder",
               "TWAPOrder",
               "TWAPBuyOrder"
-            ]
+            ],
+            "description": "`FillableOrder` is what the server reports for a `partiallyFillable` Standard `Order`; the `order` struct shape is identical to `Order`."
           },
           "order": {
             "type": "object",
