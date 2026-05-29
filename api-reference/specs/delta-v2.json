@@ -481,11 +481,10 @@
       },
       "BuildOrderV2Request": {
         "type": "object",
-        "required": ["chainId", "route", "owner"],
+        "required": ["route", "owner"],
         "properties": {
-          "chainId": { "type": "integer" },
           "side": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" },
-          "route": { "$ref": "#/components/schemas/Route" },
+          "route": { "$ref": "#/components/schemas/Route", "description": "Pass the unmodified `route` from `GET /delta/v2/prices`. The chain ID is derived from the route." },
           "owner": { "type": "string" },
           "beneficiary": { "type": "string", "description": "Defaults to `owner`." },
           "deadline": { "type": "integer", "description": "Unix seconds. Defaults to now + 1 hour." },

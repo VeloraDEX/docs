@@ -109,7 +109,6 @@ V1 takes the price object + hmac. V2 takes the route plus order params on top.
 
 + POST /delta/v2/orders/build
 + {
-+   "chainId": 1,
 +   "owner": "0x...",
 +   "route": { /* the route from /delta/v2/prices, verbatim */ },
 +   "side": "SELL",
@@ -118,6 +117,8 @@ V1 takes the price object + hmac. V2 takes the route plus order params on top.
 +   "partnerFeeBps": 25
 + }
 ```
+
+> The chain ID is no longer part of the build request — V2 derives it from the `route`.
 
 V1 returned `{ data, orderHash, domain, types }` — `data` was the on-chain Order struct.
 
