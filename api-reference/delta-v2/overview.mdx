@@ -1,0 +1,65 @@
+---
+title: "Delta V2 API"
+description: "Server-built EIP-712 orders, route-based pricing with alternatives, paginated history, and a unified status model. Recommended path for new Delta integrations."
+keywords: ["delta", "delta v2", "api-reference"]
+---
+
+Delta V2 is the recommended path for Delta integrations. The on-chain contracts and settlement model are identical to [Delta V1](/api-reference/delta/overview); the protocol surface changes for the better:
+
+- **Server-built orders.** `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign — clients don't compose `domain`, `types`, and `value` locally.
+- **Route-based pricing.** `GET /delta/v2/prices` returns a recommended `route` plus `alternatives` so users can pick a different bridge or path.
+- **Paginated history.** `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }`.
+- **Unified status model.** Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) replace the V1 split between `status` + `bridgeStatus`.
+- **Server-resolved partner fee.** Pass `partner` / `partnerAddress` / `partnerFeeBps` raw — the server validates and encodes them. No client-side `getPartnerFee` round-trip.
+
+## Lifecycle
+
+<Steps>
+  <Step title="Price">
+    `GET /delta/v2/prices` — returns `route`, `alternatives`, and the `spender` contract address.
+  </Step>
+  <Step title="Approve">
+    ERC-20 `approve(spender, amount)` against `price.spender`, or sign Permit / Permit2 with the same `verifyingContract`. Native tokens skip this.
+  </Step>
+  <Step title="Build">
+    `POST /delta/v2/orders/build` — returns `{ toSign: { domain, types, value }, orderHash }`.
+  </Step>
+  <Step title="Sign">
+    Sign `toSign` with `signTypedData` on the user's wallet.
+  </Step>
+  <Step title="Submit">
+    `POST /delta/v2/orders` — passes `order: toSign.value` and `signature` to the relayer.
+  </Step>
+  <Step title="Poll">
+    `GET /delta/v2/orders/{orderId}` until `status === "COMPLETED"` (or a terminal failure).
+  </Step>
+</Steps>
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/delta/v2/prices` | Recommended route + alternatives, same-chain or crosschain |
+| `GET` | `/delta/v2/prices/bridge-routes` | Supported `(srcChainId, destChainId, tokens)` triples |
+| `GET` | `/delta/v2/prices/bridge-protocols` | Active bridge protocols (slug, name, icon) |
+| `GET` | `/delta/v2/prices/strategies/{chainId}` | Delta yield strategies with APR |
+| `GET` | `/delta/v2/prices/is-token-supported` | Quick token-support check |
+| `POST` | `/delta/v2/orders/build` | Server-built EIP-712 typed data ready to sign |
+| `POST` | `/delta/v2/orders` | Submit a signed order |
+| `POST` | `/delta/v2/orders/cancel` | Sign-and-post cancellation |
+| `GET` | `/delta/v2/orders` | List a user's orders (paginated) |
+| `GET` | `/delta/v2/orders/{orderId}` | Order by UUID |
+| `GET` | `/delta/v2/orders/hash/{hash}` | Order by EIP-712 hash |
+| `GET` | `/delta/v2/orders/fillablebalance/...` | Fillable balance for limit-order sizing |
+| `GET` | `/delta/v2/agents/list/{chainId}` | List active auction agents |
+
+## SDK shortcut
+
+Every endpoint is wrapped by [`sdk.deltaV2.*`](/sdk/modules/delta) — the SDK handles signing, partner-fee defaults, and the build → sign → post orchestration. For a 5-minute walkthrough see [SDK → Delta module](/sdk/modules/delta).
+
+## Related pages
+
+- [Why Delta](/delta/overview) — protocol overview.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes) — the V2 status model end-to-end.
+- [SDK → Delta module](/sdk/modules/delta) — TypeScript examples (V2 primary, V1 below).
+- [Delta V1 API](/api-reference/delta/overview) — the V1 surface, still fully supported.

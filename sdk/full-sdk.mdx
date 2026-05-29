@@ -67,9 +67,10 @@ console.log("approval submitted:", hash);
 
 The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
 
+- `sdk.deltaV2` — **recommended.** Full Delta V2 lifecycle: `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus reused approve/preSign.
+- `sdk.delta` — Delta V1. Same lifecycle, locally-built orders.
 - `sdk.quote` — `getQuote`
 - `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx
-- `sdk.delta` — full Delta order lifecycle, partner fee, contract resolver
 - `sdk.limitOrders` — deprecated; see [Limit orders module](/sdk/modules/limit-orders)
 
 See [Modules → Swap](/sdk/modules/swap) and [Modules → Delta](/sdk/modules/delta) for end-to-end flows.

@@ -104,12 +104,13 @@ Write calls always resolve to a **transaction hash** (`string`). If you need the
 
 The returned SDK is namespaced by feature:
 
-| Namespace         | What's inside                                                                                                                                                                                                                                                        | Module page                                      |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| `sdk.quote`       | `getQuote` — unified Delta-with-fallback-to-Market price                                                                                                                                                                                                             | [API → Delta /quote](/api-reference/delta/quote) |
-| `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx`                                                                                                                                                              | [Swap module](/sdk/modules/swap)                 |
-| `sdk.delta`       | `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelLimitDeltaOrders`, `getPartnerFee` | [Delta module](/sdk/modules/delta)               |
-| `sdk.limitOrders` | Deprecated. Build/sign/post/cancel limit orders.                                                                                                                                                                                                                     | [Limit orders module](/sdk/modules/limit-orders) |
+| Namespace         | What's inside                                                                                                                                                                                                                                                        | Module page                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta module](/sdk/modules/delta)                   |
+| `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/modules/delta#delta-v1).                                                                                                                                                                         | [Delta module](/sdk/modules/delta#delta-v1)          |
+| `sdk.quote`       | `getQuote` — V1 Delta-with-fallback-to-Market price (no V2 equivalent yet)                                                                                                                                                                                           | [API → Delta /quote](/api-reference/delta/quote)     |
+| `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx`                                                                                                                                                              | [Swap module](/sdk/modules/swap)                     |
+| `sdk.limitOrders` | Deprecated. Build/sign/post/cancel limit orders.                                                                                                                                                                                                                     | [Limit orders module](/sdk/modules/limit-orders)     |
 
 ## End-to-end example
 
@@ -187,7 +188,7 @@ if ("delta" in quote) {
 }
 ```
 
-See [Modules → Delta](/sdk/modules/delta) for the split build/sign/post flow and order-status polling, and [Modules → Swap](/sdk/modules/swap) for the full Market-swap walkthrough.
+See [Modules → Delta](/sdk/modules/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Modules → Swap](/sdk/modules/swap) for the full Market-swap walkthrough.
 
 ## Related pages
 
