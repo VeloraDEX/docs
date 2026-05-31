@@ -1,7 +1,110 @@
 ---
 title: "Monetization"
-description: "How partners earn revenue by integrating Velora — coming soon."
-keywords: ["monetization", "fees", "revenue", "partner", "referrer"]
+description: "How partners earn revenue from Velora swaps — partner fees, surplus sharing, and how the revenue split differs between Delta and Market."
+keywords:
+  - monetization
+  - partner fees
+  - fee sharing
+  - revenue
+  - surplus
+  - positive slippage
+  - partnerFee
+  - partnerFeeBps
+  - takeSurplus
+  - isSurplusToUser
+  - partnerAddress
+  - isDirectFeeTransfer
+  - Fee Claimer
+  - Delta
+  - Market
 ---
 
-<Note>This page is coming soon.</Note>
+Velora gives partners two revenue levers on every swap they route: a **partner fee** (a fixed cut in basis points) or a **surplus share** (half of any positive slippage the routing engine or solver network captures). The two are mutually exclusive on a single swap, and the split between partner, user, and Velora differs between Delta and Market.
+
+## How partners earn
+
+- **Partner fee.** A fixed basis-point cut subtracted from the swap output. Predictable per-trade revenue, but it worsens the user-facing quote because the fee comes off the top.
+- **Surplus share.** When the route or solver overdelivers vs. the quoted output, that *positive slippage* is the surplus. Partners can claim 50% of it, leaving the user-facing quote untouched. Revenue is variable — it depends on routing edge.
+
+A swap can carry one lever or the other, not both. If a request sets both, the partner fee takes precedence and the surplus flag is ignored.
+
+Requests without a partner key fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, [get a partner key](/api-reference/authentication).
+
+## Revenue splits at a glance
+
+How fees and surplus are split between the partner, the end user, and Velora:
+
+| Configuration | Market | Delta |
+|---|---|---|
+| Partner fee, no surplus opt-in* | 85% partner / 15% Velora | 100% partner |
+| Surplus share, no fee | 50% partner / 50% Velora (or 50% user / 50% Velora when `isSurplusToUser`) | 50% partner / 50% Velora (or 50% user / 50% Velora when `isSurplusToUser`) |
+| No fee, no surplus opt-in | 100% Velora | 100% Velora |
+| Partner fee + surplus flags both set | Fee wins; surplus flag ignored | Fee wins; surplus flag ignored |
+
+Delta returns 100% of the partner fee to the partner because the protocol funds itself from surplus on the Delta side, not from per-swap fees. On Market, Velora takes a 15% cut of the partner fee to fund routing infrastructure.
+
+<sub>* Tailored arrangements available on request.</sub>
+
+## How it maps to the API
+
+Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the same monetization parameters per request. `isDirectFeeTransfer` is Market-only.
+
+| Parameter<span style={{display: 'inline-block', width: '11rem'}} /> | Type | Default | Purpose |
+|---|---|---|---|
+| `partner` | string | `anon` | Identifies your integration; ties the request to your partner-key economics |
+| `partnerAddress` | address | — | On-chain recipient of fees or surplus share |
+| `partnerFeeBps` | string (bps) | — | Fixed fee in basis points. `"200"` = 2%. Max enforced by your partner-key tier |
+| `takeSurplus` | boolean | `false` | Opt into surplus collection. Requires `partner` or `partnerAddress` |
+| `isSurplusToUser` | boolean | `false` | Route surplus to the end user instead of the partner. Requires `takeSurplus: true` |
+| `isDirectFeeTransfer`<sup>Market</sup> | boolean | `false` | Bypass the Fee Claimer contract and transfer fees to `partnerAddress` per swap |
+
+<Note>
+`partnerFeeBps` and `takeSurplus` are mutually exclusive — set one or the other. The legacy `positiveSlippageToUser` flag is deprecated; use `isSurplusToUser` instead.
+</Note>
+
+Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /quote`) so the fee is reflected in the displayed quote.
+
+## Fee delivery
+
+On **Market**, partner fees accrue inside the **Fee Claimer** contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true` — the per-swap gas cost is higher, but there's nothing to claim.
+
+On **Delta**, fees accrue inside the main Delta contract and partners claim them directly from there — there is no separate Fee Claimer contract.
+
+Surplus routed to the user (`isSurplusToUser: true`) is settled in the same transaction as the swap — no claim step either way.
+
+## How to claim
+
+### Fee Claimer UI
+
+Accumulated balances are claimable from the [Fee Claimer app](https://app.velora.xyz/#/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
+
+### Programmatically
+
+Coming soon.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Get a partner key" icon="key" href="/api-reference/authentication">
+    Unlock production rate limits and partner-fee economics.
+  </Card>
+  <Card title="Pro API accounts" icon="briefcase" href="/overview/pro-api-accounts">
+    Tier and quota details for production integrations.
+  </Card>
+  <Card title="Widget monetization" icon="puzzle-piece" href="/widget/monetize">
+    Drop-in `partnerConfig` for the React widget.
+  </Card>
+  <Card title="Delta overview" icon="bolt" href="/delta/overview">
+    Gasless intents, solver competition, and surplus economics.
+  </Card>
+  <Card title="Market API overview" icon="chart-line" href="/api-reference/market/overview">
+    `GET /prices` and `POST /transactions` reference.
+  </Card>
+  <Card title="Delta API overview" icon="signature" href="/api-reference/delta/overview">
+    `GET /quote` and intent submission reference.
+  </Card>
+</CardGroup>
+
+<Tip>
+All endpoints work without a partner key for low-volume testing — but fees and surplus only activate once a key is attached. See [Authentication & partner key](/api-reference/authentication).
+</Tip>
