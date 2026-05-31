@@ -42,8 +42,8 @@
       "endpoint": "GET /prices",
       "status": 429,
       "match": "Too Many Requests",
-      "cause": "Rate-limited without a partner key, or partner-key tier exceeded.",
-      "fix": "Attach a partner key (see /api-reference/authentication), or back off and retry.",
+      "cause": "Free-tier rate limit hit, or Pro plan quota exceeded.",
+      "fix": "Upgrade to a Pro API account (see /overview/pro-api-accounts) to lift limits, or back off and retry.",
       "docs": "/api-reference/troubleshooting#get-prices"
     },
     {
@@ -90,7 +90,7 @@
       "endpoint": "POST /transactions/:network",
       "status": 422,
       "match": "Partner not allowed",
-      "cause": "Partner-key tier doesn't permit the requested fee/surplus configuration.",
+      "cause": "Your partner tier doesn't permit the requested fee/surplus configuration.",
       "fix": "Drop the disallowed param, or contact partnerships to upgrade the tier.",
       "docs": "/api-reference/troubleshooting#post-transactions-network"
     },

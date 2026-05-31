@@ -31,7 +31,7 @@ Pass `partnerConfig` inside `config` to identify your integration and (optionall
 
 | Field | Type | Description |
 |---|---|---|
-| `partner` | `string` | Your partner-key string (e.g. `"my-app-name"`). Used for attribution and analytics. |
+| `partner` | `string` | Your `partner` identifier (e.g. `"my-app-name"`). Used for attribution and analytics. |
 | `partnerAddress` | `Address` | Optional. Ethereum address that receives the fee. Overrides the address derived from `partner`. |
 | `partnerFeeBps` | `number` | Optional. Fee in basis points. `25` = 0.25%. Max `200` (2%). |
 | `partnerTakesSurplus` | `boolean` | Optional. When `true`, you receive 50% of swap surplus instead of a fixed fee. Defaults to `false`. |
@@ -108,7 +108,7 @@ Pass a `referrerConfig` to attribute swaps to a referrer wallet that receives a 
 
 ## Production tips
 
-- **Never inline the partner key in source you publish unmodified.** Load `partner` from an environment variable so different builds (staging, production, white-label) can use different keys.
+- **Load `partner` from an environment variable.** Different builds (staging, production, white-label) can then use different identifiers without code changes.
 - **Memoize `partnerConfig`.** Like every non-primitive config field, a new object every render forces re-mount. Move it to a module-level constant or `useMemo`.
 - **Audit the partner address.** Once a swap is routed, fees pay to `partnerAddress` on-chain. Treat it like any other treasury address.
 

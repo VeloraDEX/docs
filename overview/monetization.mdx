@@ -28,7 +28,7 @@ Velora gives partners two revenue levers on every swap they route: a **partner f
 
 A swap can carry one lever or the other, not both. If a request sets both, the partner fee takes precedence and the surplus flag is ignored.
 
-Requests without a partner key fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, [get a partner key](/api-reference/authentication).
+Requests without a partner identifier fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, attach your own `partner` identifier — see [Pro API accounts](/overview/pro-api-accounts).
 
 ## Revenue splits at a glance
 
@@ -51,9 +51,9 @@ Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the
 
 | Parameter<span style={{display: 'inline-block', width: '11rem'}} /> | Type | Default | Purpose |
 |---|---|---|---|
-| `partner` | string | `anon` | Identifies your integration; ties the request to your partner-key economics |
+| `partner` | string | `anon` | Identifies your integration; ties the request to your partner economics |
 | `partnerAddress` | address | — | On-chain recipient of fees or surplus share |
-| `partnerFeeBps` | string (bps) | — | Fixed fee in basis points. `"200"` = 2%. Max enforced by your partner-key tier |
+| `partnerFeeBps` | string (bps) | — | Fixed fee in basis points. `"200"` = 2%. Max enforced by your partner tier |
 | `takeSurplus` | boolean | `false` | Opt into surplus collection. Requires `partner` or `partnerAddress` |
 | `isSurplusToUser` | boolean | `false` | Route surplus to the end user instead of the partner. Requires `takeSurplus: true` |
 | `isDirectFeeTransfer`<sup>Market</sup> | boolean | `false` | Bypass the Fee Claimer contract and transfer fees to `partnerAddress` per swap |
@@ -76,7 +76,7 @@ Surplus routed to the user (`isSurplusToUser: true`) is settled in the same tran
 
 ### Fee Claimer UI
 
-Accumulated balances are claimable from the [Fee Claimer app](https://app.velora.xyz/#/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
+Accumulated balances are claimable from the [Fee Claimer app](https://velora.xyz/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
 
 ### Programmatically
 
@@ -85,11 +85,8 @@ Coming soon.
 ## Next steps
 
 <CardGroup cols={2}>
-  <Card title="Get a partner key" icon="key" href="/api-reference/authentication">
-    Unlock production rate limits and partner-fee economics.
-  </Card>
   <Card title="Pro API accounts" icon="briefcase" href="/overview/pro-api-accounts">
-    Tier and quota details for production integrations.
+    Free partner IDs, plus paid tiers for higher rate limits and SLA.
   </Card>
   <Card title="Widget monetization" icon="puzzle-piece" href="/widget/monetize">
     Drop-in `partnerConfig` for the React widget.
@@ -106,5 +103,5 @@ Coming soon.
 </CardGroup>
 
 <Tip>
-All endpoints work without a partner key for low-volume testing — but fees and surplus only activate once a key is attached. See [Authentication & partner key](/api-reference/authentication).
+Endpoints work without a `partner` identifier, but fees and surplus only activate once one is attached — picking your own `partner` value costs nothing. When you outgrow the free tier, [Pro API accounts](/overview/pro-api-accounts) layer on higher limits, a dashboard, and SLA, or [reach out](https://www.velora.xyz/contact) for custom terms.
 </Tip>

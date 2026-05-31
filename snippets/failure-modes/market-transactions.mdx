@@ -5,6 +5,6 @@
 | Calldata reverts with `TransferHelper: TRANSFER_FROM_FAILED` | ERC-20 allowance to the v6.2 router insufficient (or pointed at the legacy v5 router) | Approve the Augustus v6.2 router address — see [Chains & contracts](/resources/chains-and-contracts); migrating off v5 → [Augustus v5 → v6.2](/resources/migrations/augustus-v5-to-v6-2) |
 | `txData` gas estimate fails on the user's RPC          | RPC gas estimation can't simulate the exact block conditions                 | Use the `gas` field returned in the response as a baseline + 15–25% headroom |
 | Calldata builds for the wrong chain                    | `network` path parameter mismatched against the `priceRoute.network`         | Always derive `:network` from `priceRoute.network`, not from a client-side variable |
-| 422 `Partner not allowed`                              | Partner-key tier doesn't permit the requested fee/surplus configuration      | Drop the disallowed param, or contact partnerships to upgrade the tier |
+| 422 `Partner not allowed`                              | Your partner tier doesn't permit the requested fee/surplus configuration     | Drop the disallowed param, or [upgrade to a Pro API account](/overview/pro-api-accounts) |
 
 <Note>Updated from support tickets at each release. Last updated: 2026-05-15.</Note>
