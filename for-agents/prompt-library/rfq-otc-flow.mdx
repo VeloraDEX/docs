@@ -2,7 +2,7 @@
 title: "AugustusRFQ OTC flow"
 description: "Prompt an AI agent to sign and fill an AugustusRFQ order off-chain."
 last-verified: 2026-05-15
-keywords: ["rfq","otc","augustus","limit-orders"]
+keywords: ["rfq","otc","augustus"]
 ---
 
 ## Outcome
@@ -17,7 +17,7 @@ A pair of TypeScript scripts: one for the **maker** (constructs and signs an Aug
 You are building two CLI scripts in TypeScript using Viem.
 
 Maker script (`make-order.ts`):
-- Constructs an AugustusRFQ limit order: sell `srcAmount` of `srcToken` for at least `destAmount` of `destToken`, expires at a configurable timestamp, partial fills allowed.
+- Constructs an AugustusRFQ OTC order: sell `srcAmount` of `srcToken` for at least `destAmount` of `destToken`, expires at a configurable timestamp, partial fills allowed. Limit orders are Delta orders; use this RFQ flow only for OTC settlement.
 - Signs the EIP-712 typed data with the maker's private key.
 - Outputs the order JSON + signature to stdout (the taker can pick this up via stdin or a side-channel).
 

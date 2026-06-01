@@ -1,15 +1,87 @@
 ---
 title: "TWAP"
-description: "Time-weighted average price orders — split a large trade into smaller chunks executed on a schedule to reduce price impact."
-keywords: ["twap","time-weighted","scheduled orders"]
+description: "A TWAP splits a larger crypto trade into scheduled slices. In Velora, TWAP is a Delta order that the user signs once and Velora settles over time."
+keywords: ["TWAP", "time weighted average price", "scheduled swaps", "split large trade", "reduce price impact", "Delta TWAP"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+A **TWAP** — time-weighted average price — splits a larger trade into smaller slices executed over time.
 
-## When to use this
+In Velora, TWAP is a **Delta order**. The user signs one scheduled order that defines the total trade, number of slices, interval, and deadline. Velora then settles eligible slices over time through Delta instead of asking the user to sign or submit a transaction for every slice.
 
-## How it works
+Use TWAP when a one-shot swap is too sensitive to execute at a single market moment.
 
-## Examples
+## What problem TWAP solves
+
+A large immediate trade can create three problems:
+
+- **Price impact:** the trade consumes available liquidity and worsens its own execution price.
+- **Timing risk:** the whole trade depends on one market moment.
+- **Execution footprint:** executing everything at once can make the trade easier to detect or react to.
+
+TWAP reduces those risks by spreading execution across smaller settlements. It does not remove market risk, and it does not guarantee a better final average price.
+
+## How Velora TWAP works
+
+Velora TWAP is scheduled Delta execution:
+
+1. The user chooses the pair, side, total amount, number of slices, interval, deadline, and execution constraints.
+2. Velora builds a signable Delta order for the schedule.
+3. The user signs once.
+4. When a slice becomes eligible, Velora runs execution for that slice.
+5. The Delta contract enforces the slice timing on-chain.
+6. The order completes after the final slice settles, or fails/expires if its constraints can no longer be met.
+
+For a sell TWAP, the user fixes the total source amount to sell, and Velora splits that source amount across slices. For a buy TWAP, the user fixes the total destination amount to receive, and Velora splits that destination target across slices while capping the total source amount spent.
+
+## Key terms
+
+- **Scheduled order:** the signed Delta order that defines the TWAP.
+- **Slice:** one settlement inside the scheduled order.
+- **Number of slices:** how many settlements the trade is split into.
+- **Interval:** the minimum time between slices. Velora enforces a schedule; slices are not independent user actions.
+- **Deadline:** the latest time the order can remain valid.
+- **Side:** sell TWAPs fix and split the source amount; buy TWAPs fix and split the destination amount while capping source spend.
+
+## TWAP vs swap vs DCA
+
+- **Swap:** execute the full amount now.
+- **TWAP:** execute one known trade over a defined schedule.
+- **DCA:** repeat buys or sells as an investment strategy over a longer horizon.
+
+TWAP is an execution method. DCA is usually a portfolio strategy. A DCA product can use TWAP-like execution, but the two concepts are not the same.
+
+## Velora surface mapping
+
+<CardGroup cols={2}>
+  <Card title="Widget" icon="window-maximize" href="/widget/overview">
+    Use the Widget when you want a ready-made TWAP form in your app.
+  </Card>
+  <Card title="Configure Widget" icon="sliders" href="/widget/configure">
+    Control whether the TWAP form is available in your UI.
+  </Card>
+  <Card title="Build Delta order" icon="bolt" href="/api-reference/delta/orders-build">
+    Build the signable Delta order that represents the schedule.
+  </Card>
+  <Card title="Delta order lifecycle" icon="signal" href="/delta/how-it-works">
+    Understand how signed Delta orders are auctioned, settled, and tracked.
+  </Card>
+</CardGroup>
+
+
 
 ## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Widget overview" icon="window-maximize" href="/widget/overview">
+    Embed a complete trading interface with TWAP support.
+  </Card>
+  <Card title="Configure Widget" icon="sliders" href="/widget/configure">
+    Control which trade modes appear in your UI.
+  </Card>
+  <Card title="Build Delta order" icon="bolt" href="/api-reference/delta/orders-build">
+    Build the signable order for Delta execution.
+  </Card>
+  <Card title="How Delta works" icon="diagram-project" href="/delta/how-it-works">
+    Learn how Delta orders are auctioned and settled.
+  </Card>
+</CardGroup>

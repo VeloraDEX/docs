@@ -1,15 +1,62 @@
 ---
 title: "Swaps"
-description: "How a swap moves through Velora — quote, route, signature, settlement."
-keywords: ["swaps","trading","quote"]
+description: "A crypto swap exchanges one token for another. Velora maps swaps to atomic Market routing or gasless Delta intents."
+keywords: ["crypto swaps", "token swap", "DEX aggregator", "swap API", "gasless swap", "MEV protection"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+A **swap** exchanges one token for another. In DeFi, the hard part is not the transfer itself — it is finding liquidity, quoting a fair output, limiting slippage, and settling the trade without exposing the user to unnecessary execution risk.
 
-## When to use this
+Velora gives this primitive two execution paths: **Market** for atomic transaction swaps, and **Delta** for gasless intent swaps. If you do not want to choose upfront, Velora can evaluate both and return the best available path.
 
-## How it works
+## What problem swaps solve
 
-## Examples
+A wallet usually holds one asset, while the user or app needs another. A swap turns that intent into execution:
+
+- **Price discovery:** estimate how much destination token the user should receive.
+- **Liquidity access:** source the trade from one or many liquidity venues.
+- **Execution control:** define slippage, recipient, chain, and timing constraints.
+- **Settlement:** deliver the destination token or fail safely according to the selected path.
+
+For small trades, this often looks simple. For large trades, thin pairs, volatile markets, or crosschain routes, the execution path matters as much as the headline quote.
+
+## Velora surface mapping
+
+<CardGroup cols={3}>
+  <Card title="Market API" icon="route" href="/market/overview">
+    Use Market when you want an atomic on-chain transaction that can compose with other contract calls.
+  </Card>
+  <Card title="Delta" icon="bolt" href="/delta/overview">
+    Use Delta when you want a gasless, MEV-protected intent filled by competing solvers.
+  </Card>
+  <Card title="Trading modes" icon="shuffle" href="/integrate/trading-modes">
+    Use `mode=ALL` when you want Velora to choose between Market and Delta server-side.
+  </Card>
+</CardGroup>
+
+## Key terms
+
+- **Quote:** an estimate of the output amount for a requested trade.
+- **Route:** the liquidity path used to reach that output.
+- **Slippage:** the maximum price movement the user accepts before execution should fail or be rejected.
+- **Price impact:** the trade's expected effect on the market price because of available liquidity depth.
+- **Intent:** an off-chain signed instruction describing the outcome the user wants, not the exact transaction path.
+- **Settlement:** the final on-chain state change that delivers the destination token.
+
+
 
 ## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/overview/quickstart">
+    Get your first Velora quote with cURL, SDK, or Widget.
+  </Card>
+  <Card title="Trading modes" icon="shuffle" href="/integrate/trading-modes">
+    Decide between `DELTA`, `MARKET`, and `ALL`.
+  </Card>
+  <Card title="Market API" icon="route" href="/market/overview">
+    Atomic on-chain swaps through Velora routing.
+  </Card>
+  <Card title="Delta" icon="bolt" href="/delta/overview">
+    Gasless, MEV-protected intent swaps through Portikus solvers.
+  </Card>
+</CardGroup>

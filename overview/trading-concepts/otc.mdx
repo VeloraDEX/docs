@@ -1,15 +1,70 @@
 ---
 title: "OTC"
-description: "Over-the-counter trades — signed maker/taker orders for direct, off-book settlement of fungible tokens."
-keywords: ["otc","over-the-counter","maker","taker"]
+description: "Crypto OTC trades are direct, off-book swaps between counterparties. Velora supports signed maker/taker settlement flows."
+keywords: ["crypto OTC", "over the counter trading", "p2p order", "RFQ", "off-book settlement", "maker taker"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+**OTC** — over-the-counter trading — is a direct trade negotiated between counterparties instead of discovered through a public swap route or orderbook. The parties agree terms off-book, then settle those terms through a signed order flow.
 
-## When to use this
+Use OTC when the counterparty matters as much as the price: treasury rebalancing, partner deals, market-maker inventory moves, or block-style trades that should not be exposed as a public order first.
 
-## How it works
+## What problem OTC solves
 
-## Examples
+Public execution is not always the right fit. OTC helps when a trade needs:
+
+- **Known counterparties:** the maker and taker agree who should participate.
+- **Custom terms:** price, size, token pair, expiry, and settlement expectations are negotiated directly.
+- **Reduced public signaling:** the negotiation happens off-book before settlement.
+- **Verifiable settlement:** the final fill still resolves on-chain, so the outcome is auditable.
+
+OTC does not mean invisible settlement. It means private negotiation with explicit on-chain execution.
+
+## Key terms
+
+- **Maker:** the party that creates and signs the order terms.
+- **Taker:** the intended counterparty that fills the order.
+- **Counterparty:** the known party on the other side of the trade.
+- **Off-book negotiation:** agreeing terms outside a public orderbook or swap route.
+- **Restricted fill:** an order design where only the intended taker or flow should execute.
+- **Settlement:** the on-chain fill that transfers tokens according to the signed terms.
+
+## OTC vs limit order vs swap
+
+- **Swap:** the user wants immediate execution against available liquidity.
+- **Limit order:** the user wants a target price and may wait for a taker.
+- **OTC:** two parties agree terms directly and use a signed order to settle.
+
+A limit order asks, “Will someone fill this price?” OTC asks, “Will this counterparty settle the terms we already agreed?”
+
+## Velora surface mapping
+
+<CardGroup cols={3}>
+  <Card title="Widget" icon="window-maximize" href="/widget/overview">
+    Use the Widget when you want an OTC form and fill flow inside your app.
+  </Card>
+  <Card title="AugustusRFQ" icon="file-signature" href="/api-reference/rfq/overview">
+    Use the order surface for signed maker/taker settlement flows.
+  </Card>
+  <Card title="Limit orders" icon="clock" href="/overview/trading-concepts/limit-orders">
+    Compare OTC with public or conditional target-price orders.
+  </Card>
+</CardGroup>
+
+
 
 ## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Widget overview" icon="window-maximize" href="/widget/overview">
+    Add OTC flows to a ready-made trading interface.
+  </Card>
+  <Card title="OTC API" icon="file-signature" href="/api-reference/rfq/overview">
+    Reference the lower-level order surface for maker/taker flows.
+  </Card>
+  <Card title="Limit orders" icon="clock" href="/overview/trading-concepts/limit-orders">
+    Compare OTC with target-price orders.
+  </Card>
+  <Card title="Chains & contracts" icon="link" href="/resources/chains-and-contracts">
+    Find canonical chain and deployment information.
+  </Card>
+</CardGroup>

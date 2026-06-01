@@ -92,7 +92,7 @@ pnpm dev
 
 Open the printed `http://localhost:5173` URL. You should see the widget render with the **Connect Wallet** button and a swap form.
 
-## Next: wire in events and a partner key
+## Next: wire in events and a `partner` identifier
 
 ```tsx
 import { Widget } from "@velora-dex/widget";
@@ -101,7 +101,7 @@ import { Widget } from "@velora-dex/widget";
   config={{
     theme: "light",
     partnerConfig: {
-      partner: import.meta.env.VITE_PARTNER_KEY,
+      partner: import.meta.env.VITE_VELORA_PARTNER,
       partnerFeeBps: 25,
     },
   }}
@@ -115,10 +115,10 @@ import { Widget } from "@velora-dex/widget";
 />;
 ```
 
-Add the partner key to `.env`:
+Add the `partner` identifier to `.env`:
 
 ```env
-VITE_PARTNER_KEY=my-app-name
+VITE_VELORA_PARTNER=my-app-name
 ```
 
 ## Related pages
