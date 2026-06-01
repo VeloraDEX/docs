@@ -1,15 +1,72 @@
 ---
 title: "Limit orders"
-description: "Signed orders, maker/taker flow, and on-chain settlement via Augustus RFQ."
-keywords: ["limit orders","rfq","maker"]
+description: "A crypto limit order lets a maker sign a target price and wait for execution. In Velora, limit orders are Delta orders."
+keywords: ["crypto limit orders", "DEX limit order", "maker taker", "signed order", "Delta order", "limit order API"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+A **limit order** lets a maker define the price they want, sign the terms, and wait for execution later. In Velora, limit orders are **Delta orders**: the user signs an intent with target-price constraints, and Delta settles it only when those constraints can be satisfied.
 
-## When to use this
+Use limit orders when the user cares more about a target price than immediate settlement.
 
-## How it works
+## What problem limit orders solve
 
-## Examples
+Limit orders separate **trade intent** from **trade timing**. Delta represents that intent as a signed order:
+
+- The maker says what they are willing to sell or buy.
+- The maker sets constraints such as price, token pair, amount, expiry, and eligible taker behavior.
+- A taker fills the order later if the terms are attractive and still valid.
+- Delta settles the order on-chain when the fill occurs.
+
+This gives users price control without forcing them to watch the market and submit a swap at the exact moment liquidity appears.
+
+## Key terms
+
+- **Maker:** the user or application that creates and signs the order.
+- **Taker:** the party that accepts and fills the order.
+- **Limit price:** the minimum or maximum effective price the maker accepts.
+- **Delta order:** the signed intent Velora uses to represent and settle the limit order.
+- **Expiry:** the time after which the order should no longer fill.
+- **Nonce:** a unique value that helps identify, replace, or cancel an order.
+- **Fill:** the action that settles the order and transfers tokens.
+- **Cancellation:** invalidating an unfilled order before it can settle.
+
+## Limit order vs swap vs OTC
+
+- **Swap:** immediate execution against available liquidity. Use it when the user wants to trade now.
+- **Limit order:** conditional execution at a target price. Use it when the user is willing to wait.
+- **OTC:** negotiated execution with a known counterparty. Use it when the trade terms are agreed off-book.
+
+Limit orders and OTC can look similar because both use signed terms. The difference is intent: a limit order expresses a price condition; OTC expresses a bilateral agreement.
+
+## Velora surface mapping
+
+<CardGroup cols={3}>
+  <Card title="Widget" icon="window-maximize" href="/widget/overview">
+    Expose limit orders in a ready-made trading interface.
+  </Card>
+  <Card title="SDK" icon="cube" href="/sdk/modules/limit-orders">
+    Build limit-order flows inside your own TypeScript app.
+  </Card>
+  <Card title="Delta" icon="bolt" href="/delta/overview">
+    Limit orders are Delta orders with target-price constraints and delayed settlement.
+  </Card>
+</CardGroup>
+
+
 
 ## Related pages
+
+<CardGroup cols={2}>
+  <Card title="Widget overview" icon="window-maximize" href="/widget/overview">
+    Add swaps, limit orders, OTC, and TWAP to your app with a React component.
+  </Card>
+  <Card title="Limit orders module" icon="cube" href="/sdk/modules/limit-orders">
+    Create, sign, and manage limit orders with the SDK.
+  </Card>
+  <Card title="OTC" icon="handshake" href="/overview/trading-concepts/otc">
+    Learn how bilateral negotiated trades differ from limit orders.
+  </Card>
+  <Card title="Delta order lifecycle" icon="signal" href="/delta/how-it-works">
+    Learn how signed Delta orders are auctioned, settled, and tracked.
+  </Card>
+</CardGroup>
