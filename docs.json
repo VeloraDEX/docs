@@ -130,14 +130,8 @@
             "group": "Get started",
             "pages": [
               "delta/overview",
-              "delta/how-it-works"
-            ]
-          },
-          {
-            "group": "Integration",
-            "pages": [
-              "delta/crosschain-delta",
-              "delta/api-integration"
+              "delta/how-it-works",
+              "delta/crosschain-delta"
             ]
           },
           {
