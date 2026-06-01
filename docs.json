@@ -177,14 +177,14 @@
         "tab": "AI Agents",
         "groups": [
           {
-            "group": "Get started",
+            "group": "Start here",
             "pages": [
               "for-agents/overview",
               "for-agents/concepts-and-objects"
             ]
           },
           {
-            "group": "Quickstart",
+            "group": "Agent quickstarts",
             "pages": [
               "for-agents/quickstart/five-call-recipe",
               "for-agents/quickstart/decision-tables",
@@ -206,25 +206,30 @@
             ]
           },
           {
-            "group": "MCP server",
+            "group": "Agent tools",
             "pages": [
-              "for-agents/mcp-server/overview",
-              "for-agents/mcp-server/installation",
-              "for-agents/mcp-server/available-tools",
-              "for-agents/mcp-server/examples"
+              {
+                "group": "MCP server",
+                "pages": [
+                  "for-agents/mcp-server/overview",
+                  "for-agents/mcp-server/installation",
+                  "for-agents/mcp-server/available-tools",
+                  "for-agents/mcp-server/examples"
+                ]
+              },
+              {
+                "group": "CLI",
+                "pages": [
+                  "for-agents/cli/overview",
+                  "for-agents/cli/installation",
+                  "for-agents/cli/commands",
+                  "for-agents/cli/examples"
+                ]
+              }
             ]
           },
           {
-            "group": "CLI",
-            "pages": [
-              "for-agents/cli/overview",
-              "for-agents/cli/installation",
-              "for-agents/cli/commands",
-              "for-agents/cli/examples"
-            ]
-          },
-          {
-            "group": "Workflows",
+            "group": "Agent workflows",
             "pages": [
               "for-agents/workflows/token-approvals",
               "for-agents/workflows/transaction-execution",
