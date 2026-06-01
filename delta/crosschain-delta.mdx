@@ -82,10 +82,10 @@ The integration shape stays close to the standard [Delta flow](/delta/how-it-wor
 Request a Delta quote with a destination chain:
 
 ```bash cURL
-curl -G "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "srcDecimals=18" \
-  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "destToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" \
   --data-urlencode "destDecimals=6" \
   --data-urlencode "amount=1000000000000000000" \
   --data-urlencode "side=SELL" \
@@ -93,7 +93,8 @@ curl -G "https://api.velora.xyz/quote" \
   --data-urlencode "destChainId=8453" \
   --data-urlencode "mode=DELTA" \
   --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-  --data-urlencode "partner=my-app-name"
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
 ```
 
 Then use the same build, sign, and submit calls as a same-chain Delta order:
