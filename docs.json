@@ -181,7 +181,8 @@
             "pages": [
               "for-agents/overview",
               "for-agents/five-call-recipe",
-              "for-agents/decision-tables"
+              "for-agents/decision-tables",
+              "for-agents/token-approvals"
             ]
           },
           {
@@ -219,15 +220,6 @@
                   "for-agents/cli/examples"
                 ]
               }
-            ]
-          },
-          {
-            "group": "Agent workflows",
-            "pages": [
-              "for-agents/workflows/token-approvals",
-              "for-agents/workflows/transaction-execution",
-              "for-agents/workflows/status-and-recovery",
-              "for-agents/workflows/partial-completion"
             ]
           },
           {

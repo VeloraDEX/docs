@@ -1,0 +1,145 @@
+---
+title: "Token approvals"
+description: "Pick the right ERC-20 spender per Velora execution mode, decide when to skip approvals via Permit or Permit2, and recover from approval mistakes."
+keywords: ["agents","approvals","permit","permit2","spender","delta","market","augustusrfq"]
+---
+
+Approvals are the single most common place agents get a Velora flow wrong. The mode you quote against decides the spender, and the spender is **never the same as the swap target**. This page is the agent-facing decision table for which contract gets the `approve(spender, amount)` call, when you can skip it entirely, and how to recover when an approval lands on the wrong contract.
+
+## When to use this
+
+- The user's source token is an ERC-20 and you're about to build a Market transaction, a Delta order, or an AugustusRFQ fill.
+- You're deciding whether to ask the user for a separate `approve` transaction, or whether to bundle a `permit` / `permit2` payload into the build call instead.
+- An earlier swap or order failed with an allowance error and you need to figure out which spender actually needed the approval.
+
+If the user's source token is the chain's native asset, skip the rest of this page and read [Native source tokens](#native-source-tokens).
+
+## The rule (read this first)
+
+| Execution mode | Spender to approve |
+|---|---|
+| Market Swap | **Augustus v6.2** |
+| Delta Swap, Delta `LIMIT`, Delta TWAP | **Delta contract** |
+| AugustusRFQ (OTC/RFQ) | **AugustusRFQ** contract on the target chain |
+
+Deployed addresses for each spender, per chain: [Chains & contracts → Addresses by chain](/resources/chains-and-contracts#addresses-by-chain).
+
+<Warning>
+  Spenders are mode-specific and **never interchangeable**. An approval to Augustus does not authorize a Delta order. An approval to the Delta contract does not authorize a Market swap. Re-quoting under a different mode changes the spender — re-check the allowance before signing.
+</Warning>
+
+Agent rule: take the spender from the execution mode of the quote response, not from the user's natural-language intent. If the quote response carries a top-level `delta` object, the Delta contract is the spender. If it carries a top-level `market` object, Augustus v6.2 is the spender.
+
+## Native source tokens
+
+If the source token is the chain's native asset (ETH on Ethereum/Optimism/Arbitrum/Base, BNB on BNB Chain, MATIC on Polygon, etc.):
+
+- **Skip the ERC-20 approval entirely.** There is no `approve(spender, amount)` step for native assets.
+- Use the canonical placeholder address `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) for `srcToken` in quote and build requests. Do not send `0x0`, do not lowercase it — the API rejects both.
+- For Market swaps, the transaction's `value` carries the native amount. For Delta, native source tokens are restricted; quote with `mode=ALL` or `mode=MARKET` to discover a route.
+
+If the source token is a wrapped native (WETH, WMATIC, WBNB, etc.), treat it as a regular ERC-20 and apply the spender matrix above.
+
+## Per-chain Delta and AugustusRFQ availability
+
+Augustus v6.2 (Market) is deployed on **every** supported chain. Delta and AugustusRFQ have narrower footprints — if you quote a chain that doesn't have the right contract deployed, the spender doesn't exist and the flow can't proceed.
+
+The canonical per-chain spender addresses live in [Chains & contracts → Addresses by chain](/resources/chains-and-contracts#addresses-by-chain). The columns labelled "Augustus v6.2", "Delta", and "AugustusRFQ" are the spender addresses for the three modes; a `—` means the contract isn't deployed on that chain and that mode is unavailable there. Code should read these at runtime via [`/resources/contracts.json`](/resources/contracts.json) keyed by `chainId`.
+
+Agent rule: if the user asked for a Delta or RFQ flow on a chain without that contract, surface the limitation and offer the available alternatives — do not silently fall back to a different mode.
+
+## Skip the separate `approve` transaction with Permit or Permit2
+
+Most ERC-20 tokens support either EIP-2612 **Permit** (signed off-chain, single-token allowance) or Uniswap **Permit2** (signed off-chain, universal allowance manager). When the token supports one of these, the agent can collect a signature instead of asking the user for a separate on-chain `approve` transaction.
+
+How it surfaces in Velora flows:
+
+- **Market.** Pass the signed `permit` or `permit2` payload into [`POST /transactions/:network`](/api-reference/market/transactions). Augustus v6.2 consumes it on the swap call — no separate approve transaction is needed.
+- **Delta orders/build.** Pass the signed `permit` or `permit2` payload into [`POST /delta/orders/build`](/api-reference/delta/orders-build). If the token requires Permit/Permit2 and the payload is missing, the build call rejects with `400 Permit / Permit2 required` — see the [Delta orders/build failure modes](/api-reference/delta/orders-build#failure-modes).
+
+Agent rules for Permit/Permit2:
+
+- Detect Permit/Permit2 capability **before** asking the user for an on-chain `approve` — collect the signature instead when supported.
+- A Permit/Permit2 signature is a user authorization, not a free no-op. Confirm with the user before requesting the signature, the same way you would confirm an on-chain approval.
+- Permit/Permit2 signatures bind to a specific spender, amount, deadline, and (for Permit2) nonce. If you requote into a different mode, the existing signature is **not transferable** — collect a new one for the new spender.
+- For the canonical patterns (when to use Permit vs Permit2, per-token quirks, deadline handling), link out to [Permit & Permit2 patterns](/guides/permit-and-permit2-patterns).
+
+## Allowance checks before signing
+
+| Allowance state | Agent action |
+|---|---|
+| `allowance >= amount` for the correct spender on the correct chain | Skip the approval step. Proceed to build → sign → submit. |
+| `allowance < amount` for the correct spender | Ask the user to approve at least `amount` (or `MaxUint256` if your UX prefers infinite). If the token supports Permit/Permit2, prefer a signed payload over a separate transaction. |
+| `allowance` was set for a **different spender** (different mode) | Do not retry against the wrong spender. Ask for a fresh approval to the correct spender for the current quote's mode. |
+| `allowance` is non-zero but you need to lower it for a non-standard ERC-20 (USDT-style) | Approve `0` first, then the new amount. Only required for the small set of tokens that reject non-zero → non-zero. Most modern ERC-20s accept it directly. |
+| Connected chain differs from quote chain | Stop. The chain used for quote, approval, signature, and execution must match. Ask the user to switch network before reading allowance or sending an approve. |
+
+Agent rule: never request an approval before the quote response is final and you know the spender. Approvals to the wrong contract are not refunded by the user's wallet — they leave a stale allowance behind and confuse the next flow.
+
+## Failure modes
+
+| Symptom | Likely cause | Agent recovery |
+|---|---|---|
+| Approval transaction confirms but the next swap/order still reverts with `insufficient allowance` | Approval was granted to the wrong spender (e.g., Augustus instead of the Delta contract, or vice versa). | Re-read the quote response, identify the correct spender from the spender matrix above, and request a fresh approval to that contract. See the [Delta orders/build failure modes](/api-reference/delta/orders-build#failure-modes) row for "Approval reverts before signing". |
+| Approval confirms on chain A but the swap is on chain B | Wallet was on a different network when the approve was signed. | Ask the user to switch to the quote's chain and re-approve there. Allowances are per-chain. |
+| `400 Invalid srcToken` on quote or build for native ETH | Sent `0x0` or lowercase `0xeee...e` instead of the canonical placeholder. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) and requote. |
+| `400 Permit / Permit2 required` from `POST /delta/orders/build` | Token requires Permit/Permit2 and no payload was attached. | Collect the signed Permit or Permit2 payload up front and include it in the build request. Falling back to a separate `approve` transaction is not supported for these tokens. |
+| User approved infinite (`MaxUint256`) to one mode's spender, now wants the other mode | Each mode has its own spender. The first allowance is fine but does not authorize the second mode. | Read allowance against the new mode's spender and request a separate approval. Do not treat the existing infinite allowance as universal. |
+| User rejects the approve transaction or the Permit/Permit2 signature | Explicit user refusal. | Stop. Do not retry automatically. Surface the rejection and ask whether to choose a different mode (some flows might let you avoid the approval entirely, e.g., Delta for native-source pairs that route through Market is not viable, but a different src token might be). |
+
+## Examples
+
+### Branching by quote response
+
+```text
+1. GET /quote?mode=ALL with chainId, srcToken, destToken, amount, partner
+2. If response has top-level `delta`:
+   - spender = 0x0000000000bbf5c5fd284e657f01bd000933c96d (Delta contract)
+3. Else if response has top-level `market`:
+   - spender = 0x6a000f20005980200259b80c5102003040001068 (Augustus v6.2)
+4. Else:
+   - Stop. No route. Do not request an approval.
+5. If srcToken is native placeholder:
+   - Skip approval. Proceed to build.
+6. Else:
+   - Read allowance(srcToken, owner=user, spender)
+   - If allowance < amount:
+     - If srcToken supports Permit/Permit2: collect signature, attach to build
+     - Else: request approve(spender, amount) on the quote's chainId
+   - Wait for approval confirmation before continuing
+7. Continue to build → sign → submit
+```
+
+### Switching modes mid-flow
+
+If the user accepts a quote, the approval lands on the matching spender, then they ask to switch from Market to Delta (or vice versa) before signing:
+
+- Requote in the new mode.
+- Recheck allowance against the **new** spender. The previous approval does not carry over.
+- Either approve again to the new spender, or attach a fresh Permit/Permit2 signature to the new build request.
+- Confirm the user understands they're approving a second contract.
+
+## Guardrails
+
+- Take the spender from the **quote response shape**, not from natural language.
+- Never approve Augustus for a Delta order. Never approve the Delta contract for a Market swap.
+- Skip ERC-20 approval entirely for native source tokens; use the canonical mixed-case placeholder.
+- Detect Permit/Permit2 capability before requesting a separate `approve` transaction.
+- Re-check allowance against the new spender any time the execution mode changes.
+- Treat Permit/Permit2 signatures as one-shot authorizations bound to spender, amount, and deadline — not transferable across modes or builds.
+- Never assume an infinite allowance to one spender covers another.
+
+<CardGroup cols={2}>
+  <Card title="Decision tables" icon="route" href="/for-agents/decision-tables">
+    Route user intent and wallet state to the next agent action.
+  </Card>
+  <Card title="Five-call recipe" icon="repeat" href="/for-agents/five-call-recipe">
+    The canonical agent loop: quote, build, authorize, submit, track.
+  </Card>
+  <Card title="Permit & Permit2 patterns" icon="signature" href="/guides/permit-and-permit2-patterns">
+    General-purpose reference for Permit and Permit2 signing flows.
+  </Card>
+  <Card title="Chains & contracts" icon="link" href="/resources/chains-and-contracts">
+    Per-chain contract addresses for Augustus, Delta, and AugustusRFQ.
+  </Card>
+</CardGroup>
