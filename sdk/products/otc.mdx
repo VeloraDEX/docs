@@ -9,7 +9,7 @@ keywords: ["sdk", "otc", "rfq", "augustusRFQ", "p2p", "maker", "taker", "limitOr
 Mechanically it's the same signed-order flow as a classic on-chain limit order — the difference is the **`taker`** field. Set it to a counterparty's address and the order is a private, fillable-by-one OTC trade (`P2P`); leave it open and anyone could fill it.
 
 <Note>
-This is for **bilateral, counterparty-specific** trades. For open, target-price orders that any solver can fill, use [Limit orders](/sdk/products/limit-orders) (Delta) instead — they're gasless and MEV-protected. For the conceptual difference, see [Trading concepts → OTC](/overview/trading-concepts/otc).
+This is for **bilateral, counterparty-specific** trades. For open, target-price orders that any solver can fill, use [Limit orders](/sdk/products/limit-orders) (Delta) instead — they're gasless and MEV-protected. For the conceptual difference, see [Product stack → OTC](/overview/product-stack/otc).
 </Note>
 
 ## When to use this
@@ -110,6 +110,6 @@ await sdk.limitOrders.cancelLimitOrder(orderHash);
 ## Related pages
 
 - [Limit orders](/sdk/products/limit-orders) — open, gasless target-price orders (Delta).
-- [Trading concepts → OTC](/overview/trading-concepts/otc) — the conceptual model.
+- [Product stack → OTC](/overview/product-stack/otc) — the conceptual model.
 - [API reference → AugustusRFQ](/api-reference/rfq/overview) — the underlying order surface.
 - [Chains & contracts](/resources/chains-and-contracts) — AugustusRFQ deployment addresses.

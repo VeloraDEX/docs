@@ -94,8 +94,8 @@
                   {
                     "group": "Swaps",
                     "pages": [
-                      "sdk/products/swap",
-                      "sdk/products/delta"
+                      "sdk/products/delta",
+                      "sdk/products/swap"
                     ]
                   },
                   "sdk/products/limit-orders",

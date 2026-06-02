@@ -9,7 +9,7 @@ A **TWAP** (time-weighted average price) splits a larger trade into smaller slic
 You build TWAPs through the same `sdk.deltaV2` module as market Delta orders, using `submitTWAPDeltaOrder` (or the `buildTWAPDeltaOrder` split flow). The defining inputs are the **total amount**, the **number of slices**, and the **interval** between them.
 
 <Note>
-For the conceptual model — slices, intervals, sell vs. buy, how TWAP differs from a one-shot swap or DCA — see [Trading concepts → TWAP](/overview/trading-concepts/twap).
+For the conceptual model — slices, intervals, sell vs. buy, how TWAP differs from a one-shot swap or DCA — see [Product stack → TWAP](/overview/product-stack/twap).
 </Note>
 
 ## When to use this
@@ -147,5 +147,5 @@ Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesS
 
 - [Swaps → Delta](/sdk/products/delta) — the market Delta order flow this builds on.
 - [Limit orders](/sdk/products/limit-orders) — the other Delta-based order type.
-- [Trading concepts → TWAP](/overview/trading-concepts/twap) — the conceptual model.
+- [Product stack → TWAP](/overview/product-stack/twap) — the conceptual model.
 - [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes) — what each status means.
