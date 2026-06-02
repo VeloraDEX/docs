@@ -137,7 +137,7 @@ This pattern is also handy in CI — every test is deterministic and runs offlin
 - **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing — the EIP-712 domain includes `chainId`.
 - **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing — the SDK's internal retries and partner-fee resolution can issue requests you don't expect.
 - **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, see [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
-- **Verify the spender.** For Market swaps the user approves `getSpender()` (`TokenTransferProxy`). For Delta the user approves `getDeltaContract()`. Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
+- **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
 
 ## Related pages
 

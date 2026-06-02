@@ -10,14 +10,14 @@ The `mode` query parameter on [`GET /quote`](/api-reference/delta/quote) tells V
 
 ## Delta vs Market
 
-|  | Normal swap (Market API) | Delta intent |
+|  | Delta intent | Normal swap (Market API) |
 |---|---|---|
-| User signs | A transaction (on-chain tx) | An EIP-712 order (off-chain message) |
-| User pays gas | Yes | No |
-| MEV exposure | Public mempool — sandwichable | Private auction — solver competition |
-| Crosschain | Separate tx per chain | One signature, multi-chain settlement |
-| Price improvements | Best-effort routing across DEXs | Solvers compete in an auction to improve the quoted price |
-| Failure mode | Tx reverts — gas spent on a failed call | Revert-protection — failed settlements cost no gas; order expires or is rejected with no funds lost |
+| User signs | An EIP-712 order (off-chain message) | A transaction (on-chain tx) |
+| User pays gas | No | Yes |
+| MEV exposure | Private auction — solver competition | Public mempool — sandwichable |
+| Crosschain | One signature, multi-chain settlement | Separate tx per chain |
+| Price improvements | Solvers compete in an auction to improve the quoted price | Best-effort routing across DEXs |
+| Failure mode | Revert-protection — failed settlements cost no gas; order expires or is rejected with no funds lost | Tx reverts — gas spent on a failed call |
 
 **Pick `mode=DELTA`** when:
 
