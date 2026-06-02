@@ -221,15 +221,6 @@
                 ]
               }
             ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "for-agents/reference/endpoint-specs",
-              "for-agents/reference/error-playbooks",
-              "for-agents/reference/data-schemas",
-              "for-agents/prompt-patterns"
-            ]
           }
         ]
       },
