@@ -1,10 +1,12 @@
 ---
-title: "Delta module"
+title: "Delta"
 description: "Submit, sign, and track Delta intents from sdk.deltaV2 — gasless swaps where solvers execute on the user's behalf."
 keywords: ["sdk", "delta", "deltaV2", "DeltaV2", "intents", "gasless", "submitDeltaOrder"]
 ---
 
-The Delta module wraps the [Delta API](/delta/overview) — gasless, MEV-protected swaps where the user signs an off-chain order and a network of solvers (Portikus) competes to fill it. The user pays no gas; the solver covers execution cost out of their margin.
+A **swap** in Velora settles through one of two execution paths: [**Market**](/sdk/products/swap) or **Delta** (this page). Delta wraps the [Delta API](/delta/overview) — gasless, MEV-protected swaps where the user signs an off-chain order and a network of solvers (Portikus) competes to fill it. The user pays no gas; the solver covers execution cost out of their margin.
+
+Delta is also the engine behind two other products in the SDK — [Limit orders](/sdk/products/limit-orders) (a Delta order with a target price) and [TWAP](/sdk/products/twap) (a Delta order split into scheduled slices). This page covers the **market** Delta order; those pages build on the same flow.
 
 <Note>
 **Delta V2 is recommended.** V2 is server-built (you don't compose EIP-712 typed data locally), returns richer pricing (recommended route + alternatives), and ships paginated order history. V1 remains fully supported — see [Delta V1](#delta-v1) at the bottom of this page.
@@ -16,7 +18,7 @@ The Delta module wraps the [Delta API](/delta/overview) — gasless, MEV-protect
 - You want MEV protection — orders fill via private auction, not the public mempool.
 - You want a single signature to settle crosschain — see [Crosschain Delta](/delta/crosschain-delta).
 
-For swaps where the user submits the transaction themselves, see [Modules → Swap](/sdk/modules/swap).
+For swaps where the user submits the transaction themselves, see [Market](/sdk/products/swap).
 
 ## How V2 is exposed
 
@@ -148,7 +150,7 @@ const { data, page, limit, total } = await sdk.deltaV2.getDeltaOrders({
 });
 ```
 
-Each entry is a `DeltaV2.DeltaAuction<T>`, generic over `onChainOrderType` (the same shape as V1's `DeltaAuction`). The list may include `'ProductiveOrder'` — a family with no SDK builder; see [Productive orders](#productive-orders-read-only) below. It may also report `'FillableOrder'` for a `partiallyFillable` Standard order — treat it exactly like `'Order'` (identical shape).
+Each entry is a `DeltaV2.DeltaAuction<T>`, generic over `onChainOrderType` (the same shape as V1's `DeltaAuction`). It may report `'FillableOrder'` for a `partiallyFillable` Standard order — treat it exactly like `'Order'` (identical shape). Use `type: "LIMIT"` to filter for [limit orders](/sdk/products/limit-orders).
 
 ## Partner fee
 
@@ -180,31 +182,12 @@ This signs and posts a cancellation request. It only succeeds for orders that ar
 
 Pass `destChainId` to `getDeltaPrice` to settle on a different chain than the source. The returned `route` is bridge-aware; submitting the order is identical to same-chain. See [Crosschain Delta](/delta/crosschain-delta) for the full design and [`getBridgeRoutes`](https://github.com/VeloraDEX/sdk/blob/master/src/methods/deltaV2/getBridgeRoutes.ts) for advanced route inspection.
 
-## External and TWAP orders
+## Other Delta products
 
-The SDK supports two advanced order families on V2 that share the same build/sign/post pattern:
+Limit orders and TWAP are Delta orders too — they reuse this exact build → sign → post → poll flow with a couple of extra fields:
 
-- **External Delta orders** — settle through a custom handler contract. Used for Aave-style collateral/debt swaps and other DeFi compositions. Use `buildExternalDeltaOrder` / `submitExternalDeltaOrder`. See [`EXTERNAL_ORDERS.md`](https://github.com/VeloraDEX/sdk/blob/master/docs/EXTERNAL_ORDERS.md) in the SDK repo.
-- **TWAP Delta orders** — split a large order into time-weighted chunks (sell-side or buy-side). Use `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`.
-
-Both reuse the generic `signDeltaOrder` and the V2 polling endpoints.
-
-## Productive orders (read-only)
-
-Alongside the four buildable families (`Order`, `ExternalOrder`, `TWAPOrder`, `TWAPBuyOrder`), the SDK surfaces a fifth `onChainOrderType` — **`ProductiveOrder`** — through the read endpoints (`sdk.deltaV2.getDeltaOrderById`, `sdk.deltaV2.getDeltaOrders`, etc.). Productive orders are produced and managed entirely by the server: there are **no `buildProductiveOrder`, `signProductiveOrder`, or `submitProductiveOrder` helpers** in the SDK. The shape is wired through `OnChainOrderType`, `OnChainOrderMap`, and `DeltaAuctionUnion` (also exported individually as `DeltaAuctionProductive`) so a consumer iterating over an order list can narrow on `onChainOrderType === 'ProductiveOrder'` and read the order safely. Productive orders carry no `OrderKind`, so the side is always `SELL`.
-
-```ts
-import { OrderHelpers, type DeltaAuctionUnion } from "@velora-dex/sdk";
-
-function describe(order: DeltaAuctionUnion) {
-  if (order.onChainOrderType === "ProductiveOrder") {
-    // order: DeltaAuctionProductive — read-only, no SDK builder
-    return `productive: ${order.order.srcToken}`;
-  }
-  // "Order" and "FillableOrder" share the same shape (DeltaAuctionFillable)
-  // ... handle Order / FillableOrder / ExternalOrder / TWAPOrder / TWAPBuyOrder
-}
-```
+- **[Limit orders](/sdk/products/limit-orders)** — a Delta order with a target-price constraint and `type: "LIMIT"`.
+- **[TWAP](/sdk/products/twap)** — a Delta order split into time-weighted slices, built with `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`.
 
 ## Migrate from V1 to V2
 
@@ -267,7 +250,7 @@ V1 returns `DeltaPrice { destAmount, partner, partnerFee, srcAmount, destToken }
 + });
 ```
 
-V2 method names are the same as V1's at the property level (`buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`) — what changes is the SDK namespace (`sdk.delta` → `sdk.deltaV2`) and the param/response shapes. `buildDeltaOrder` returns `{ toSign, orderHash }` from the server. `signDeltaOrder` is generic across all order families (Order, ExternalOrder, TWAPOrder, TWAPBuyOrder) — V1's separate `signExternalDeltaOrder` / `signTWAPDeltaOrder` collapse into one call.
+V2 method names are the same as V1's at the property level (`buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`) — what changes is the SDK namespace (`sdk.delta` → `sdk.deltaV2`) and the param/response shapes. `buildDeltaOrder` returns `{ toSign, orderHash }` from the server. `signDeltaOrder` is generic across order families, so the market, limit, and TWAP flows all sign through the same call.
 
 ### Polling status
 
@@ -350,7 +333,9 @@ V2 is recommended for most flows — partner-fee resolution is server-side, the 
 
 ## Related pages
 
+- [Market](/sdk/products/swap) — the other swap execution path (user-submitted transactions).
+- [Limit orders](/sdk/products/limit-orders) — a Delta order with a target price.
+- [TWAP](/sdk/products/twap) — a Delta order split into scheduled slices.
 - [Why Delta](/delta/overview) — the protocol design.
-- [Quickstart](/overview/quickstart) — Delta end-to-end via cURL.
 - [Monetize](/sdk/monetize) — partner-fee fields.
 - [API reference → Delta](/api-reference/delta/overview) — the HTTP endpoints.

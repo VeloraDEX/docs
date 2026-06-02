@@ -104,13 +104,13 @@ Write calls always resolve to a **transaction hash** (`string`). If you need the
 
 The returned SDK is namespaced by feature:
 
-| Namespace         | What's inside                                                                                                                                                                                                                                                        | Module page                                          |
+| Namespace         | What's inside                                                                                                                                                                                                                                                        | Docs page                                            |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta module](/sdk/modules/delta)                   |
-| `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/modules/delta#delta-v1).                                                                                                                                                                         | [Delta module](/sdk/modules/delta#delta-v1)          |
+| `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta](/sdk/products/delta)                          |
+| `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/products/delta#delta-v1).                                                                                                                                                                         | [Delta](/sdk/products/delta#delta-v1)                 |
 | `sdk.quote`       | `getQuote` — V1 Delta-with-fallback-to-Market price (no V2 equivalent yet)                                                                                                                                                                                           | [API → Delta /quote](/api-reference/delta/quote)     |
-| `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx`                                                                                                                                                              | [Swap module](/sdk/modules/swap)                     |
-| `sdk.limitOrders` | Deprecated. Build/sign/post/cancel limit orders.                                                                                                                                                                                                                     | [Limit orders module](/sdk/modules/limit-orders)     |
+| `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx` (Market execution path for swaps)                                                                                                                            | [Market](/sdk/products/swap)                          |
+| `sdk.limitOrders` | AugustusRFQ maker/taker orders — used for OTC (limit orders are now Delta orders).                                                                                                                                                                                   | [OTC](/sdk/products/otc)                              |
 
 ## End-to-end example
 
@@ -188,11 +188,11 @@ if ("delta" in quote) {
 }
 ```
 
-See [Modules → Delta](/sdk/modules/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Modules → Swap](/sdk/modules/swap) for the full Market-swap walkthrough.
+See [Swaps → Delta](/sdk/products/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Swaps → Market](/sdk/products/swap) for the full Market-swap walkthrough.
 
 ## Related pages
 
-- [Modules → Swap](/sdk/modules/swap)
-- [Modules → Delta](/sdk/modules/delta)
+- [Swaps → Market](/sdk/products/swap)
+- [Swaps → Delta](/sdk/products/delta)
 - [Configure providers](/sdk/configure-providers)
 - [Monetize](/sdk/monetize)

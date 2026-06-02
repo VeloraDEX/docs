@@ -1,17 +1,21 @@
 ---
-title: "Swap module"
+title: "Market"
 description: "Build, approve, and execute Market swaps through sdk.swap — the user submits the transaction themselves."
 keywords: ["sdk", "swap", "market", "buildTx", "getRate"]
 ---
 
-The Swap module wraps the [Market API](/market/overview) — rates, allowances, and transaction-building for swaps that the **user** signs and submits. For gasless swaps where solvers settle on the user's behalf, see [Modules → Delta](/sdk/modules/delta).
+A **swap** in Velora settles through one of two execution paths: **Market** (this page) or [**Delta**](/sdk/products/delta). Market is the atomic on-chain path — it wraps the [Market API](/market/overview) for rates, allowances, and transaction-building, and the **user** signs and submits the transaction themselves. For gasless swaps where solvers settle on the user's behalf, see [Delta](/sdk/products/delta).
+
+<Note>
+This path is exposed as `sdk.swap` in code (the namespace predates the Market/Delta naming). `sdk.swap` is the Market execution path for swaps.
+</Note>
 
 ## When to use this
 
 - The user has gas on the source chain and is happy to submit a transaction.
 - You need the cheapest path across DEX aggregation (no auction, no off-chain settlement).
 - You want full control over slippage, gas, and recipient.
-- You don't need crosschain or MEV-protected settlement — see [Delta module](/sdk/modules/delta) for that.
+- You don't need crosschain or MEV-protected settlement — see [Delta](/sdk/products/delta) for that.
 
 ## The flow
 
@@ -112,7 +116,7 @@ Add `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSu
 
 ## Related pages
 
-- [Modules → Delta](/sdk/modules/delta) — gasless intent-based swaps.
+- [Swaps → Delta](/sdk/products/delta) — gasless intent-based swaps.
 - [Monetize](/sdk/monetize) — partner-fee fields and tradeoffs.
 - [Configure providers](/sdk/configure-providers) — set up your wallet library.
 - [API reference → Market](/api-reference/market/overview) — the underlying HTTP endpoints.

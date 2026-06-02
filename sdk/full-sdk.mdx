@@ -70,10 +70,10 @@ The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
 - `sdk.deltaV2` — **recommended.** Full Delta V2 lifecycle: `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus reused approve/preSign.
 - `sdk.delta` — Delta V1. Same lifecycle, locally-built orders.
 - `sdk.quote` — `getQuote`
-- `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx
-- `sdk.limitOrders` — deprecated; see [Limit orders module](/sdk/modules/limit-orders)
+- `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx (Market execution path for swaps)
+- `sdk.limitOrders` — AugustusRFQ maker/taker orders, used for OTC; see [OTC](/sdk/products/otc)
 
-See [Modules → Swap](/sdk/modules/swap) and [Modules → Delta](/sdk/modules/delta) for end-to-end flows.
+See [Swaps → Market](/sdk/products/swap) and [Swaps → Delta](/sdk/products/delta) for end-to-end flows.
 
 ## Sharing one caller across chains
 
@@ -99,13 +99,13 @@ const optimism = constructFullSDK({ ...baseConfig, chainId: 10 });
   >
     All four contract callers and both fetchers, with examples.
   </Card>
-  <Card title="Modules → Delta" icon="bolt" href="/sdk/modules/delta">
+  <Card title="Swaps → Delta" icon="bolt" href="/sdk/products/delta">
     The full Delta order lifecycle, including the split build/sign/post flow.
   </Card>
   <Card
-    title="Modules → Swap"
+    title="Swaps → Market"
     icon="arrows-left-right"
-    href="/sdk/modules/swap"
+    href="/sdk/products/swap"
   >
     Market-swap walkthrough using the namespaced SDK.
   </Card>

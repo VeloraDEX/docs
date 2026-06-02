@@ -89,11 +89,18 @@
               "sdk/full-sdk",
               "sdk/partial-sdk",
               {
-                "group": "Modules",
+                "group": "Products",
                 "pages": [
-                  "sdk/modules/swap",
-                  "sdk/modules/limit-orders",
-                  "sdk/modules/delta"
+                  {
+                    "group": "Swaps",
+                    "pages": [
+                      "sdk/products/swap",
+                      "sdk/products/delta"
+                    ]
+                  },
+                  "sdk/products/limit-orders",
+                  "sdk/products/twap",
+                  "sdk/products/otc"
                 ]
               },
               "sdk/configure-providers",
