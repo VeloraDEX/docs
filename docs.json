@@ -60,10 +60,10 @@
           {
             "group": "Product stack",
             "pages": [
-              "overview/trading-concepts/swaps",
-              "overview/trading-concepts/limit-orders",
-              "overview/trading-concepts/twap",
-              "overview/trading-concepts/otc"
+              "overview/product-stack/swaps",
+              "overview/product-stack/limit-orders",
+              "overview/product-stack/twap",
+              "overview/product-stack/otc"
             ]
           }
         ]
