@@ -1,15 +1,71 @@
 ---
 title: "AI Agents"
-description: "The Velora docs as an LLM runbook — Delta is intent-native, which makes agent integration first-class."
-keywords: ["agents","ai","overview"]
+description: "Use Velora as an execution layer for AI agents — quote, route, sign, submit, and recover with deterministic API flows."
+keywords: ["agents","ai","llm","delta","market","mcp","prompts"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+AI agents are good at orchestration, but bad at guessing financial state. Velora gives agents a small set of deterministic trading primitives: quote, choose an execution path, build the action, collect the right signature, submit, and track status.
 
-## When to use this
+Use this section when you want Claude, Cursor, Codex, an MCP client, or your own agent runtime to build or operate a Velora integration.
 
-## How it works
+## What agents can do with Velora
 
-## Examples
+<CardGroup cols={2}>
+  <Card title="Route user intent" icon="route" href="/for-agents/decision-tables">
+    Map user requests like “swap now”, “gasless swap”, or “protect me from MEV” to the right Velora flow.
+  </Card>
+  <Card title="Run the trade loop" icon="repeat" href="/for-agents/five-call-recipe">
+    Quote, build, sign, submit, and poll swaps, limit orders, and TWAPs using deterministic sequences.
+  </Card>
+  <Card title="Generate integrations" icon="sparkles" href="/for-agents/prompt-library">
+    Copy verified prompts for Claude Code, Cursor, Codex, and other coding agents.
+  </Card>
+  <Card title="Use agent tools" icon="plug" href="/for-agents/mcp-server/overview">
+    Connect MCP clients or CLI workflows when you want tools instead of raw HTTP.
+  </Card>
+</CardGroup>
 
-## Related pages
+## Why Velora fits agents
+
+Agents need APIs that return structured decisions, not ambiguous text. Velora exposes execution paths as explicit response objects:
+
+- Top-level `delta` means continue the Delta order flow.
+- Top-level `market` means continue the Market transaction flow.
+- If neither is present, stop and ask the user to change the trade.
+
+That lets an agent branch deterministically instead of guessing which route was selected.
+
+## Execution paths
+
+| Path | Use when | User signs | Agent tracks |
+|---|---|---|---|
+| Delta Swap | The user wants gasless execution, MEV protection, or solver competition for an immediate swap. | EIP-712 typed data | Order ID and status |
+| Delta Limit Order | The user wants to trade only at a target price or better. This is a Delta `LIMIT` order built and submitted through the Delta API, not AugustusRFQ. | EIP-712 typed data | Order ID and fill status |
+| Delta TWAP | The user wants one signed order that splits execution across time. Sell TWAPs preserve source amount; buy TWAPs preserve destination amount and cap source spend. | EIP-712 typed data | Slice execution and order status |
+| Market API | The user wants immediate on-chain settlement. | Transaction | Transaction hash |
+| AugustusRFQ | The user wants OTC/RFQ settlement with a counterparty. | RFQ order or transaction, depending on flow | RFQ fill state |
+| Widget / SDK | The user wants an app integration, not a raw API flow. | Depends on configured flow | App-level state |
+
+## The agent rule
+
+<Warning>
+  Agents should not infer trading behavior from natural language alone. Always branch on the quote response shape: top-level `delta` means Delta, top-level `market` means Market.
+</Warning>
+
+## Where to start
+
+- Use [Decision tables](/for-agents/decision-tables) to route user intent and API responses.
+- Use [Five-call recipe](/for-agents/five-call-recipe) to implement the canonical trade loop.
+- Use [Prompt library](/for-agents/prompt-library) to generate working integrations with AI coding agents.
+- Use [Trading modes](/integrate/trading-modes) to understand `mode=DELTA`, `mode=MARKET`, and `mode=ALL`.
+- Use [Limit orders](/overview/trading-concepts/limit-orders) and [TWAP](/overview/trading-concepts/twap) when the user wants delayed execution, target prices, or time-sliced trades. For API-based agents, build these flows through `/delta/v2/prices`, `/delta/v2/orders/build`, `/delta/v2/orders`, and Delta order read endpoints.
+
+## Guardrails
+
+Agents should:
+
+- Never invent token addresses, chain IDs, quotes, transaction hashes, or order IDs.
+- Ask before changing chain, recipient, spend direction, or execution mode.
+- Ask for confirmation before submitting a signed order or sending a transaction.
+- Requote when the quote expires, validation fails, or balances materially change.
+- Treat `delta` and `market` as mutually exclusive top-level response paths.

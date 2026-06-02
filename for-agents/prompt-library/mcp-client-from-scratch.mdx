@@ -19,7 +19,7 @@ You are building a tiny standalone MCP client in TypeScript using the `@modelcon
 Requirements:
 - Connect to the Velora MCP server (transport and endpoint per /for-agents/mcp-server/installation).
 - After connection, call `tools/list` and print the available tools.
-- Run a `quote` tool call for 1 ETH → USDC on Ethereum mainnet with `partner=my-app-name`, then a `swap` tool call against the resulting quote.
+- Run a `quote` tool call for 1 ETH → USDC on Ethereum mainnet with the `partner` set to the app or project partner key (`my-app-name` is only a placeholder), then a `swap` tool call against the resulting quote.
 - Print every tool result. Exit cleanly when the swap returns success or terminal failure.
 - Total file size: ≤ 50 lines, excluding imports.
 

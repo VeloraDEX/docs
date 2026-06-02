@@ -180,15 +180,8 @@
             "group": "Start here",
             "pages": [
               "for-agents/overview",
-              "for-agents/concepts-and-objects"
-            ]
-          },
-          {
-            "group": "Agent quickstarts",
-            "pages": [
-              "for-agents/quickstart/five-call-recipe",
-              "for-agents/quickstart/decision-tables",
-              "for-agents/quickstart/code-samples"
+              "for-agents/five-call-recipe",
+              "for-agents/decision-tables"
             ]
           },
           {

@@ -19,7 +19,7 @@ You are building a React component that runs a Velora Crosschain Delta flow with
 Requirements:
 - The user holds (say) USDC on Polygon. They want to end up with aUSDC supplied to Aave v3 on Base. One signature.
 - Use Velora's Crosschain Delta API. Endpoints: `GET /quote` (with the Crosschain params per [Crosschain Delta docs]), `POST /delta/orders/build`, `POST /delta/orders`.
-- Always pass `partner=my-app-name` on every quote call (replace with the host app's `partner` identifier).
+- Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - The solver fills on Base; you provide a post-fill calldata hook that calls `aavePool.supply(USDC, amount, user, 0)` against Aave v3's Base pool address.
 - Read the Aave v3 pool address from a constants file (do NOT hardcode in component code).
 - Surface clear status: "Quoting" → "Signing" → "Filling on Base" → "Depositing into Aave" → "Done".

@@ -181,7 +181,7 @@ interface FormInputProps {
 
 ### `orderDeadline`
 
-`string` — Unix timestamp (seconds), as a numeric string. Only functional when `selectedForm` is `"limit"` or `"otc"`. For Delta limit orders, the minimum recommended expiry is `now + 10 minutes`. For OTC, `"0"` means no expiry. The widget doesn't reject invalid values at prop time — they surface in the trade flow.
+`string` — Unix timestamp (seconds), as a numeric string. Only functional when `selectedForm` is `"limit"` or `"otc"`. For Delta Limit Orders, the minimum recommended expiry is `now + 10 minutes`. For OTC, `"0"` means no expiry. The widget doesn't reject invalid values at prop time — they surface in the trade flow.
 
 ```tsx
 <Widget
