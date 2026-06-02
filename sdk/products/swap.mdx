@@ -1,10 +1,10 @@
 ---
 title: "Market"
-description: "Build, approve, and execute Market swaps through sdk.swap — the user submits the transaction themselves."
+description: "Build, approve, and execute Market Swaps through sdk.swap. The user submits the transaction themselves."
 keywords: ["sdk", "swap", "market", "buildTx", "getRate"]
 ---
 
-A **swap** in Velora settles through one of two execution paths: [**Delta**](/sdk/products/delta) or **Market** (this page). Market is the atomic on-chain path — it wraps the [Market API](/market/overview) for rates, allowances, and transaction-building, and the **user** signs and submits the transaction themselves. For gasless swaps where solvers settle on the user's behalf, see [Delta](/sdk/products/delta).
+A **swap** in Velora settles through one of two execution paths: [**Delta**](/sdk/products/delta) or **Market** (this page). Market is the atomic on-chain path. It wraps the [Market API](/market/overview) for rates, allowances, and transaction-building, and the **user** signs and submits the transaction themselves. For gasless swaps where solvers settle on the user's behalf, see [Delta](/sdk/products/delta).
 
 <Note>
 This path is exposed as `sdk.swap` in code (the namespace predates the Delta/Market naming). `sdk.swap` is the Market execution path for swaps.
@@ -15,7 +15,7 @@ This path is exposed as `sdk.swap` in code (the namespace predates the Delta/Mar
 - The user has gas on the source chain and is happy to submit a transaction.
 - You need the cheapest path across DEX aggregation (no auction, no off-chain settlement).
 - You want full control over slippage, gas, and recipient.
-- You don't need crosschain or MEV-protected settlement — see [Delta](/sdk/products/delta) for that.
+- You don't need crosschain or MEV-protected settlement. See [Delta](/sdk/products/delta) for that.
 
 ## The flow
 
@@ -30,7 +30,7 @@ This path is exposed as `sdk.swap` in code (the namespace predates the Delta/Mar
     Call `sdk.swap.buildTx` with the price route, slippage (or `destAmount`), user address, and `partner`. The response is a fully-populated `TransactionRequest`.
   </Step>
   <Step title="Send it from the wallet">
-    Pass the result of `buildTx` to your signer's `sendTransaction`. The SDK is no longer in the loop after this — you own the broadcast.
+    Pass the result of `buildTx` to your signer's `sendTransaction`. The SDK is no longer in the loop after this; you own the broadcast.
   </Step>
 </Steps>
 
@@ -104,11 +104,11 @@ See the [Build parameters for transaction](/api-reference/market/transactions) e
 
 ## Other methods
 
-- `sdk.swap.getSpender()` — the `TokenTransferProxy` address you approve.
-- `sdk.swap.getBalances(userAddress)` — token balances and allowances in one call.
-- `sdk.swap.getTokens()` — Velora-supported tokens on the active chain.
-- `sdk.swap.getAdapters()` — the DEX adapters available to the router.
-- `sdk.swap.swapTx(params)` — one-call orchestrator: rate + build + send. Convenience over the four-step flow.
+- `sdk.swap.getSpender()` returns the `TokenTransferProxy` address you approve.
+- `sdk.swap.getBalances(userAddress)`: token balances and allowances in one call.
+- `sdk.swap.getTokens()` lists Velora-supported tokens on the active chain.
+- `sdk.swap.getAdapters()` returns the DEX adapters available to the router.
+- `sdk.swap.swapTx(params)` is a one-call orchestrator (rate + build + send). Convenience over the four-step flow.
 
 ## Partner fee
 
@@ -116,7 +116,7 @@ Add `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSu
 
 ## Related pages
 
-- [Swaps → Delta](/sdk/products/delta) — gasless intent-based swaps.
+- [Swaps → Delta](/sdk/products/delta): gasless intent-based swaps.
 - [Monetize](/sdk/monetize) — partner-fee fields and tradeoffs.
-- [Configure providers](/sdk/configure-providers) — set up your wallet library.
-- [API reference → Market](/api-reference/market/overview) — the underlying HTTP endpoints.
+- [Configure providers](/sdk/configure-providers) for wallet-library setup.
+- [API reference → Market](/api-reference/market/overview), the underlying HTTP endpoints.

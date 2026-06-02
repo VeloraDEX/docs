@@ -4,15 +4,15 @@ description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, s
 keywords: ["sdk", "full", "constructFullSDK"]
 ---
 
-`constructFullSDK` returns the same namespaced API as the [Simple SDK](/sdk/simple-sdk) — `sdk.swap.*`, `sdk.delta.*`, `sdk.quote` — but you construct the fetcher and contract caller yourself. That extra wiring buys you a typed `<TxResponse>` generic and the freedom to share one caller across multiple SDK instances or chains.
+`constructFullSDK` returns the same namespaced API as the [Simple SDK](/sdk/simple-sdk) (`sdk.swap.*`, `sdk.delta.*`, `sdk.quote`), but you construct the fetcher and contract caller yourself. That extra wiring buys you a typed `<TxResponse>` generic and the freedom to share one caller across multiple SDK instances or chains.
 
 ## When to use this
 
 - You want write methods to return your wallet library's native response type (e.g., viem `Hex` or `ethers.ContractTransaction`) instead of a bare transaction hash.
-- You need one `contractCaller` to back several SDKs — for example, the same signer on mainnet (`chainId: 1`) and on Optimism (`chainId: 10`).
+- You need one `contractCaller` to back several SDKs — for example, the same signer used on mainnet (`chainId: 1`) and Optimism (`chainId: 10`).
 - You're building infrastructure that abstracts the fetcher (custom retry, caching, logging) and don't want the Simple SDK to wrap it.
 
-If none of those apply, prefer the [Simple SDK](/sdk/simple-sdk) — fewer moving parts.
+If none of those apply, prefer the [Simple SDK](/sdk/simple-sdk); it has fewer moving parts.
 
 ## Construct it
 
@@ -42,7 +42,7 @@ const sdk = constructFullSDK({
 });
 ```
 
-Swap the contract-caller line for `constructEthersContractCaller`, `constructEthersV6ContractCaller`, or `constructWeb3ContractCaller` to use a different wallet library — see [Configure providers](/sdk/configure-providers) for each variant.
+Swap the contract-caller line for `constructEthersContractCaller`, `constructEthersV6ContractCaller`, or `constructWeb3ContractCaller` to use a different wallet library. See [Configure providers](/sdk/configure-providers) for each variant.
 
 ## Typed transaction responses
 
@@ -67,11 +67,11 @@ console.log("approval submitted:", hash);
 
 The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
 
-- `sdk.deltaV2` — **recommended.** Full Delta V2 lifecycle: `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus reused approve/preSign.
-- `sdk.delta` — Delta V1. Same lifecycle, locally-built orders.
-- `sdk.quote` — `getQuote`
-- `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx (Market execution path for swaps)
-- `sdk.otc` — AugustusRFQ maker/taker orders, used for OTC; see [OTC](/sdk/products/otc)
+- `sdk.deltaV2` is the **recommended** path. Full Delta V2 lifecycle: `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus reused approve/preSign.
+- `sdk.delta`: Delta V1. Same lifecycle, locally-built orders.
+- `sdk.quote` exposes `getQuote`.
+- `sdk.swap`: rate, build, approve, balances, spender, tokens, adapters, swapTx (Market execution path for swaps).
+- `sdk.otc` exposes the AugustusRFQ maker/taker orders used for OTC; see [OTC](/sdk/products/otc).
 
 See [Swaps → Delta](/sdk/products/delta) and [Swaps → Market](/sdk/products/swap) for end-to-end flows.
 
@@ -107,6 +107,6 @@ const optimism = constructFullSDK({ ...baseConfig, chainId: 10 });
     icon="arrows-left-right"
     href="/sdk/products/swap"
   >
-    Market-swap walkthrough using the namespaced SDK.
+    Market-Swap walkthrough using the namespaced SDK.
   </Card>
 </CardGroup>

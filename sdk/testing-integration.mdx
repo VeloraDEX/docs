@@ -1,6 +1,6 @@
 ---
 title: "Test your integration"
-description: "Test SDK flows without burning mainnet funds — fork mainnet locally, mock the fetcher for unit tests, and verify partner attribution end-to-end."
+description: "Test SDK flows without burning mainnet funds. Fork mainnet locally, mock the fetcher for unit tests, and verify partner attribution end-to-end."
 keywords: ["sdk", "testing", "fork", "hardhat", "anvil", "mock", "fetcher"]
 ---
 
@@ -14,11 +14,11 @@ The SDK calls real Velora APIs and real on-chain contracts. To test integrations
 
 ## Fork mainnet for end-to-end tests
 
-Velora's contracts (Augustus router, Delta, AugustusRFQ) deploy to production networks only — there's no testnet deployment. The standard pattern is to fork mainnet (or your target chain) and impersonate a funded account.
+Velora's contracts (Augustus router, Delta, AugustusRFQ) deploy to production networks only; there's no testnet deployment. The standard pattern is to fork mainnet (or your target chain) and impersonate a funded account.
 
 ### Tenderly
 
-Tenderly Virtual TestNets (forks) are the most widely used option — a hosted fork with a public RPC, a block explorer, and unlimited faucet, so you don't run a node locally and your whole team can share one environment. Create a fork in the [Tenderly dashboard](https://dashboard.tenderly.co) (or via the API), then point the SDK at its RPC URL:
+Tenderly Virtual TestNets (forks) are the most widely used option: a hosted fork with a public RPC, a block explorer, and unlimited faucet, so you don't run a node locally and your whole team can share one environment. Create a fork in the [Tenderly dashboard](https://dashboard.tenderly.co) (or via the API), then point the SDK at its RPC URL:
 
 ```ts
 import { createWalletClient, http } from "viem";
@@ -90,10 +90,10 @@ networks: {
 },
 ```
 
-Run with `PROVIDER_URL=https://mainnet... npx hardhat test`. The Velora SDK exposes overrides for impersonation via your provider — see the SDK's [own hardhat config](https://github.com/VeloraDEX/sdk/blob/master/hardhat.config.ts) for a reference.
+Run with `PROVIDER_URL=https://mainnet... npx hardhat test`. The Velora SDK exposes overrides for impersonation via your provider; see the SDK's [own hardhat config](https://github.com/VeloraDEX/sdk/blob/master/hardhat.config.ts) for a reference.
 
 <Note>
-  Forking only spoofs the chain state — quotes still come from the real Velora
+  Forking only spoofs the chain state. Quotes still come from the real Velora
   API. Account-specific endpoints (allowance lookups against the impersonated
   address) work because the fork's RPC returns the impersonated account's
   storage.
@@ -129,18 +129,18 @@ const rate = await sdk.swap.getRate({
 expect(rate.destAmount).toBe("999");
 ```
 
-This pattern is also handy in CI — every test is deterministic and runs offline.
+This pattern is also handy in CI: every test is deterministic and runs offline.
 
 ## Debugging tips
 
 - **Check `partner`.** A missing or unknown partner key surfaces as `400` on quote/order endpoints. Confirm it's set on every SDK call and matches the partner registered with Velora.
-- **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing — the EIP-712 domain includes `chainId`.
-- **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing — the SDK's internal retries and partner-fee resolution can issue requests you don't expect.
+- **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing, because the EIP-712 domain includes `chainId`.
+- **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing. The SDK's internal retries and partner-fee resolution can issue requests you don't expect.
 - **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, see [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
-- **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
+- **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market Swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
 
 ## Related pages
 
-- [Troubleshooting](/api-reference/troubleshooting) — known failure modes per endpoint.
-- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes) — Delta order statuses and recovery.
+- [Troubleshooting](/api-reference/troubleshooting): known failure modes per endpoint.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes), covering Delta order statuses and recovery.
 - [Configure providers](/sdk/configure-providers) — fetcher and caller setup.

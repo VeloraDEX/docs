@@ -1,10 +1,10 @@
 ---
 title: "Monetize"
-description: "Add partner fees or surplus share to every SDK call — same partner key works across Delta orders, Market swaps, and quotes."
+description: "Add partner fees or surplus share to every SDK call. The same partner key works across Delta orders, Market Swaps, and quotes."
 keywords: ["sdk", "fees", "monetization", "partner", "partnerFee", "takeSurplus"]
 ---
 
-Every quote, swap, and Delta call accepts a `partner` string and optional fee overrides. The fee is collected on-chain at settlement and routed to your partner address — no extra integration needed.
+Every quote, swap, and Delta call accepts a `partner` string and optional fee overrides. The fee is collected on-chain at settlement and routed to your partner address, with no extra integration needed.
 
 ## Quick setup
 
@@ -36,7 +36,7 @@ const auction = await sdk.deltaV2.submitDeltaOrder({
 ```
 
 <Note>
-**Delta V2 vs V1.** V2 sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them — no extra round-trip. V1 calls `getPartnerFee(partner)` locally inside `buildDeltaOrder` (response is cached per partner). Either way the fee lands on-chain at settlement; the V2 path is just one fewer network call.
+**Delta V2 vs V1.** V2 sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them in one call. V1 calls `getPartnerFee(partner)` locally inside `buildDeltaOrder` (response is cached per partner). Either way the fee lands on-chain at settlement; the V2 path is just one fewer network call.
 </Note>
 
 If you need to obtain the registered defaults programmatically (e.g., to show "0.25% fee" in your UI), call `getPartnerFee` directly:
@@ -59,16 +59,16 @@ const { partnerAddress, partnerFee, takeSurplus } =
 **Precedence.** If both `partnerFeeBps` and `partnerTakesSurplus` are set, `partnerFeeBps` wins. To take surplus instead, set `partnerTakesSurplus: true` and **omit** `partnerFeeBps`.
 </Note>
 
-## Fee vs surplus — which to pick
+## Fee vs surplus: which to pick
 
-A fixed fee gives predictable per-trade revenue but worsens the user-facing quote; a surplus share is variable but leaves the quote untouched. For the full comparison — including how the split between partner, user, and Velora differs across Delta and Market — see [Monetization](/overview/monetization).
+A fixed fee gives predictable per-trade revenue but worsens the user-facing quote; a surplus share is variable but leaves the quote untouched. For the full comparison (including how the split between partner, user, and Velora differs across Delta and Market), see [Monetization](/overview/monetization).
 
 ## Where it applies
 
-- **Delta V2** (recommended) — pass `partner` (and overrides) to `sdk.deltaV2.getDeltaPrice`, `sdk.deltaV2.submitDeltaOrder`, `sdk.deltaV2.buildDeltaOrder`, and `sdk.deltaV2.postDeltaOrder`. The server encodes the fee into the on-chain order.
-- **Delta V1** — pass `partner` to `sdk.delta.buildDeltaOrder` or `sdk.delta.submitDeltaOrder`. The SDK resolves the fee locally via `getPartnerFee` and encodes it into the signed order's `partnerAndFee` field.
-- **Market swap** — pass `partner` to `sdk.swap.getRate` (inside `options: { partner }`) and `sdk.swap.buildTx` (top-level). Fee is taken from the destination token at settlement.
-- **Quote** — pass `partner` to `sdk.quote.getQuote`. The returned `priceRoute` / `deltaPrice` already accounts for the fee, so the `destAmount` you show users is the net amount.
+- **Delta V2** (recommended): pass `partner` (and overrides) to `sdk.deltaV2.getDeltaPrice`, `sdk.deltaV2.submitDeltaOrder`, `sdk.deltaV2.buildDeltaOrder`, and `sdk.deltaV2.postDeltaOrder`. The server encodes the fee into the on-chain order.
+- **Delta V1**: pass `partner` to `sdk.delta.buildDeltaOrder` or `sdk.delta.submitDeltaOrder`. The SDK resolves the fee locally via `getPartnerFee` and encodes it into the signed order's `partnerAndFee` field.
+- **Market Swap**: pass `partner` to `sdk.swap.getRate` (inside `options: { partner }`) and `sdk.swap.buildTx` (top-level). Fee is taken from the destination token at settlement.
+- **Quote**: pass `partner` to `sdk.quote.getQuote`. The returned `priceRoute` / `deltaPrice` already accounts for the fee, so the `destAmount` you show users is the net amount.
 
 The fee is collected on-chain at settlement; there is no off-chain accounting step on your side.
 
@@ -76,11 +76,11 @@ The fee is collected on-chain at settlement; there is no off-chain accounting st
 
 - **Load `partner` from an environment variable.** Different builds (staging, production, white-label) can use different keys without code changes.
 - **Audit `partnerAddress`.** Once a swap settles, fees pay to that address on-chain. Treat it like any treasury address.
-- **Don't ship per-call overrides** unless you genuinely vary fees by route or user tier — registering defaults with Velora keeps your client code simpler and lets you adjust fees without redeploying.
+- **Don't ship per-call overrides** unless you genuinely vary fees by route or user tier. Registering defaults with Velora keeps your client code simpler and lets you adjust fees without redeploying.
 
 ## Related pages
 
-- [Pro API accounts](/overview/pro-api-accounts) — register a partner key and set defaults.
+- [Pro API accounts](/overview/pro-api-accounts): register a partner key and set defaults.
 - [Widget → Monetize](/widget/monetize) — same fee mechanics for the embeddable widget.
-- [Swaps → Delta](/sdk/products/delta) — full Delta order flow with partner attribution.
-- [Swaps → Market](/sdk/products/swap) — full Market-swap flow with partner attribution.
+- [Swaps → Delta](/sdk/products/delta) covers the full Delta order flow with partner attribution.
+- [Swaps → Market](/sdk/products/swap), the full Market-Swap flow with partner attribution.

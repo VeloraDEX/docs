@@ -12,7 +12,7 @@ keywords: ["sdk", "overview", "typescript", "javascript"]
   <Card title="Versatile" icon="plug">
     Works with [viem](/sdk/configure-providers#viem),
     [ethers](/sdk/configure-providers#ethers-v5) (v5 or v6), or
-    [web3.js](/sdk/configure-providers#web3-js) — bring whichever stack you
+    [web3.js](/sdk/configure-providers#web3-js). Bring whichever stack you
     already use.
   </Card>
   <Card title="Composable" icon="cubes">
@@ -107,7 +107,7 @@ graph TD
   C --> F["Contract caller: viem / ethers v5 / v6 / web3"]
 ```
 
-- **Simple** auto-wires the fetcher and contract caller from a single options object — best for quickstarts and server-side scripts.
+- **Simple** auto-wires the fetcher and contract caller from a single options object. Best for quickstarts and server-side scripts.
 - **Full** exposes the same methods namespaced (`sdk.swap.*`, `sdk.delta.*`) but lets you construct the fetcher and caller yourself, including a custom transaction-response type.
 - **Partial** is the tree-shaken variant: pass in only the `construct*` functions you import, and TypeScript infers the resulting SDK shape from your selection.
 
@@ -122,7 +122,7 @@ graph TD
     icon="code-branch"
     href="/sdk/choose-a-variant"
   >
-    Simple vs Full vs Partial — bundle size, API shape, when to pick each.
+    Simple vs Full vs Partial: bundle size, API shape, when to pick each.
   </Card>
   <Card title="Simple SDK" icon="bolt" href="/sdk/simple-sdk">
     One constructor, sensible defaults, every method available.
@@ -132,12 +132,12 @@ graph TD
     icon="sliders"
     href="/sdk/configure-providers"
   >
-    Wire up viem, ethers, or web3 — and choose your HTTP client.
+    Wire up viem, ethers, or web3, then choose your HTTP client.
   </Card>
 </CardGroup>
 
 ## Related pages
 
-- [Why Velora](/overview/why-velora) — when to reach for the SDK vs the API or widget.
-- [Migration from `@paraswap/sdk`](/resources/migrations/paraswap-sdk-to-velora-sdk) — legacy package → `@velora-dex/sdk`.
+- [Why Velora](/overview/why-velora): when to reach for the SDK vs the API or widget.
+- [Migration from `@paraswap/sdk`](/resources/migrations/paraswap-sdk-to-velora-sdk): upgrade the legacy package to `@velora-dex/sdk`.
 - [API reference](/api-reference/introduction) — the HTTP endpoints the SDK wraps.

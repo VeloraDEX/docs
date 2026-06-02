@@ -6,21 +6,21 @@ keywords: ["sdk", "otc", "rfq", "augustusRFQ", "p2p", "maker", "taker", "limitOr
 
 **OTC** (over-the-counter) is a direct trade negotiated between two known counterparties rather than discovered through a public route. In the SDK it's a signed AugustusRFQ order, exposed under the `sdk.otc` namespace: a **maker** signs the terms off-chain naming a specific **taker**, and only that taker can fill the order on-chain.
 
-Mechanically it's the same signed-order flow as a classic on-chain limit order — the difference is the **`taker`** field. Set it to a counterparty's address and the order is a private, fillable-by-one OTC trade (`P2P`); leave it open and anyone could fill it.
+Mechanically it's the same signed-order flow as a classic on-chain limit order. The difference is the **`taker`** field. Set it to a counterparty's address and the order is a private, fillable-by-one OTC trade (`P2P`); leave it open and anyone could fill it.
 
 <Note>
-This is for **bilateral, counterparty-specific** trades. For open, target-price orders that any solver can fill, use [Limit orders](/sdk/products/limit-orders) (Delta) instead — they're gasless and MEV-protected. For the conceptual difference, see [Product stack → OTC](/overview/product-stack/otc).
+This is for **bilateral, counterparty-specific** trades. For open, target-price orders that any solver can fill, use [Limit orders](/sdk/products/limit-orders) (Delta) instead; those are gasless and MEV-protected. For the conceptual difference, see [Product stack → OTC](/overview/product-stack/otc).
 </Note>
 
 ## When to use this
 
-- The counterparty matters as much as the price — treasury rebalancing, partner deals, market-maker inventory moves.
+- The counterparty matters as much as the price: treasury rebalancing, partner deals, market-maker inventory moves.
 - You've agreed terms off-book and want a verifiable on-chain settlement restricted to the agreed counterparty.
 - You don't want the trade exposed as a public order before it settles.
 
 ## How it works
 
-OTC has two sides. The **maker** builds and signs the order (gasless, off-chain). The **taker** — the named counterparty — submits the fill transaction on-chain through the AugustusRFQ contract.
+OTC has two sides. The **maker** builds and signs the order (gasless, off-chain). The **taker** (the named counterparty) submits the fill transaction on-chain through the AugustusRFQ contract.
 
 <Steps>
   <Step title="Maker approves the maker asset">
@@ -64,7 +64,7 @@ const order = await sdk.otc.submitP2POrder({
 // (API, your backend, or any off-chain channel)
 ```
 
-To split the steps — e.g. to sign with a hardware wallet — use `sdk.otc.buildLimitOrder` → `sdk.otc.signLimitOrder` → `sdk.otc.postP2POrder`.
+To split the steps (e.g. to sign with a hardware wallet), use `sdk.otc.buildLimitOrder` → `sdk.otc.signLimitOrder` → `sdk.otc.postP2POrder`.
 
 ## Taker: fill the order
 
@@ -84,7 +84,7 @@ const tx = await sdk.otc.fillOrderDirectly({
 });
 ```
 
-The fill reverts if the order is expired, already filled, or the caller isn't the named taker — always re-check `expiry` against the current block before submitting.
+The fill reverts if the order is expired, already filled, or the caller isn't the named taker, so always re-check `expiry` against the current block before submitting.
 
 ## Query and cancel
 
@@ -105,13 +105,13 @@ const forMe = await sdk.otc.getLimitOrders({
 await sdk.otc.cancelLimitOrder(orderHash);
 ```
 
-Cancellation here is an on-chain call to AugustusRFQ — it costs gas, unlike the gasless `cancelDeltaOrders` flow for Delta orders.
+Cancellation here is an on-chain call to AugustusRFQ, so it costs gas, unlike the gasless `cancelDeltaOrders` flow for Delta orders.
 
 `sdk.otc.getLimitOrdersContract()` returns the AugustusRFQ address for the active chain; see [Chains & contracts](/resources/chains-and-contracts) for all deployments.
 
 ## Related pages
 
-- [Limit orders](/sdk/products/limit-orders) — open, gasless target-price orders (Delta).
-- [Product stack → OTC](/overview/product-stack/otc) — the conceptual model.
+- [Limit orders](/sdk/products/limit-orders): open, gasless target-price orders (Delta).
+- [Product stack → OTC](/overview/product-stack/otc), the conceptual model.
 - [API reference → AugustusRFQ](/api-reference/rfq/overview) — the underlying order surface.
-- [Chains & contracts](/resources/chains-and-contracts) — AugustusRFQ deployment addresses.
+- [Chains & contracts](/resources/chains-and-contracts) for AugustusRFQ deployment addresses.

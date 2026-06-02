@@ -4,7 +4,7 @@ description: "Install @velora-dex/sdk and fetch your first quote in under five m
 keywords: ["sdk", "install", "quickstart", "typescript"]
 ---
 
-The Velora SDK is published as [`@velora-dex/sdk`](https://www.npmjs.com/package/@velora-dex/sdk). It has no required runtime dependencies — `viem`, `ethers`, `web3`, and `axios` are all optional peers that the SDK detects at construction time.
+The Velora SDK is published as [`@velora-dex/sdk`](https://www.npmjs.com/package/@velora-dex/sdk). It has no required runtime dependencies; `viem`, `ethers`, `web3`, and `axios` are all optional peers that the SDK detects at construction time.
 
 ## Install the package
 
@@ -26,7 +26,7 @@ yarn add @velora-dex/sdk
 
 ### Peer dependencies
 
-Pick whichever wallet library and HTTP client you already use. All of these are optional peers — install only the ones you need.
+Pick whichever wallet library and HTTP client you already use. All of these are optional peers, so install only the ones you need.
 
 | Package  | Version              | When you need it                                                                        |
 | -------- | -------------------- | --------------------------------------------------------------------------------------- |
@@ -36,12 +36,12 @@ Pick whichever wallet library and HTTP client you already use. All of these are 
 | `axios`  | `>=0.25.0 <2.0.0`    | If you wire the SDK fetcher to axios. (Use the built-in `fetch` instead to avoid this.) |
 
 <Note>
-You can use the SDK in **read-only mode** without any of these. Pass `{ chainId, fetch }` (or `{ chainId, axios }`) and the SDK can call every API method — quotes, prices, order status — but cannot sign or submit transactions.
+You can use the SDK in **read-only mode** without any of these. Pass `{ chainId, fetch }` (or `{ chainId, axios }`) and the SDK can call every API method (quotes, prices, order status), but it cannot sign or submit transactions.
 </Note>
 
 ## Your first call
 
-The smallest possible setup — quote 10,000 USDC → ETH on mainnet using native `fetch`:
+The smallest possible setup: quote 10,000 USDC → ETH on mainnet using native `fetch`.
 
 ```ts
 import { constructSimpleSDK } from "@velora-dex/sdk";
@@ -64,16 +64,16 @@ console.log(priceRoute.srcAmount, "→", priceRoute.destAmount);
 
 The returned `priceRoute` contains at minimum:
 
-- `srcAmount` — the input amount you passed (echoed for confirmation).
-- `destAmount` — the expected output amount in destination-token wei.
-- `bestRoute` — the resolved swap path across DEXes.
-- `gasCost` and `gasCostUSD` — estimated execution gas.
+- `srcAmount`: the input amount you passed (echoed for confirmation).
+- `destAmount` is the expected output amount in destination-token wei.
+- `bestRoute`, the resolved swap path across DEXes.
+- `gasCost` and `gasCostUSD`: estimated execution gas.
 
 If the call throws with `Network Error` or a 4xx response, double-check `chainId`, `partner`, and that your firewall allows outbound HTTPS to the Velora API.
 
 ## Add a wallet to send transactions
 
-Pass a `providerOptions` argument to enable `approveToken`, `submitDeltaOrder`, and `buildTx`-then-send flows. The shape varies by library — see [Configure providers](/sdk/configure-providers) for the four supported stacks (viem, ethers v5, ethers v6, web3).
+Pass a `providerOptions` argument to enable `approveToken`, `submitDeltaOrder`, and `buildTx`-then-send flows. The shape varies by library; see [Configure providers](/sdk/configure-providers) for the four supported stacks (viem, ethers v5, ethers v6, web3).
 
 ## Next steps
 

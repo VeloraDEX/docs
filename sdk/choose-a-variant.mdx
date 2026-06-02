@@ -11,37 +11,37 @@ The SDK ships three constructors that wrap the same per-method `construct*` prim
 |                        | Simple                                                                                                                 | Full                                                                                           | Partial                                                                                  |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | Constructor            | `constructSimpleSDK`                                                                                                   | `constructFullSDK`                                                                             | `constructPartialSDK`                                                                    |
-| API shape              | Namespaced — `sdk.swap.getRate(...)`, `sdk.delta.submitDeltaOrder(...)`, `sdk.quote.getQuote(...)`                     | Same namespaces, typed against your transaction-response generic — `sdk.swap.*`, `sdk.delta.*` | Flat — `sdk.getRate(...)`, `sdk.approveToken(...)`. Whatever you import is what you get. |
+| API shape              | Namespaced: `sdk.swap.getRate(...)`, `sdk.delta.submitDeltaOrder(...)`, `sdk.quote.getQuote(...)`                      | Same namespaces, typed against your transaction-response generic (`sdk.swap.*`, `sdk.delta.*`) | Flat: `sdk.getRate(...)`, `sdk.approveToken(...)`. Whatever you import is what you get.  |
 | Bundle size            | Includes every module                                                                                                  | Includes every module                                                                          | Tree-shaken to the constructors you import                                               |
 | Provider wiring        | Pass `{ axios }` or `{ fetch }` and (optionally) `providerOptions`; SDK builds the fetcher and contract caller for you | You build `fetcher` and `contractCaller` and pass them in                                      | You build `fetcher` and `contractCaller` and pass them in                                |
-| `<TxResponse>` generic | Returns `TxHash` (string) for write calls                                                                              | You choose — viem `Hex`, `ethers.ContractTransaction`, etc.                                    | Inherits from the `contractCaller` you pass                                              |
+| `<TxResponse>` generic | Returns `TxHash` (string) for write calls                                                                              | You choose: viem `Hex`, `ethers.ContractTransaction`, etc.                                     | Inherits from the `contractCaller` you pass                                              |
 | Best for               | Quickstarts, server-side scripts, integrators who want one import                                                      | Apps that use most modules and want typed transaction responses                                | Bundle-size-sensitive front-ends                                                         |
 
 ## Pick by use case
 
-- **"I just want a quote and a swap."** Use the **Simple SDK** — one constructor, ready to call.
-- **"I have a Node service that does Delta orders, market swaps, and price polling."** Use the **Full SDK** — namespaced access plus a typed `<TxResponse>` so your code knows what `approveToken` returns.
-- **"I'm shipping a front-end and only sign Delta orders."** Use the **Partial SDK** — import `constructBuildDeltaOrder`, `constructSignDeltaOrder`, `constructPostDeltaOrder` and tree-shake the rest.
-- **"I want a custom HTTP client (got, undici, superagent…)."** All three variants accept a custom `fetcher` — see [Configure providers](/sdk/configure-providers#custom-fetcher).
+- **"I just want a quote and a swap."** Use the **Simple SDK**: one constructor, ready to call.
+- **"I have a Node service that does Delta orders, Market Swaps, and price polling."** Use the **Full SDK**. You get namespaced access plus a typed `<TxResponse>` so your code knows what `approveToken` returns.
+- **"I'm shipping a front-end and only sign Delta orders."** Use the **Partial SDK**: import `constructBuildDeltaOrder`, `constructSignDeltaOrder`, `constructPostDeltaOrder` and tree-shake the rest.
+- **"I want a custom HTTP client (got, undici, superagent…)."** All three variants accept a custom `fetcher`. See [Configure providers](/sdk/configure-providers#custom-fetcher).
 
 ## What stays the same
 
 Every variant ultimately calls the same `construct*` factories under [`@velora-dex/sdk` `src/methods/`](https://github.com/VeloraDEX/sdk/tree/master/src/methods). That means:
 
-- Same method signatures across variants — `getRate`, `buildDeltaOrder`, `submitDeltaOrder`, etc. behave identically.
-- Same partner-fee handling — see [Monetize](/sdk/monetize).
+- Same method signatures across variants: `getRate`, `buildDeltaOrder`, `submitDeltaOrder`, etc. behave identically.
+- Same partner-fee handling. See [Monetize](/sdk/monetize).
 - Same retries, errors, and `FetcherError` semantics regardless of constructor.
 
 ## Related pages
 
 <CardGroup cols={3}>
   <Card title="Simple SDK" icon="bolt" href="/sdk/simple-sdk">
-    `constructSimpleSDK` — one constructor, sensible defaults.
+    `constructSimpleSDK`: one constructor, sensible defaults.
   </Card>
   <Card title="Full SDK" icon="cubes" href="/sdk/full-sdk">
-    `constructFullSDK` — namespaced, typed transaction responses.
+    `constructFullSDK`. Namespaced, with typed transaction responses.
   </Card>
   <Card title="Partial SDK" icon="scissors" href="/sdk/partial-sdk">
-    `constructPartialSDK` — cherry-pick constructors, tree-shake the rest.
+    `constructPartialSDK`: cherry-pick constructors, tree-shake the rest.
   </Card>
 </CardGroup>

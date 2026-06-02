@@ -4,7 +4,7 @@ description: "constructSimpleSDK auto-wires the fetcher and contract caller so o
 keywords: ["sdk", "simple", "constructSimpleSDK", "quickstart"]
 ---
 
-`constructSimpleSDK` is the recommended entry point for most integrators. You pass it a `chainId`, an HTTP client, and (optionally) a wallet — it returns an SDK with every Velora method available under flat namespaces.
+`constructSimpleSDK` is the recommended entry point for most integrators. You pass it a `chainId`, an HTTP client, and (optionally) a wallet; in return you get an SDK with every Velora method available under flat namespaces.
 
 ## When to use this
 
@@ -35,7 +35,7 @@ const simpleSDK = constructSimpleSDK({ chainId: 1, fetch });
 
 </CodeGroup>
 
-Without a wallet, the SDK is **read-only** — quotes, prices, order status, supported tokens — but cannot approve, sign, or submit.
+Without a wallet, the SDK is **read-only** (quotes, prices, order status, supported tokens), but cannot approve, sign, or submit.
 
 ## Add a wallet
 
@@ -108,13 +108,13 @@ The returned SDK is namespaced by feature:
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta](/sdk/products/delta)                          |
 | `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/products/delta#delta-v1).                                                                                                                                                                         | [Delta](/sdk/products/delta#delta-v1)                 |
-| `sdk.quote`       | `getQuote` — V1 Delta-with-fallback-to-Market price (no V2 equivalent yet)                                                                                                                                                                                           | [API → Delta /quote](/api-reference/delta/quote)     |
+| `sdk.quote`       | `getQuote` (V1 Delta-with-fallback-to-Market price; no V2 equivalent yet)                                                                                                                                                                                            | [API → Delta /quote](/api-reference/delta/quote)     |
 | `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx` (Market execution path for swaps)                                                                                                                            | [Market](/sdk/products/swap)                          |
 | `sdk.otc`         | AugustusRFQ maker/taker orders for OTC trades. For target-price limit orders, use the Delta namespace instead.                                                                                                                                                       | [OTC](/sdk/products/otc)                              |
 
 ## End-to-end example
 
-Quote, approve, and submit a Delta order in one flow. (Falls back to a Market swap if Delta isn't available for the pair.)
+Quote, approve, and submit a Delta order in one flow. (Falls back to a Market Swap if Delta isn't available for the pair.)
 
 ```ts
 import axios from "axios";
@@ -188,7 +188,7 @@ if ("delta" in quote) {
 }
 ```
 
-See [Swaps → Delta](/sdk/products/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Swaps → Market](/sdk/products/swap) for the full Market-swap walkthrough.
+See [Swaps → Delta](/sdk/products/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Swaps → Market](/sdk/products/swap) for the full Market-Swap walkthrough.
 
 ## Related pages
 

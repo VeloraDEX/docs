@@ -5,19 +5,19 @@ keywords:
   ["sdk", "partial", "constructPartialSDK", "tree-shaking", "bundle-size"]
 ---
 
-`constructPartialSDK` is the tree-shaken entry point. You pick which per-method `construct*` factories you care about, and the resulting SDK has only those methods on it. TypeScript infers the return type from your selection, so calls into unused modules don't compile — and the bundler drops the unused code.
+`constructPartialSDK` is the tree-shaken entry point. You pick which per-method `construct*` factories you care about, and the resulting SDK has only those methods on it. TypeScript infers the return type from your selection, so calls into unused modules don't compile, and the bundler drops the unused code.
 
 ## When to pick this
 
 - You're shipping a browser bundle and every kilobyte counts.
-- You only use a small slice of the SDK — e.g. just `getRate` + `approveToken`, or just the Delta signing flow.
+- You only use a small slice of the SDK, e.g. just `getRate` + `approveToken`, or just the Delta signing flow.
 - You want compile-time guarantees that your build doesn't accidentally call a method you didn't intend to ship.
 
 If you use most of the SDK or run server-side, prefer [Simple SDK](/sdk/simple-sdk) or [Full SDK](/sdk/full-sdk).
 
 ## Example: rates and approvals only
 
-The smallest useful Partial SDK — read rates from the API, approve tokens for swaps.
+The smallest useful Partial SDK: read rates from the API, approve tokens for swaps.
 
 ```ts
 import axios from "axios";
@@ -121,7 +121,7 @@ const auction = await deltaSDK.postDeltaOrder({
 });
 ```
 
-The `DeltaV2` namespace doubles as a runtime object — bundlers tree-shake whichever members you don't reference, so this example pulls in only the four V2 constructors above.
+The `DeltaV2` namespace doubles as a runtime object. Bundlers tree-shake whichever members you don't reference, so this example pulls in only the four V2 constructors above.
 
 ## Available constructors
 
@@ -138,10 +138,10 @@ Pass any combination of these. Methods on the resulting SDK match the names list
 | Swap                      | `constructGetRate`, `constructBuildTx`, `constructApproveToken`, `constructGetBalances`, `constructGetSpender`, `constructGetTokens`, `constructGetAdapters`, `constructSwapTx`                                                                                                                                                                                                                                                 |
 | Quote                     | `constructGetQuote`                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-Note that V1 and V2 expose the same constructor names (`constructBuildDeltaOrder`, etc.) — V2 is just nested inside the `DeltaV2` namespace, which is what lets the two ship side-by-side without collision. The full list lives in [`src/index.ts`](https://github.com/VeloraDEX/sdk/blob/master/src/index.ts).
+Note that V1 and V2 expose the same constructor names (`constructBuildDeltaOrder`, etc.); V2 is just nested inside the `DeltaV2` namespace, which is what lets the two ship side-by-side without collision. The full list lives in [`src/index.ts`](https://github.com/VeloraDEX/sdk/blob/master/src/index.ts).
 
 <Tip>
-  Several constructors come in pairs — for example,
+  Several constructors come in pairs. For example,
   `DeltaV2.constructBuildDeltaOrder` + `DeltaV2.constructSignDeltaOrder` +
   `DeltaV2.constructPostDeltaOrder`, or `DeltaV2.constructSubmitDeltaOrder`
   (which orchestrates all three). Use the orchestrator when you want one call;
@@ -174,6 +174,6 @@ Note that V1 and V2 expose the same constructor names (`constructBuildDeltaOrder
     icon="arrows-left-right"
     href="/sdk/products/swap"
   >
-    Market-swap walkthrough using individual constructors.
+    Market-Swap walkthrough using individual constructors.
   </Card>
 </CardGroup>

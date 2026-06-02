@@ -9,7 +9,7 @@ A **TWAP** (time-weighted average price) splits a larger trade into smaller slic
 You build TWAPs through the same `sdk.deltaV2` module as market Delta orders, using `submitTWAPDeltaOrder` (or the `buildTWAPDeltaOrder` split flow). The defining inputs are the **total amount**, the **number of slices**, and the **interval** between them.
 
 <Note>
-For the conceptual model — slices, intervals, sell vs. buy, how TWAP differs from a one-shot swap or DCA — see [Product stack → TWAP](/overview/product-stack/twap).
+For the conceptual model (slices, intervals, sell vs. buy, how TWAP differs from a one-shot swap or DCA), see [Product stack → TWAP](/overview/product-stack/twap).
 </Note>
 
 ## When to use this
@@ -20,8 +20,8 @@ For the conceptual model — slices, intervals, sell vs. buy, how TWAP differs f
 
 ## Sell vs. buy
 
-- **Sell TWAP** (`onChainOrderType: "TWAPOrder"`) — fixes the total **source** amount and splits it across slices. Use `totalSrcAmount`.
-- **Buy TWAP** (`onChainOrderType: "TWAPBuyOrder"`) — fixes the total **destination** amount to receive and splits that target across slices, while capping the total source spent. Use `totalDestAmount` and `maxSrcAmount`.
+- **Sell TWAP** (`onChainOrderType: "TWAPOrder"`) fixes the total **source** amount and splits it across slices. Use `totalSrcAmount`.
+- **Buy TWAP** (`onChainOrderType: "TWAPBuyOrder"`): fixes the total **destination** amount to receive and splits that target across slices, while capping the total source spent. Use `totalDestAmount` and `maxSrcAmount`.
 
 ## The flow
 
@@ -29,7 +29,7 @@ The build → sign → post → poll flow mirrors a [market Delta order](/sdk/pr
 
 <Steps>
   <Step title="Quote one slice">
-    Call `sdk.deltaV2.getDeltaPrice` for a **single slice** — the per-slice amount, i.e. `floor(total / numSlices)`. The route's amount must match that per-slice amount; the server multiplies it across the schedule.
+    Call `sdk.deltaV2.getDeltaPrice` for a **single slice**: the per-slice amount, i.e. `floor(total / numSlices)`. The route's amount must match that per-slice amount; the server multiplies it across the schedule.
   </Step>
   <Step title="Approve the source token (or sign a Permit)">
     Approve the **total** source amount (`totalSrcAmount` for sell, `maxSrcAmount` for buy) with `sdk.deltaV2.approveTokenForDelta`, or sign a Permit / Permit2 message. Native tokens skip this step.
@@ -98,7 +98,7 @@ const auction = await sdk.deltaV2.submitTWAPDeltaOrder({
 
 ## Split flow
 
-Use the three-step flow when you need to customize signing — a hardware wallet, an async multisig, or batched signing.
+Use the three-step flow when you need to customize signing (a hardware wallet, an async multisig, or batched signing).
 
 ```ts
 const built = await sdk.deltaV2.buildTWAPDeltaOrder({
@@ -121,7 +121,7 @@ const auction = await sdk.deltaV2.postTWAPDeltaOrder({
 });
 ```
 
-`signDeltaOrder` is the same generic signer used for market and limit orders — there's no TWAP-specific signing call.
+`signDeltaOrder` is the same generic signer used for market and limit orders; there's no TWAP-specific signing call.
 
 ## Poll, list, and cancel
 
@@ -141,11 +141,11 @@ Status codes are documented under [Delta → Order lifecycle and status codes](/
 
 ## Partner fee
 
-Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to `getDeltaPrice`, `submitTWAPDeltaOrder`, `buildTWAPDeltaOrder`, and `postTWAPDeltaOrder` — exactly as with market Delta orders. See [Monetize](/sdk/monetize) for the full field reference.
+Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to `getDeltaPrice`, `submitTWAPDeltaOrder`, `buildTWAPDeltaOrder`, and `postTWAPDeltaOrder`, exactly as with market Delta orders. See [Monetize](/sdk/monetize) for the full field reference.
 
 ## Related pages
 
-- [Swaps → Delta](/sdk/products/delta) — the market Delta order flow this builds on.
-- [Limit orders](/sdk/products/limit-orders) — the other Delta-based order type.
+- [Swaps → Delta](/sdk/products/delta) covers the market Delta order flow this builds on.
+- [Limit orders](/sdk/products/limit-orders): the other Delta-based order type.
 - [Product stack → TWAP](/overview/product-stack/twap) — the conceptual model.
-- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes) — what each status means.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes), where each status is documented.
