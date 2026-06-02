@@ -1,0 +1,133 @@
+---
+title: "Decision tables"
+description: "Deterministic routing rules for AI agents using Velora — map user intent, quote responses, wallet state, and errors to the next action."
+keywords: ["agents","decisions","routing","delta","market"]
+---
+
+Use these tables when an agent needs to choose the next Velora action. Prefer explicit rules over model judgment, and branch on the data returned by the API rather than on assumptions from the prompt.
+
+## User intent → Velora surface
+
+| User intent | Prefer | Agent action | Why |
+|---|---|---|---|
+| "Swap token A to token B" | `mode=ALL` | Call [`GET /quote`](/api-reference/delta/quote) with `mode=ALL`, `chainId`, token addresses, amount, slippage, and the app or project `partner` value. | Velora can choose the best available path. |
+| "Gasless swap" or "I have no gas" | Delta | Call `GET /quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | Delta uses an EIP-712 signature and solver settlement. |
+| "Place a limit order" or "trade only if price reaches X" | Delta `LIMIT` order | Collect the target price, side, token pair, chain, amount, expiry, recipient, and partially-fillable preference before building the order. | New limit orders are Delta orders over the Delta API, not AugustusRFQ. |
+| "TWAP this trade" or "split this order over time" | Delta TWAP | Collect side, total amount, number of slices, cadence/interval, chain, token pair, slippage/price constraints, deadline/expiry, recipient, and max source spend for buy TWAPs. | TWAP is one scheduled Delta order, not repeated independent swaps. Preserve sell-vs-buy amount semantics. |
+| "Best price" | `mode=ALL` | Quote with `mode=ALL`, then branch on `delta` vs `market`. | Velora can choose the best available path. |
+| "Protect me from MEV" | Delta | Call `GET /quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | MEV protection is a Delta-only scenario. |
+| "Swap now" or "settle in this transaction" | Market API | Call `GET /quote` with `mode=MARKET`, then build a Market transaction. | Market returns calldata the user sends on-chain. |
+| "Sell exactly this amount" | Sell quote | Treat the user amount as the source amount. | The user fixed input. Do not reinterpret it as a target output. |
+| "Buy exactly this amount" | Buy quote | Treat the user amount as the destination amount and cap source spend. | The user fixed output. The agent should protect max spend. |
+| "Embed swaps in my app" | SDK or Widget | Use the SDK for custom UX, or the Widget for fastest integration. | The agent should not build raw API plumbing when the requested job is app embedding. |
+| "OTC" or "RFQ with a counterparty" | AugustusRFQ | Route to the AugustusRFQ flow. | AugustusRFQ is for OTC/RFQ settlement, not standard limit orders. |
+
+<Note>
+  Use `mode=ALL` when the user has not explicitly chosen Delta or Market. A `mode=ALL` response returns one execution path. Do not expect both.
+</Note>
+
+## Quote response → next action
+
+| API result | Next action | Preserve | Do not |
+|---|---|---|---|
+| Top-level response field is `delta` | Continue the Delta order flow with [`POST /delta/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
+| Top-level response field is `market` | Continue the Market transaction flow with [`POST /transactions/:network`](/api-reference/market/transactions). | Pass the returned `market` object into the transaction build step. | Do not try to submit it as a Delta order. |
+| Response has neither `delta` nor `market` | Stop the flow and surface the no-route result. | Keep the user's original tokens, chain, amount, and mode for retry suggestions. | Do not fabricate a quote, route, gas estimate, or output amount. |
+| Quote expired, HMAC invalid, or build rejected | Requote, then rebuild from the fresh response. | Use the newest `delta`, `hmac`, or `market` object. | Do not reuse stale quote payloads. |
+| Chain or token unsupported | Ask the user to choose a supported chain/token pair. | Link to [chains and contracts](/resources/chains-and-contracts) when useful. | Do not guess a token address from symbol alone. |
+
+## Wallet state → approval or signature
+
+| Wallet state | Agent action | Rule |
+|---|---|---|
+| Source token is native ETH | Skip ERC-20 approval. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` as the native token placeholder. |
+| ERC-20 allowance is insufficient for Market | Ask the user to approve the Market spender, then rebuild or send the swap transaction. | Market execution uses Augustus v6.2 calldata. |
+| ERC-20 allowance is insufficient for Delta | Ask the user to approve the Delta spender before submitting the order. | Do not approve Augustus for a Delta order. |
+| Wallet can sign EIP-712 | Use Delta when the quote response includes `delta`. | The user signs typed data, not an on-chain transaction. |
+| Wallet cannot sign EIP-712 | Ask whether to fall back to Market if a Market route is available. | Do not silently change execution mode. |
+| Connected chain differs from quote chain | Ask the user to switch networks before signing or sending. | The chain used for quote, approval, signature, and execution must match. |
+| Recipient is not the connected wallet | Ask for explicit confirmation. | Treat third-party recipients as a sensitive action. |
+
+## Execution mode → signing behavior
+
+| Flow | User signs | User pays gas | Submit with | Track with |
+|---|---|---|---|---|
+| Market Swap | On-chain transaction | Yes | Wallet transaction send | Transaction hash |
+| Delta Swap | EIP-712 typed data | No | [`POST /delta/orders`](/api-reference/delta/orders) | Delta order ID and status |
+| Delta `LIMIT` order | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` with `order=toSign.value`, `signature`, `type=LIMIT`, `chainId`, and `partner` | Order ID and fill status |
+| Delta TWAP | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` after signing the built `TWAPOrder` or `TWAPBuyOrder` payload | Slice execution and order status |
+| AugustusRFQ OTC flow | RFQ order or fill transaction, depending on the integration | Depends on fill path | AugustusRFQ flow | RFQ order/fill state |
+
+## Order type → required details
+
+| Order type | Agent must collect | Agent must preserve |
+|---|---|---|
+| Market or Delta Swap | Chain, source token, destination token, amount, direction, recipient, slippage. | The selected execution mode and the quote response object used for build. |
+| Limit order | Chain, token pair, side, amount, target price, expiry/deadline, recipient, and partially-fillable preference. | The user's target-price constraint and `LIMIT` order type. Do not convert a limit order into an immediate swap unless the user confirms. |
+| Sell TWAP | Source token, destination token, total source amount to sell, slice count, cadence/interval, deadline/expiry, recipient, slippage/price constraints. | The total source amount and `TWAPOrder` family. Split source amount across slices. |
+| Buy TWAP | Source token, destination token, total destination amount to receive, max source spend, slice count, cadence/interval, deadline/expiry, recipient, slippage/price constraints. | The total destination target and `TWAPBuyOrder` family. Split destination target across slices and cap source spend. |
+| OTC / AugustusRFQ | Counterparty, token pair, amount, price, expiry, fill permissions. | OTC/RFQ settlement semantics. Do not label it as a standard limit order. |
+
+## Delta advanced orders → API path
+
+| Advanced order | API path | Agent rule |
+|---|---|---|
+| Limit order | `GET /delta/v2/prices` → `POST /delta/v2/orders/build` → user signs `toSign` → `POST /delta/v2/orders` with `type=LIMIT`. | Pass `route` and `toSign.value` verbatim. Use `limitAmount` when the target-price constraint needs an explicit amount override. |
+| Sell TWAP | `GET /delta/v2/prices` for one source slice → `POST /delta/v2/orders/build` with `orderType=TWAPOrder`, `interval`, `numSlices`, and `totalSrcAmount`. | Preserve total source amount and split source across slices. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`. |
+| Buy TWAP | `GET /delta/v2/prices` for one destination slice → `POST /delta/v2/orders/build` with `orderType=TWAPBuyOrder`, `interval`, `numSlices`, `totalDestAmount`, and `maxSrcAmount`. | Preserve total destination amount, split destination across slices, and cap source spend. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`. |
+| Read status | `GET /delta/v2/orders/{orderId}`, `GET /delta/v2/orders/hash/{hash}`, or paginated `GET /delta/v2/orders`. | Narrow on `type` and `onChainOrderType`: `LIMIT`, `TWAPOrder`, `TWAPBuyOrder`, `FillableOrder`, etc. |
+
+## Missing information → ask or proceed
+
+| Situation | Agent decision | Prompt to user |
+|---|---|---|
+| Token, chain, amount, and direction are all clear | Proceed to quote. | None. |
+| Token symbol exists on multiple chains | Ask for the chain. | "Which chain should I use for USDC?" |
+| Token symbol maps to multiple token contracts on the same chain | Ask for the token address or show choices. | "I found multiple tokens named X. Which contract should I use?" |
+| Slippage is missing | Use the app's configured default, or ask if no default exists. | "What slippage tolerance should I use?" |
+| User asks for maximum balance swap | Ask for confirmation before quoting the full balance. | "Do you want to swap your entire balance, excluding gas if needed?" |
+| Price impact is high | Warn and ask for confirmation before signing. | "This route has high price impact. Do you want to continue?" |
+| User asks for an unsupported chain | Stop and show supported alternatives. | "Velora does not support that chain for this flow yet. Choose one of these chains instead." |
+
+## Error or symptom → recovery action
+
+| Symptom | Likely cause | Agent recovery |
+|---|---|---|
+| `400` for missing slippage | Quote request is incomplete. | Add slippage in basis points and retry. |
+| Pricing error or no route | No route for the requested pair, size, chain, or mode. | Retry with `mode=ALL`, reduce size, change token, or ask the user for another route. |
+| HMAC or quote validation error | The quote payload is stale or mismatched. | Requote and rebuild from the same fresh response. |
+| Approval transaction succeeds but swap still fails allowance check | Approval went to the wrong spender or wrong chain. | Check the spender for the selected mode and ask for a new approval if needed. |
+| User rejects transaction or signature | User declined the action. | Stop. Do not retry automatically. |
+| Delta order remains pending | Solver settlement is still in progress or the order may expire. | Poll status with backoff and show the latest order state. Do not resubmit blindly. |
+| Transaction reverts | Market transaction failed on-chain. | Surface the revert, suggest requoting, and avoid replaying the same calldata. |
+
+## Guardrails for agents
+
+- Never invent token addresses, chain IDs, quotes, transaction hashes, or order IDs.
+- Always set `partner` to the integrator's app or project partner key. Treat `my-app-name` as a placeholder, not a literal value.
+- Branch on the response shape: `delta` means Delta order flow; `market` means Market transaction flow.
+- Keep the `delta` block and its `hmac` together. Treat them as an opaque pair.
+- Requote after expiration, HMAC errors, material balance changes, or route failures.
+- Ask before changing execution mode, recipient, chain, or spend direction.
+- Ask for user confirmation before submitting a signed order or sending an on-chain transaction.
+
+<CardGroup cols={2}>
+  <Card title="Trading modes" icon="route" href="/integrate/trading-modes">
+    Choose between `mode=DELTA`, `mode=MARKET`, and `mode=ALL`.
+  </Card>
+  <Card title="Delta quote" icon="code" href="/api-reference/delta/quote">
+    Quote Delta and Market paths from the same endpoint.
+  </Card>
+  <Card title="Market transaction" icon="code" href="/api-reference/market/transactions">
+    Build calldata from a Market response.
+  </Card>
+  <Card title="Chains and contracts" icon="link" href="/resources/chains-and-contracts">
+    Check supported chains and canonical contract addresses.
+  </Card>
+  <Card title="Limit orders" icon="chart-line" href="/overview/trading-concepts/limit-orders">
+    Route target-price orders to Delta order flows.
+  </Card>
+  <Card title="TWAP" icon="clock" href="/overview/trading-concepts/twap">
+    Preserve sell-vs-buy amount semantics when splitting trades over time.
+  </Card>
+</CardGroup>

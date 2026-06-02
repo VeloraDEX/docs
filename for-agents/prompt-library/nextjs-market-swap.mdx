@@ -1,6 +1,6 @@
 ---
-title: "Next.js Market swap"
-description: "Prompt an AI agent to integrate Velora Market swap into a Next.js dApp using Wagmi and Viem."
+title: "Next.js Market Swap"
+description: "Prompt an AI agent to integrate Velora Market Swap into a Next.js dApp using Wagmi and Viem."
 last-verified: 2026-05-15
 keywords: ["nextjs","wagmi","viem","market","swap"]
 ---
@@ -20,7 +20,7 @@ Build a `/swap` page that lets the user swap any ERC-20 → any ERC-20 on Velora
 
 Requirements:
 - Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `GET /prices` and `POST /transactions/:network`.
-- Always pass `partner=my-app-name` on every quote call (replace `my-app-name` with the host app's `partner` identifier).
+- Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed-case — lowercase is rejected).
 - Quote first, then call `/transactions/:network` with the `priceRoute` returned by the quote, passed verbatim.
 - Use Viem's `useWalletClient` to send the transaction. Read `chainId` from Wagmi.

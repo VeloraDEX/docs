@@ -28,17 +28,21 @@ The authoritative supported-chain list is queryable at runtime via `GET /chains`
 
 ## Addresses by chain
 
-| ID | Chain | Augustus v6.2 | Delta | AugustusRFQ |
-|---|---|---|---|---|
-| 1 | Ethereum | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xe92b586627ccA7a83dC919cc7127196d70f55a06` |
-| 10 | Optimism | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
-| 56 | BNB Chain | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x8DcDfe88EF0351f27437284D0710cD65b20288bb` |
-| 100 | Gnosis | `0x6a000f20005980200259b80c5102003040001068` | — | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
-| 130 | Unichain | `0x6a000f20005980200259b80c5102003040001068` | — | — |
-| 137 | Polygon | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043` |
-| 8453 | Base | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd` |
-| 42161 | Arbitrum One | `0x6a000f20005980200259b80c5102003040001068` | `0x0000000000bbf5c5fd284e657f01bd000933c96d` | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
-| 43114 | Avalanche | `0x6a000f20005980200259b80c5102003040001068` | — | `0x34302c4267d0dA0A8c65510282Cc22E9e39df51f` |
+Each contract is also the ERC-20 spender for its execution mode — approve Augustus v6.2 for Market swaps, the Delta contract for Delta orders (Swap, Limit, TWAP), and AugustusRFQ for OTC/RFQ fills. A `—` means the contract isn't deployed on that chain and the corresponding mode is unavailable there. See [Token approvals for agents](/for-agents/token-approvals) for the spender-by-mode decision rules.
+
+**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` on every Delta-enabled chain. AugustusRFQ addresses vary per chain and are listed below.
+
+| Chain (ID) | Delta | AugustusRFQ |
+|---|---|---|
+| Ethereum (1) | ✓ | `0xe92b586627ccA7a83dC919cc7127196d70f55a06` |
+| Optimism (10) | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| BNB Chain (56) | ✓ | `0x8DcDfe88EF0351f27437284D0710cD65b20288bb` |
+| Gnosis (100) | — | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
+| Unichain (130) | — | — |
+| Polygon (137) | ✓ | `0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043` |
+| Base (8453) | ✓ | `0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd` |
+| Arbitrum One (42161) | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| Avalanche (43114) | — | `0x34302c4267d0dA0A8c65510282Cc22E9e39df51f` |
 
 ## Contracts
 

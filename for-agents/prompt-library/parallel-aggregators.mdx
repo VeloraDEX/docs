@@ -17,7 +17,7 @@ A backend service that **fans out a single user swap intent** to Velora and one 
 You are extending an existing TypeScript backend that already wires one DEX aggregator (assume 1inch or 0x). Add Velora as a parallel quote source.
 
 Requirements:
-- Velora endpoint: `GET https://api.velora.xyz/quote` with `mode=ALL` and `partner=my-app-name` (replace with the host app's `partner` identifier). The `mode=ALL` response contains exactly one of `delta` or `market` (server-picked winner). To compare Delta vs Market head-to-head before competing against the other aggregator, issue two requests in parallel (`mode=DELTA` and `mode=MARKET`), then pick the better Velora result.
+- Velora endpoint: `GET https://api.velora.xyz/quote` with `mode=ALL` and `partner` set to the host app's partner identifier (`my-app-name` is only a placeholder). The `mode=ALL` response contains exactly one of `delta` or `market` (server-picked winner). To compare Delta vs Market head-to-head before competing against the other aggregator, issue two requests in parallel (`mode=DELTA` and `mode=MARKET`), then pick the better Velora result.
 - Compare on `destUSD` (or `destAmount` normalized to a common token) net of `gasCostUSD` and `partnerFee`.
 - Fan out in parallel; respect a hard 800ms budget per quote source; fall back gracefully if one source times out.
 - For the Velora native-ETH placeholder use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case).

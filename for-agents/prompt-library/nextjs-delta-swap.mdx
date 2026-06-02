@@ -1,5 +1,5 @@
 ---
-title: "Next.js Delta swap"
+title: "Next.js Delta Swap"
 description: "Prompt an AI agent to add Velora Delta gasless swaps to a Next.js dApp."
 last-verified: 2026-05-15
 keywords: ["nextjs","delta","gasless","intents"]
@@ -20,7 +20,7 @@ Build a `/swap-gasless` page that lets the user place a Velora Delta intent for 
 
 Requirements:
 - Use the Velora Delta REST API at `https://api.velora.xyz`. Endpoints: `GET /quote` (with `mode=DELTA`), `POST /delta/orders/build`, `POST /delta/orders`, `GET /delta/orders/:id`.
-- Always pass `partner=my-app-name` on every quote call (replace `my-app-name` with the host app's `partner` identifier).
+- Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
 - Always include `slippage` (basis points) in the quote — omitting it returns 400.
 - Pass the `delta` block returned by the quote verbatim to `/delta/orders/build` as `price`. Do not normalize, sort, or re-stringify it. Include the `hmac` from the same quote response.

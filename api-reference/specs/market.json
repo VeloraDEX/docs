@@ -82,7 +82,7 @@
     },
     "/transactions/{network}": {
       "post": {
-        "summary": "Build calldata for a Market swap",
+        "summary": "Build calldata for a Market Swap",
         "operationId": "marketTransactions",
         "parameters": [
           { "name": "network", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID. Market uses `network`; Delta uses `chainId`." }

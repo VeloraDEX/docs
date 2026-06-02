@@ -28,7 +28,7 @@ All callbacks are optional. Subscribe only to what you need.
 | [`onConnectWalletClick`](#onconnectwalletclick) | The Connect Wallet button is clicked (dApp-mode hook). |
 | [`onAllowToken`](#onallowtoken)                 | Token approval / permit lifecycle.                     |
 | [`onWrapETH`](#onwrapeth)                       | ETH → WETH wrap lifecycle (Delta pre-step).            |
-| [`onSwap`](#onswap)                             | Market or Delta swap lifecycle.                        |
+| [`onSwap`](#onswap)                             | Market or Delta Swap lifecycle.                        |
 | [`onTwapOrder`](#ontwaporder)                   | TWAP order lifecycle.                                  |
 | [`onLimitOrder`](#onlimitorder)                 | Delta limit-order lifecycle.                           |
 | [`onOTCOrder`](#onotcorder)                     | OTC order lifecycle.                                   |
@@ -147,7 +147,7 @@ Token approval (`approve`) or signed-permit (`permit1` / `permit2`) lifecycle.
 
 ## `onWrapETH`
 
-Fires during ETH → WETH wrapping. Used as a pre-step for Delta swaps that start from native ETH.
+Fires during ETH → WETH wrapping. Used as a pre-step for Delta Swaps that start from native ETH.
 
 **Sub-events:** `WrapETH:click`, `WrapETH:request`, `WrapETH:sent`, `WrapETH:confirmed`, `WrapETH:failed`.
 
@@ -169,7 +169,7 @@ Fires during ETH → WETH wrapping. Used as a pre-step for Delta swaps that star
 
 ## `onSwap`
 
-The most common callback — fires for both market and Delta swap lifecycles.
+The most common callback — fires for both market and Delta Swap lifecycles.
 
 **Sub-events:**
 
@@ -201,7 +201,7 @@ The most common callback — fires for both market and Delta swap lifecycles.
     onSwap: ({ event }) => {
       if (event.name === "Swap:confirmed") {
         if (event.params.swapMode === "market") {
-          console.log("Market swap confirmed", event.params.txHash);
+          console.log("Market Swap confirmed", event.params.txHash);
         } else {
           console.log("Delta order filled", event.params.order);
         }
@@ -459,11 +459,11 @@ For a wallet-connected market swap that requires token approval, events fire in 
 2. **`onFormInputChange`** — `FormInput:change` for every field edit.
 3. **`onPriceChange`** — `PriceQueryUpdate` (loading / refetching) and `PriceUpdate` (successful fetch) as quotes refresh.
 4. **`onAllowToken`** — `AllowToken:request` → `AllowToken:sent` → `AllowToken:confirmed`. Skipped if allowance already covers the trade or the flow uses a permit signature only.
-5. **`onWrapETH`** — for Delta swaps with ETH as `tokenFrom`, the user is asked to wrap first: `WrapETH:click` → `WrapETH:request` → `WrapETH:sent` → `WrapETH:confirmed`.
+5. **`onWrapETH`** — for Delta Swaps with ETH as `tokenFrom`, the user is asked to wrap first: `WrapETH:click` → `WrapETH:request` → `WrapETH:sent` → `WrapETH:confirmed`.
 6. **`onSwap`** — `Swap:click` → `Swap:request` → `Swap:sent` → `Swap:confirmed`. Replace with `Swap:failed` or `Swap:cancelled` on the unhappy path.
 7. **`onCancelTx`** — only if the user explicitly cancels a pending market swap tx: `CancelTx:request` → `CancelTx:sent` → `CancelTx:confirmed`.
 
-**Delta swaps** replace step 4/5/6 with a single Delta order submission (`Swap:sent` with `swapMode: "delta"` and an `order` param). The order is filled off-band — `Swap:confirmed` may arrive minutes later, or be missed entirely if the user closes the widget.
+**Delta Swaps** replace step 4/5/6 with a single Delta order submission (`Swap:sent` with `swapMode: "delta"` and an `order` param). The order is filled off-band — `Swap:confirmed` may arrive minutes later, or be missed entirely if the user closes the widget.
 
 **Limit, OTC, and TWAP flows** replace step 6 with their respective callbacks (`onLimitOrder`, `onOTCOrder`, `onTwapOrder`).
 

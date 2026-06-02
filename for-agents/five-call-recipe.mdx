@@ -1,0 +1,176 @@
+---
+title: "Five-call recipe"
+description: "The canonical agent loop for Velora trades — normalize intent, quote or construct, build, authorize, submit, and track."
+keywords: ["agents","quickstart","recipe","delta","market","limit orders","twap"]
+---
+
+Most Velora agent workflows follow the same loop:
+
+1. Normalize the user intent.
+2. Quote or construct the order.
+3. Build the executable payload.
+4. Ask the user to authorize the exact payload.
+5. Submit and track until the flow completes or fails.
+
+The exact endpoint sequence depends on the selected execution path. Use [Decision tables](/for-agents/decision-tables) to choose the path before running this recipe.
+
+## Universal agent loop
+
+| Step | Agent action | Output |
+|---|---|---|
+| 1. Normalize | Resolve chain, tokens, amount, direction, recipient, execution preference, and constraints. | Complete intent object |
+| 2. Quote or construct | Quote swaps, or construct a limit order, TWAP, or OTC intent. | Top-level `delta`, top-level `market`, or order draft |
+| 3. Build | Build typed data or transaction calldata. | EIP-712 payload or transaction request |
+| 4. Authorize | Ask the user to review and sign or send. | Signature or transaction hash |
+| 5. Track | Poll order status or transaction receipt. | Filled, failed, expired, reverted, or pending |
+
+<Warning>
+  Do not ask the user to sign until chain, tokens, amount, recipient, order type, and execution path are final. If any material field changes, rebuild and ask again.
+</Warning>
+
+## Delta Swap
+
+Use Delta when the user wants gasless execution, MEV protection, solver competition, or a Delta-only flow.
+
+```text
+1. GET /quote?mode=DELTA
+2. POST /delta/orders/build
+3. Ask the user to sign the EIP-712 typed data
+4. POST /delta/orders
+5. GET /delta/orders/:id until filled, failed, or expired
+```
+
+Agent rules:
+
+- Use `chainId`, not `network`, on quote requests.
+- Include a `partner` value on quote requests. Use the app or project partner key; examples use `my-app-name` only as a placeholder.
+- Keep the top-level `delta` object and its matching `hmac` together.
+- Pass the `delta` object forward unchanged.
+- Do not grant approval to Augustus for a Delta order.
+- Track by Delta order ID, not by transaction hash.
+
+## Market Swap
+
+Use Market when the user wants immediate on-chain settlement or when the selected quote response has a top-level `market` object.
+
+```text
+1. GET /quote?mode=MARKET
+2. POST /transactions/:network
+3. Ask the user to review and send the transaction
+4. Wait for the transaction receipt
+5. Surface success, revert, or timeout
+```
+
+Agent rules:
+
+- Market is an on-chain transaction flow.
+- The user signs a transaction and pays gas.
+- Track with the transaction hash.
+- Requote if the transaction build fails, the quote expires, or balances materially change.
+- Do not submit a Market response as a Delta order.
+
+## Auto-route with `mode=ALL`
+
+Use `mode=ALL` when the user asks for a normal swap or best available execution without choosing Delta or Market.
+
+```text
+1. GET /quote?mode=ALL
+2. If the top-level response field is delta, continue the Delta Swap flow from build onward
+3. If the top-level response field is market, continue the Market Swap flow from transaction build onward
+4. If neither field is present, stop and handle no-route
+```
+
+Agent rules:
+
+- `mode=ALL` returns one selected execution path, not both.
+- Branch on the top-level response field, not on the requested mode.
+- Ask before changing execution mode if the user explicitly requested Delta or Market.
+
+## Delta Limit Order
+
+Use a Delta Limit Order when the user wants target-price execution, delayed settlement, or “only trade if price reaches X”. New integrations should describe the HTTP API flow directly: price the route, build a Delta order with `type=LIMIT`, sign the returned EIP-712 payload, submit the signed order, then track it through Delta order status.
+
+```text
+1. Normalize the target-price intent
+2. GET /delta/v2/prices for the route
+3. POST /delta/v2/orders/build
+   - pass the returned route verbatim
+   - set type=LIMIT at submission time
+   - use limitAmount for the user's target-price constraint when needed
+4. Ask the user to sign the returned toSign EIP-712 payload
+5. POST /delta/v2/orders with order=toSign.value, signature, type=LIMIT, chainId, and partner
+6. Track with GET /delta/v2/orders/{orderId}, GET /delta/v2/orders/hash/{hash}, or GET /delta/v2/orders
+```
+
+Agent rules:
+
+- Limit orders are Delta orders, not AugustusRFQ orders.
+- Preserve the user's target price, side, amount, token pair, chain, recipient, expiry/deadline, and partially-fillable preference.
+- Treat `LIMIT` as the order type constraint; do not turn it into a Market Swap just because a spot quote is available.
+- Pass `route` into `/delta/v2/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
+- If the target price, expiry, amount, or recipient changes, rebuild and ask the user to sign again.
+
+## Delta TWAP
+
+Use a Delta TWAP when the user wants one signed order to split execution across time. Delta exposes TWAP as advanced order families in `/delta/v2/orders/build`: `orderType=TWAPOrder` for sell-side schedules and `orderType=TWAPBuyOrder` for buy-side schedules.
+
+```text
+1. Normalize the TWAP schedule
+2. GET /delta/v2/prices for one slice
+   - Sell TWAP: route.origin.input.amount = floor(totalSrcAmount / numSlices)
+   - Buy TWAP: route.origin.output.amount = floor(totalDestAmount / numSlices)
+3. POST /delta/v2/orders/build
+   - pass the returned route verbatim
+   - set orderType=TWAPOrder for sell schedules, or orderType=TWAPBuyOrder for buy schedules
+   - include interval and numSlices
+   - include totalSrcAmount for TWAPOrder
+   - include totalDestAmount and maxSrcAmount for TWAPBuyOrder
+4. Ask the user to sign the returned toSign EIP-712 payload
+5. POST /delta/v2/orders with order=toSign.value, signature, chainId, and partner
+6. Track with GET /delta/v2/orders/{orderId}, GET /delta/v2/orders/hash/{hash}, or GET /delta/v2/orders
+```
+
+Agent rules:
+
+- Do not model TWAP as a loop of unrelated swaps; it is one scheduled Delta order.
+- Sell TWAP: preserve the total source amount to sell and split source amount across slices.
+- Buy TWAP: preserve the total destination amount to receive and split destination target across slices while capping source spend.
+- Preserve slice count, cadence/interval, deadline/expiry, token pair, chain, recipient, slippage or price constraints, and partially-fillable behavior.
+- If any schedule field changes, rebuild the TWAP order and ask the user to sign again.
+
+## Failure handling
+
+| Failure | Agent action |
+|---|---|
+| Missing required field | Ask the user for the missing field. |
+| No route | Ask for a different amount, token, chain, or execution mode. |
+| Quote expired | Requote and rebuild. |
+| HMAC or quote validation error | Requote and keep the new response object paired with its new validation data. |
+| User rejects signature or transaction | Stop. Do not retry automatically. |
+| Transaction reverts | Surface the revert and suggest requoting. |
+| Delta order remains pending | Poll with backoff and show the latest order status. |
+| Limit order or TWAP expires | Surface the expiry. Do not recreate automatically. |
+
+## Guardrails
+
+- Never invent token addresses, chain IDs, quotes, transaction hashes, or order IDs.
+- Do not mutate top-level `delta` or `market` response objects.
+- Do not treat limit orders as AugustusRFQ.
+- Do not treat TWAP as unrelated swaps.
+- Do not retry rejected signatures automatically.
+- Ask before changing chain, recipient, order type, execution mode, amount direction, target price, schedule, or expiry.
+
+<CardGroup cols={2}>
+  <Card title="Decision tables" icon="route" href="/for-agents/decision-tables">
+    Route user intent and API responses to the next action.
+  </Card>
+  <Card title="Delta quote" icon="code" href="/api-reference/delta/quote">
+    Quote Delta, Market, or auto-routed paths.
+  </Card>
+  <Card title="Market transaction" icon="code" href="/api-reference/market/transactions">
+    Build calldata from a Market response.
+  </Card>
+  <Card title="Troubleshooting" icon="triangle-exclamation" href="/api-reference/troubleshooting">
+    Per-endpoint failure modes: symptom, root cause, fix.
+  </Card>
+</CardGroup>

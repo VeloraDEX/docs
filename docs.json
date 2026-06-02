@@ -131,14 +131,8 @@
             "group": "Get started",
             "pages": [
               "delta/overview",
-              "delta/how-it-works"
-            ]
-          },
-          {
-            "group": "Integration",
-            "pages": [
-              "delta/crosschain-delta",
-              "delta/api-integration"
+              "delta/how-it-works",
+              "delta/crosschain-delta"
             ]
           },
           {
@@ -184,18 +178,12 @@
         "tab": "AI Agents",
         "groups": [
           {
-            "group": "Get started",
+            "group": "Start here",
             "pages": [
               "for-agents/overview",
-              "for-agents/concepts-and-objects"
-            ]
-          },
-          {
-            "group": "Quickstart",
-            "pages": [
-              "for-agents/quickstart/five-call-recipe",
-              "for-agents/quickstart/decision-tables",
-              "for-agents/quickstart/code-samples"
+              "for-agents/five-call-recipe",
+              "for-agents/decision-tables",
+              "for-agents/token-approvals"
             ]
           },
           {
@@ -213,39 +201,26 @@
             ]
           },
           {
-            "group": "MCP server",
+            "group": "Agent tools",
             "pages": [
-              "for-agents/mcp-server/overview",
-              "for-agents/mcp-server/installation",
-              "for-agents/mcp-server/available-tools",
-              "for-agents/mcp-server/examples"
-            ]
-          },
-          {
-            "group": "CLI",
-            "pages": [
-              "for-agents/cli/overview",
-              "for-agents/cli/installation",
-              "for-agents/cli/commands",
-              "for-agents/cli/examples"
-            ]
-          },
-          {
-            "group": "Workflows",
-            "pages": [
-              "for-agents/workflows/token-approvals",
-              "for-agents/workflows/transaction-execution",
-              "for-agents/workflows/status-and-recovery",
-              "for-agents/workflows/partial-completion"
-            ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "for-agents/reference/endpoint-specs",
-              "for-agents/reference/error-playbooks",
-              "for-agents/reference/data-schemas",
-              "for-agents/prompt-patterns"
+              {
+                "group": "MCP server",
+                "pages": [
+                  "for-agents/mcp-server/overview",
+                  "for-agents/mcp-server/installation",
+                  "for-agents/mcp-server/available-tools",
+                  "for-agents/mcp-server/examples"
+                ]
+              },
+              {
+                "group": "CLI",
+                "pages": [
+                  "for-agents/cli/overview",
+                  "for-agents/cli/installation",
+                  "for-agents/cli/commands",
+                  "for-agents/cli/examples"
+                ]
+              }
             ]
           }
         ]
@@ -323,19 +298,8 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/debug-failed-transactions",
-              "guides/handling-stuck-orders",
-              "guides/mev-protection-patterns",
-              "guides/optimizing-for-latency",
-              "guides/intermediate-token-routing",
-              "guides/gas-estimation-and-sponsorship",
-              "guides/permit-and-permit2-patterns"
-            ]
-          },
-          {
-            "group": "Recipes",
-            "pages": [
-              "resources/recipes/index"
+              "guides/permit-and-permit2-patterns",
+              "guides/mev-protection-patterns"
             ]
           },
           {
@@ -369,14 +333,7 @@
           {
             "group": "FAQ",
             "pages": [
-              "faq/getting-started",
-              "faq/trading",
-              "faq/limit-orders",
-              "faq/fees-and-monetization",
-              "faq/slippage-and-price-impact",
-              "faq/token-support",
-              "faq/route-availability",
-              "faq/troubleshooting"
+              "faq"
             ]
           }
         ]
