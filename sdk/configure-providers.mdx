@@ -94,7 +94,7 @@ const contractCaller = constructWeb3ContractCaller(web3, account);
 Write methods resolve to web3's `PromiEvent<TransactionReceipt>`. Listen on `transactionHash` for early notification:
 
 ```ts
-const eventfulTx = await sdk.swap.approveToken(amount, DAI);
+const eventfulTx = await sdk.swap.approveToken(amount, USDC);
 eventfulTx.once("transactionHash", (hash: string) =>
   console.log("tx sent:", hash),
 );

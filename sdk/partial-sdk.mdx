@@ -52,15 +52,15 @@ const sdk = constructPartialSDK(
 
 // type is inferred from your selection — only these two methods exist
 const priceRoute = await sdk.getRate({
-  srcToken: "0x6B175474E89094C44Da98b954EedeAC495271d0F", // DAI
-  destToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
-  amount: "1000000000000000000",
+  srcToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+  destToken: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // ETH
+  amount: "10000000000",
   userAddress: account,
   side: "SELL",
 });
 const hash = await sdk.approveToken(
-  "1000000000000000000",
-  "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+  "10000000000",
+  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
 );
 ```
 
@@ -89,21 +89,21 @@ const deltaSDK = constructPartialSDK(
   constructApproveTokenForDelta, // reused from V1 — same contract
 );
 
-const DAI = "0x6B175474E89094C44Da98b954EedeAC495271d0F";
 const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
-const amount = "1000000000000000000";
+const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+const amount = "10000000000";
 
 const price = await deltaSDK.getDeltaPrice({
-  srcToken: DAI,
-  destToken: USDC,
+  srcToken: USDC,
+  destToken: ETH,
   amount,
-  srcDecimals: 18,
-  destDecimals: 6,
+  srcDecimals: 6,
+  destDecimals: 18,
   userAddress: account,
   partner: "my-app-name",
 });
 
-await deltaSDK.approveTokenForDelta(amount, DAI);
+await deltaSDK.approveTokenForDelta(amount, USDC);
 
 const built = await deltaSDK.buildDeltaOrder({
   route: price.route,

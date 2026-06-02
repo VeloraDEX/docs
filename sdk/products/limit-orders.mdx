@@ -61,16 +61,16 @@ The build → sign → post → poll flow is identical to a [market Delta order]
 
 ```ts
 const price = await sdk.deltaV2.getDeltaPrice({
-  srcToken: DAI,
-  destToken: USDC,
-  amount: "1000000000000000000", // sell 1 DAI
-  srcDecimals: 18,
-  destDecimals: 6,
+  srcToken: USDC,
+  destToken: ETH,
+  amount: "10000000000", // sell 10,000 USDC
+  srcDecimals: 6,
+  destDecimals: 18,
   userAddress: account,
   partner: "my-app-name",
 });
 
-await sdk.deltaV2.approveTokenForDelta("1000000000000000000", DAI);
+await sdk.deltaV2.approveTokenForDelta("10000000000", USDC);
 
 const auction = await sdk.deltaV2.submitDeltaOrder({
   route: price.route,
@@ -78,7 +78,7 @@ const auction = await sdk.deltaV2.submitDeltaOrder({
   owner: account,
   partner: "my-app-name",
   type: "LIMIT",
-  limitAmount: "1010000", // require at least 1.01 USDC — your limit price
+  limitAmount: "3000000000000000000", // require at least 3 ETH — your limit price
   deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // expire in 24h
   // partiallyFillable: true, // optional, default = fill-or-kill
 });
@@ -98,7 +98,7 @@ const built = await sdk.deltaV2.buildDeltaOrder({
   side: price.side,
   owner: account,
   partner: "my-app-name",
-  limitAmount: "1010000", // minimum dest amount — your limit price
+  limitAmount: "3000000000000000000", // minimum dest amount (3 ETH) — your limit price
   deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
 });
 

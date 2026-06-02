@@ -63,16 +63,16 @@ The same unsuffixed names exist for V1 at the top level of the package (`constru
 
 ```ts
 const price = await sdk.deltaV2.getDeltaPrice({
-  srcToken: DAI,
-  destToken: USDC,
-  amount: "1000000000000000000", // 1 DAI
-  srcDecimals: 18,
-  destDecimals: 6,
+  srcToken: USDC,
+  destToken: ETH,
+  amount: "10000000000", // 10,000 USDC
+  srcDecimals: 6,
+  destDecimals: 18,
   userAddress: account,
   partner: "my-app-name",
 });
 
-await sdk.deltaV2.approveTokenForDelta("1000000000000000000", DAI);
+await sdk.deltaV2.approveTokenForDelta("10000000000", USDC);
 
 const auction = await sdk.deltaV2.submitDeltaOrder({
   route: price.route,
@@ -198,11 +198,11 @@ The two paths share the same on-chain contracts and approval flow. What changes 
 ```diff
 - const deltaPrice = await sdk.delta.getDeltaPrice({
 + const price = await sdk.deltaV2.getDeltaPrice({
-    srcToken: DAI,
-    destToken: USDC,
+    srcToken: USDC,
+    destToken: ETH,
     amount,
-    srcDecimals: 18,
-    destDecimals: 6,
+    srcDecimals: 6,
+    destDecimals: 18,
     userAddress: account,
     partner: "my-app-name",
   });
@@ -216,8 +216,8 @@ V1 returns `DeltaPrice { destAmount, partner, partnerFee, srcAmount, destToken }
 - const auction = await sdk.delta.submitDeltaOrder({
 -   deltaPrice,
 -   owner: account,
--   srcToken: DAI,
--   destToken: USDC,
+-   srcToken: USDC,
+-   destToken: ETH,
 -   srcAmount: amount,
 -   destAmount,         // you compute slippage-adjusted destAmount
 -   partner: "my-app-name",
@@ -305,24 +305,26 @@ V1 is exposed at `sdk.delta.*`. The flow is similar but the order is built local
 
 ```ts
 const deltaPrice = await sdk.delta.getDeltaPrice({
-  srcToken: DAI,
-  destToken: USDC,
+  srcToken: USDC,
+  destToken: ETH,
   amount,
-  srcDecimals: 18,
-  destDecimals: 6,
+  srcDecimals: 6,
+  destDecimals: 18,
   userAddress: account,
   partner: "my-app-name",
 });
 
-await sdk.delta.approveTokenForDelta(amount, DAI);
+await sdk.delta.approveTokenForDelta(amount, USDC);
 
 const auction = await sdk.delta.submitDeltaOrder({
   deltaPrice,
   owner: account,
-  srcToken: DAI,
-  destToken: USDC,
+  srcToken: USDC,
+  destToken: ETH,
   srcAmount: amount,
-  destAmount: deltaPrice.destAmount, // apply your own slippage
+  destAmount: BigInt(
+    +(+deltaPrice.destAmount * (1 - 50 / 10000)).toFixed(0),
+  ).toString(10), // 0.5% slippage
   partner: "my-app-name",
 });
 ```

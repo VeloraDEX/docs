@@ -59,7 +59,7 @@ So with the viem caller above:
 
 ```ts
 // type Promise<Hex>
-const hash = await sdk.swap.approveToken("1000000000000000000", DAI);
+const hash = await sdk.swap.approveToken("10000000000", USDC);
 console.log("approval submitted:", hash);
 ```
 
@@ -71,7 +71,7 @@ The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
 - `sdk.delta` — Delta V1. Same lifecycle, locally-built orders.
 - `sdk.quote` — `getQuote`
 - `sdk.swap` — rate, build, approve, balances, spender, tokens, adapters, swapTx (Market execution path for swaps)
-- `sdk.limitOrders` — AugustusRFQ maker/taker orders, used for OTC; see [OTC](/sdk/products/otc)
+- `sdk.otc` — AugustusRFQ maker/taker orders, used for OTC; see [OTC](/sdk/products/otc)
 
 See [Swaps → Delta](/sdk/products/delta) and [Swaps → Market](/sdk/products/swap) for end-to-end flows.
 
