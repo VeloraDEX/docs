@@ -265,19 +265,8 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/debug-failed-transactions",
-              "guides/handling-stuck-orders",
-              "guides/mev-protection-patterns",
-              "guides/optimizing-for-latency",
-              "guides/intermediate-token-routing",
-              "guides/gas-estimation-and-sponsorship",
-              "guides/permit-and-permit2-patterns"
-            ]
-          },
-          {
-            "group": "Recipes",
-            "pages": [
-              "resources/recipes/index"
+              "guides/permit-and-permit2-patterns",
+              "guides/mev-protection-patterns"
             ]
           },
           {
@@ -310,14 +299,7 @@
           {
             "group": "FAQ",
             "pages": [
-              "faq/getting-started",
-              "faq/trading",
-              "faq/limit-orders",
-              "faq/fees-and-monetization",
-              "faq/slippage-and-price-impact",
-              "faq/token-support",
-              "faq/route-availability",
-              "faq/troubleshooting"
+              "faq"
             ]
           }
         ]
