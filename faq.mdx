@@ -40,7 +40,7 @@ Market volatility can push these higher. The Widget exposes a user-configurable 
 
 ### How is price impact different from slippage?
 
-TODO — price impact is the trade's expected effect on the market price due to liquidity depth; slippage is the max movement the user accepts before the trade reverts or is rejected. See [Swaps](/overview/trading-concepts/swaps) for the key-term definitions.
+**Price impact** is the trade's expected effect on the market price, driven by liquidity depth — bigger trades on thinner pools move the price more, and it's already reflected in the quoted output. **Slippage** is the tolerance you set on top: the maximum further movement you'll accept between quote and settlement before the trade reverts (Market) or the order doesn't settle (Delta). See [Swaps → Key terms](/overview/trading-concepts/swaps#key-terms) for the canonical definitions.
 
 ## Token support
 
@@ -48,9 +48,12 @@ TODO — price impact is the trade's expected effect on the market price due to 
 
 For the API, just pass the token's contract address as `srcToken` or `destToken` — there's no allowlist gating on `/quote` or `/prices` beyond what liquidity venues quote. For the [Widget](/widget/configure#token-lists), add custom token-list URLs via `config.tokenLists` (spread `defaults.tokenLists` to keep the curated set, or replace entirely). If the route comes back unpriced, see [Route availability](#route-availability) below.
 
-### What about tax tokens / fee-on-transfer / rebasing tokens?
+### What about tax tokens / fee-on-transfer tokens?
 
-TODO — fee-on-transfer tokens often need wider slippage to clear the transfer cut; rebasing tokens may quote but fail at settlement. Test with small amounts first.
+**Delta doesn't support tax / fee-on-transfer tokens** today — route them through Market instead. On [`GET /prices`](/api-reference/market/prices), declare the fees so the quote accounts for them:
+
+- `srcTokenTransferFee` / `destTokenTransferFee` — tax in basis points on every transfer of the token.
+- `srcTokenDexTransferFee` / `destTokenDexTransferFee` — tax in basis points charged only on DEX swaps.
 
 ## Route availability
 
@@ -58,9 +61,9 @@ TODO — fee-on-transfer tokens often need wider slippage to clear the transfer 
 
 A `400` with `{"errorType":"PricingError"}` from `/quote` or `/prices` means neither Market nor Delta could source the pair on the requested chain. Common causes: the token isn't quoted by any liquidity venue Velora indexes, the trade size exceeds depth, or the chain doesn't have the relevant DEX. Check [Chains & contracts](/resources/chains-and-contracts) for per-chain coverage and [`GET /chains`](/api-reference/market/overview) at runtime for the authoritative supported-chain list. Failure modes per endpoint: [Troubleshooting](/api-reference/troubleshooting).
 
-### How do I widen DEX coverage?
+### Can I filter on specific DEXs?
 
-TODO — most chains include the broad set automatically. Per-request DEX inclusion/exclusion parameters and chain-specific gaps are covered in the Market API reference.
+**Market only.** Pass `includeDEXS` or `excludeDEXS` to [`GET /prices`](/api-reference/market/prices) as a comma-separated list of DEX names — the router will restrict the route to (or exclude) those venues. Delta has no equivalent: solvers pick their own execution path.
 
 ## Limit orders & Delta intents
 
@@ -70,7 +73,7 @@ A signed Delta order fills only when a solver can hit your limit price and net t
 
 ### How do I cancel a pending order?
 
-TODO — covered in the Delta API reference and order-lifecycle page.
+Cancellation mechanism depends on the order type. **Non-ETH Delta orders** cancel off-chain via signed typed data — no gas. **ETH-source Delta orders** cancel on-chain via `withdrawAndCancel` (one tx that withdraws the ETH and invalidates the order). **OTC orders** cancel on-chain. Walk the full transitions in [Order lifecycle & status codes](/delta/order-lifecycle-and-status-codes).
 
 ## Fees & monetization
 
@@ -80,7 +83,7 @@ Pass a `partner` identifier with each request and you can attach one of two reve
 
 ### What's the difference between a free partner ID and a Pro API account?
 
-TODO — see [Pro API accounts](/overview/pro-api-accounts) for the comparison.
+A **free partner ID** is just a string you pass as `&partner=<your-app-name>` — no signup, no key. It identifies your traffic, gets you **1 RPS / 3,000 req/day**, and *if* you also attach `partnerAddress` + `partnerFeeBps` or `takeSurplus`, it unlocks the partner-fee economics from [Monetization](/overview/monetization). A **Pro API account** is a paid plan layered on top: higher sustained and burst RPS, larger daily quotas, an analytics dashboard, early-feature access, and SLA-backed support. Full plan comparison: [Pro API accounts](/overview/pro-api-accounts).
 
 ## Troubleshooting
 
