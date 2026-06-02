@@ -61,12 +61,7 @@ const { partnerAddress, partnerFee, takeSurplus } =
 
 ## Fee vs surplus — which to pick
 
-| | Fixed fee (`partnerFeeBps`) | Surplus share (`partnerTakesSurplus`) |
-|---|---|---|
-| Revenue | Predictable per-trade cut | Variable — depends on routing edge |
-| User cost | Worse quotes (fee comes off the top) | Same quote as no-fee — surplus is the *better-than-quoted* portion |
-| Max | 2% (`partnerFeeBps: 200`) | 50% of surplus |
-| Best for | Mass-market integrations where a known cut matters | High-volume integrations that prioritize the user-facing rate |
+A fixed fee gives predictable per-trade revenue but worsens the user-facing quote; a surplus share is variable but leaves the quote untouched. For the full comparison — including how the split between partner, user, and Velora differs across Delta and Market — see [Monetization](/overview/monetization).
 
 ## Where it applies
 
