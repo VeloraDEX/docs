@@ -189,8 +189,8 @@
             "group": "Prompt library",
             "pages": [
               "for-agents/prompt-library/index",
-              "for-agents/prompt-library/nextjs-market-swap",
               "for-agents/prompt-library/nextjs-delta-swap",
+              "for-agents/prompt-library/nextjs-market-swap",
               "for-agents/prompt-library/parallel-aggregators",
               "for-agents/prompt-library/telegram-trading-bot",
               "for-agents/prompt-library/crosschain-aave-deposit",

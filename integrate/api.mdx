@@ -13,7 +13,7 @@ The Velora REST API is the most flexible integration path. It works with any lan
     Plain HTTPS — call from any language, any runtime.
   </Card>
   <Card title="Full surface area" icon="grid">
-    Market, Delta, OTC, prices, tokens, transactions — everything in one place.
+    Delta, Market, OTC, quotes, tokens, transactions — everything in one place.
   </Card>
   <Card title="No dependencies" icon="feather">
     No SDK to install, no version drift — just HTTP.
@@ -29,10 +29,10 @@ See the **[API Reference →](/api-reference/introduction)** for endpoints, para
 Language-specific end-to-end snippets live next to the API they target:
 
 <CardGroup cols={2}>
-  <Card title="Market API examples" icon="chart-line" href="/market/examples/typescript">
-    `GET /prices` quote for 1 ETH → USDC. TypeScript, Go, Python, Rust.
-  </Card>
   <Card title="Delta API examples" icon="bolt" href="/delta/examples/typescript">
     `GET /quote?mode=DELTA` for a gasless intent quote. TypeScript, Go, Python, Rust.
+  </Card>
+  <Card title="Market API examples" icon="chart-line" href="/market/examples/typescript">
+    `GET /prices` quote for 1 ETH → USDC. TypeScript, Go, Python, Rust.
   </Card>
 </CardGroup>

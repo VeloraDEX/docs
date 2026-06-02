@@ -5,6 +5,10 @@ last-verified: 2026-05-15
 keywords: ["nextjs","wagmi","viem","market","swap"]
 ---
 
+<Tip>
+  Want gasless + MEV-protected fills instead? Start with [`nextjs-delta-swap`](/for-agents/prompt-library/nextjs-delta-swap), or call `GET /quote?mode=ALL` and let Velora pick the path — see [Trading modes](/integrate/trading-modes).
+</Tip>
+
 ## Outcome
 
 A Next.js 14 (App Router) page with a fully working **Velora Market** swap: quote → build calldata → sign and send via Wagmi/Viem. The user signs one transaction. The route uses Augustus v6.2 against the chain selected by their connected wallet.

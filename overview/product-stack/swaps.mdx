@@ -1,12 +1,12 @@
 ---
 title: "Swaps"
-description: "A crypto swap exchanges one token for another. Velora maps swaps to atomic Market routing or gasless Delta intents."
+description: "A crypto swap exchanges one token for another. Velora maps swaps to gasless Delta intents or atomic Market routing."
 keywords: ["crypto swaps", "token swap", "DEX aggregator", "swap API", "gasless swap", "MEV protection"]
 ---
 
 A **swap** exchanges one token for another. In DeFi, the hard part is not the transfer itself — it is finding liquidity, quoting a fair output, limiting slippage, and settling the trade without exposing the user to unnecessary execution risk.
 
-Velora gives this primitive two execution paths: **Market** for atomic transaction swaps, and **Delta** for gasless intent swaps. If you do not want to choose upfront, Velora can evaluate both and return the best available path.
+Velora gives this primitive two execution paths: **Delta** for gasless intent swaps, and **Market** for atomic transaction swaps. If you do not want to choose upfront, Velora can evaluate both and return the best available path.
 
 ## What problem swaps solve
 
@@ -22,14 +22,14 @@ For small trades, this often looks simple. For large trades, thin pairs, volatil
 ## Velora surface mapping
 
 <CardGroup cols={3}>
-  <Card title="Market API" icon="route" href="/market/overview">
-    Use Market when you want an atomic on-chain transaction that can compose with other contract calls.
-  </Card>
   <Card title="Delta" icon="bolt" href="/delta/overview">
     Use Delta when you want a gasless, MEV-protected intent filled by competing solvers.
   </Card>
+  <Card title="Market API" icon="route" href="/market/overview">
+    Use Market when you want an atomic on-chain transaction that can compose with other contract calls.
+  </Card>
   <Card title="Trading modes" icon="shuffle" href="/integrate/trading-modes">
-    Use `mode=ALL` when you want Velora to choose between Market and Delta server-side.
+    Use `mode=ALL` when you want Velora to choose between Delta and Market server-side.
   </Card>
 </CardGroup>
 
@@ -53,10 +53,10 @@ For small trades, this often looks simple. For large trades, thin pairs, volatil
   <Card title="Trading modes" icon="shuffle" href="/integrate/trading-modes">
     Decide between `DELTA`, `MARKET`, and `ALL`.
   </Card>
-  <Card title="Market API" icon="route" href="/market/overview">
-    Atomic on-chain swaps through Velora routing.
-  </Card>
   <Card title="Delta" icon="bolt" href="/delta/overview">
     Gasless, MEV-protected intent swaps through Portikus solvers.
+  </Card>
+  <Card title="Market API" icon="route" href="/market/overview">
+    Atomic on-chain swaps through Velora routing.
   </Card>
 </CardGroup>
