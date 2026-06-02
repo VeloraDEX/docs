@@ -105,6 +105,8 @@ const forMe = await sdk.limitOrders.getLimitOrders({
 await sdk.limitOrders.cancelLimitOrder(orderHash);
 ```
 
+Cancellation here is an on-chain call to AugustusRFQ — it costs gas, unlike the gasless `cancelDeltaOrders` flow for Delta orders.
+
 `sdk.limitOrders.getLimitOrdersContract()` returns the AugustusRFQ address for the active chain; see [Chains & contracts](/resources/chains-and-contracts) for all deployments.
 
 ## Related pages
