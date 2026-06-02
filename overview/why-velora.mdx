@@ -6,21 +6,21 @@ keywords: ["velora","overview","quickstart","why"]
 
 Velora is a DEX aggregator and intents protocol. One integration gives you:
 
-- **Market routing** — best price across every DEX, AMM, and bridge on every chain Velora supports (10+ EVM chains).
 - **Delta intents** — gasless, MEV-protected swaps and signed orders, including limit orders. Single signature.
+- **Market routing** — best price across every DEX, AMM, and bridge on every chain Velora supports (10+ EVM chains).
 - **Crosschain** — Delta orders that resolve across chains via bridge-aware solvers.
 - **Augustus RFQ** — on-chain OTC for ERC-20, with optional partial fills.
 
-You can pick a single surface or run them side by side. The Market API exposes `GET /prices` for direct aggregator routing; the Delta API exposes `GET /quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and returns either a `delta` block or a `market` block (same shape as `/prices`'s `priceRoute`) — Velora picks the winner server-side. See [Trading modes](/integrate/trading-modes).
+You can pick a single surface or run them side by side. The Delta API exposes `GET /quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and returns either a `delta` block or a `market` block (same shape as `/prices`'s `priceRoute`) — Velora picks the winner server-side. The Market API exposes `GET /prices` for direct aggregator routing. See [Trading modes](/integrate/trading-modes).
 
 ## Choose your integration
 
 | You want to… | Use | Time to first swap |
 |---|---|---|
-| Maximum control, any language, any backend | [Market API](/api-reference/market/overview) / [Delta API](/api-reference/delta/overview) | ~60 seconds |
+| Crosschain, gasless, MEV-protected fills | [Delta](/delta/overview) (via API or SDK) | ~10 minutes |
+| Maximum control, any language, any backend | [Delta API](/api-reference/delta/overview) / [Market API](/api-reference/market/overview) | ~60 seconds |
 | Type-safe TypeScript, your own UI | [@velora-dex/sdk](/sdk/install) | ~5 minutes |
 | Drop-in UI, zero design work | [@velora-dex/widget](/widget/install) | ~10 minutes |
-| Crosschain, gasless, MEV-protected fills | [Delta](/delta/overview) (via API or SDK) | ~10 minutes |
 | AI agent / LLM integration | [MCP server](/for-agents/mcp-server/overview) + [five-call recipe](/for-agents/five-call-recipe) | ~5 minutes |
 
 ## Next steps

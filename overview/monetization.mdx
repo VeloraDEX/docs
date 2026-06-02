@@ -34,10 +34,10 @@ Requests without a partner identifier fall back to the `anon` partner, which cha
 
 How fees and surplus are split between the partner, the end user, and Velora:
 
-| Configuration | Market | Delta |
+| Configuration | Delta | Market |
 |---|---|---|
-| Partner fee, no surplus opt-in* | 85% partner / 15% Velora | 100% partner |
-| Surplus share, no fee | 50% partner / 50% Velora (or 50% user / 50% Velora when `isSurplusToUser`) | 50% partner / 50% Velora (or 50% user / 50% Velora when `isSurplusToUser`) |
+| Partner fee, no surplus opt-in* | 100% partner | 85% partner / 15% Velora |
+| Surplus share, no fee | 50% Velora / 50% partner or user | 50% Velora / 50% partner or user |
 | No fee, no surplus opt-in | 100% Velora | 100% Velora |
 | Partner fee + surplus flags both set | Fee wins; surplus flag ignored | Fee wins; surplus flag ignored |
 
@@ -55,7 +55,7 @@ Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the
 | `partnerAddress` | address | — | On-chain recipient of fees or surplus share |
 | `partnerFeeBps` | string (bps) | — | Fixed fee in basis points. `"200"` = 2%. Max enforced by your partner tier |
 | `takeSurplus` | boolean | `false` | Opt into surplus collection. Requires `partner` or `partnerAddress` |
-| `isSurplusToUser` | boolean | `false` | Route surplus to the end user instead of the partner. Requires `takeSurplus: true` |
+| `isSurplusToUser` | boolean | `false` | Route surplus to the end user. Requires `takeSurplus: true` |
 | `isDirectFeeTransfer`<sup>Market</sup> | boolean | `false` | Bypass the Fee Claimer contract and transfer fees to `partnerAddress` per swap |
 
 <Note>
@@ -94,11 +94,11 @@ Coming soon.
   <Card title="Delta overview" icon="bolt" href="/delta/overview">
     Gasless intents, solver competition, and surplus economics.
   </Card>
-  <Card title="Market API overview" icon="chart-line" href="/api-reference/market/overview">
-    `GET /prices` and `POST /transactions` reference.
-  </Card>
   <Card title="Delta API overview" icon="signature" href="/api-reference/delta/overview">
     `GET /quote` and intent submission reference.
+  </Card>
+  <Card title="Market API overview" icon="chart-line" href="/api-reference/market/overview">
+    `GET /prices` and `POST /transactions` reference.
   </Card>
 </CardGroup>
 

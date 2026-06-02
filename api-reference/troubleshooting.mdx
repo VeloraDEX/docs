@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-description: "Common failure modes across the Velora Market and Delta APIs — symptom, root cause, and fix."
+description: "Common failure modes across the Velora Delta and Market APIs — symptom, root cause, and fix."
 keywords:
   - troubleshooting
   - errors
@@ -27,16 +27,6 @@ Each table covers a single endpoint and is updated from support tickets at each 
 <Tip>
   Building error-handling logic or LLM tools? Read [`/resources/errors.json`](/resources/errors.json) — it mirrors every row on this page in machine-readable form, with `endpoint`, `status`, `match`, `cause`, `fix`, and `docs` fields per error.
 </Tip>
-
-## Market API
-
-### GET /prices
-
-<MarketPricesFailureModes />
-
-### POST /transactions/:network
-
-<MarketTransactionsFailureModes />
 
 ## Delta V2 API
 
@@ -69,3 +59,13 @@ Each table covers a single endpoint and is updated from support tickets at each 
 ### POST /delta/orders
 
 <DeltaOrdersFailureModes />
+
+## Market API
+
+### GET /prices
+
+<MarketPricesFailureModes />
+
+### POST /transactions/:network
+
+<MarketTransactionsFailureModes />
