@@ -176,6 +176,107 @@ Limit orders and TWAP are Delta orders too. They reuse this exact build → sign
 - **[Limit orders](/sdk/products/limit-orders)**: a Delta order with a target-price constraint and `type: "LIMIT"`.
 - **[TWAP](/sdk/products/twap)** is a Delta order split into time-weighted slices, built with `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`.
 
+## Migrate from V1 to V2
+
+<Note>
+Only relevant if you're **upgrading an existing integration** from an older SDK version. New integrations can ignore this section — everything above already uses the current API.
+</Note>
+
+Delta V2 keeps the **same `sdk.delta.*` namespace and method names** as V1. What changes is that orders are now **server-built** (you no longer compose EIP-712 typed data locally), pricing is **route-based**, and order history is **paginated**. The on-chain contracts, approval flow, and signature format are unchanged.
+
+### Pricing
+
+`getDeltaPrice` takes the same params, but the response shape changes:
+
+```diff
+  const price = await sdk.delta.getDeltaPrice({
+    srcToken: USDC,
+    destToken: ETH,
+    amount,
+    srcDecimals: 6,
+    destDecimals: 18,
+    userAddress: account,
+    partner: "my-app-name",
+  });
+```
+
+V1 returned a flat `DeltaPrice { srcAmount, destAmount, partner, partnerFee, destToken, ... }`. V2 returns `DeltaPrice { route, alternatives, side, partner: { name, feePercent }, spender }` — swap details now live under `price.route`, and `alternatives` lets users pick a different bridge.
+
+### One-call submit
+
+```diff
+  const auction = await sdk.delta.submitDeltaOrder({
+-   deltaPrice,
+-   owner: account,
+-   srcToken: USDC,
+-   destToken: ETH,
+-   srcAmount: amount,
+-   destAmount,         // you compute the slippage-adjusted destAmount
+-   partner: "my-app-name",
++   route: price.route, // route carries src/dest tokens and amounts
++   side: price.side,
++   owner: account,
++   slippage: 50,       // bps; the SDK applies slippage for you
++   partner: "my-app-name",
+  });
+```
+
+### Split flow (build → sign → post)
+
+```diff
+- const signable = await sdk.delta.buildDeltaOrder({ /* ... */ });
+- const signature = await sdk.delta.signDeltaOrder(signable);
+- const auction = await sdk.delta.postDeltaOrder({
+-   order: signable.data,
++ const built = await sdk.delta.buildDeltaOrder({ /* ... */ });
++ const signature = await sdk.delta.signDeltaOrder(built);
++ const auction = await sdk.delta.postDeltaOrder({
++   order: built.toSign.value as any,
+    signature,
+    partner: "my-app-name",
+  });
+```
+
+`buildDeltaOrder` now returns `{ toSign, orderHash }` from the server (V1 returned `SignableDeltaOrderData` with a locally-composed `.data`). `signDeltaOrder` is unchanged and is generic across the market, limit, and TWAP flows.
+
+### Listing orders
+
+```diff
+- const orders = await sdk.delta.getDeltaOrders({ /* filter */ });
++ const { data, total, hasMore } = await sdk.delta.getDeltaOrders({
++   userAddress: account,
++   page: 1,
++   limit: 100,
++ });
+```
+
+V1 returned a flat `DeltaAuction[]`. V2 returns a paginated `{ data, total, page, limit, hasMore }` envelope, and `userAddress` is required.
+
+### Cancelling
+
+```diff
+- await sdk.delta.cancelLimitDeltaOrders({ orderIds: [orderId] });
++ await sdk.delta.cancelDeltaOrders({ orderIds: [orderId] });
+```
+
+### Bridge inspection
+
+```diff
+- await sdk.delta.getBridgeInfo(/* ... */);
++ await sdk.delta.getBridgeRoutes(/* ... */);
+```
+
+`getBridgeRoutes` returns a flat `routes[]` array instead of V1's nested `srcChainId → destChainId → tokens[]` map.
+
+### What stays the same
+
+- `sdk.delta.*` — same namespace and method names.
+- `approveTokenForDelta`, `getDeltaContract`, `preSignDeltaOrder`, and `getPartnerFee` are unchanged.
+- Type names (`DeltaPrice`, `DeltaAuction`, `BuiltDeltaOrder`) are still imported bare from the package root — only their shapes changed.
+- The on-chain order struct and signature format are identical, so V2 is just a different way to assemble the same on-chain payload.
+
+If you call the HTTP API directly rather than through the SDK, see [Delta V1 → V2 (HTTP API)](/resources/migrations/delta-v1-to-v2).
+
 ## Related pages
 
 - [Market](/sdk/products/swap) — the other swap execution path (user-submitted transactions).
