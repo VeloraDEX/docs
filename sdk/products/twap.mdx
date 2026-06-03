@@ -1,12 +1,12 @@
 ---
 title: "TWAP"
 description: "Split a large trade into scheduled slices from the SDK. In Velora, a TWAP is a Delta order the user signs once and solvers settle slice-by-slice over time."
-keywords: ["sdk", "twap", "delta", "deltaV2", "scheduled", "slices", "gasless"]
+keywords: ["sdk", "twap", "delta", "scheduled", "slices", "gasless"]
 ---
 
 A **TWAP** (time-weighted average price) splits a larger trade into smaller slices executed over time. In Velora, a TWAP is a **Delta order**: the user signs one scheduled order, and the [Portikus](/delta/overview) solver network settles each eligible slice gaslessly until the order completes or expires.
 
-You build TWAPs through the same `sdk.deltaV2` module as market Delta orders, using `submitTWAPDeltaOrder` (or the `buildTWAPDeltaOrder` split flow). The defining inputs are the **total amount**, the **number of slices**, and the **interval** between them.
+You build TWAPs through the same `sdk.delta` module as market Delta orders, using `submitTWAPDeltaOrder` (or the `buildTWAPDeltaOrder` split flow). The defining inputs are the **total amount**, the **number of slices**, and the **interval** between them.
 
 <Note>
 For the conceptual model (slices, intervals, sell vs. buy, how TWAP differs from a one-shot swap or DCA), see [Product stack → TWAP](/overview/product-stack/twap).
@@ -29,16 +29,16 @@ The build → sign → post → poll flow mirrors a [market Delta order](/sdk/pr
 
 <Steps>
   <Step title="Quote one slice">
-    Call `sdk.deltaV2.getDeltaPrice` for a **single slice**: the per-slice amount, i.e. `floor(total / numSlices)`. The route's amount must match that per-slice amount; the server multiplies it across the schedule.
+    Call `sdk.delta.getDeltaPrice` for a **single slice**: the per-slice amount, i.e. `floor(total / numSlices)`. The route's amount must match that per-slice amount; the server multiplies it across the schedule.
   </Step>
   <Step title="Approve the source token (or sign a Permit)">
-    Approve the **total** source amount (`totalSrcAmount` for sell, `maxSrcAmount` for buy) with `sdk.deltaV2.approveTokenForDelta`, or sign a Permit / Permit2 message. Native tokens skip this step.
+    Approve the **total** source amount (`totalSrcAmount` for sell, `maxSrcAmount` for buy) with `sdk.delta.approveTokenForDelta`, or sign a Permit / Permit2 message. Native tokens skip this step.
   </Step>
   <Step title="Build, sign, and post the schedule">
-    Call `sdk.deltaV2.submitTWAPDeltaOrder` with the schedule, or run `buildTWAPDeltaOrder` → `signDeltaOrder` → `postTWAPDeltaOrder` yourself when you need control over signing.
+    Call `sdk.delta.submitTWAPDeltaOrder` with the schedule, or run `buildTWAPDeltaOrder` → `signDeltaOrder` → `postTWAPDeltaOrder` yourself when you need control over signing.
   </Step>
   <Step title="Poll for slice execution">
-    Poll `sdk.deltaV2.getDeltaOrderById` over the order's lifetime; it completes once the final slice settles, or fails/expires if its constraints can no longer be met.
+    Poll `sdk.delta.getDeltaOrderById` over the order's lifetime; it completes once the final slice settles, or fails/expires if its constraints can no longer be met.
   </Step>
 </Steps>
 
@@ -50,7 +50,7 @@ const totalSrcAmount = "10000000000"; // 10,000 USDC total
 const perSlice = (BigInt(totalSrcAmount) / BigInt(numSlices)).toString();
 
 // quote ONE slice — the route amount must equal floor(totalSrcAmount / numSlices)
-const price = await sdk.deltaV2.getDeltaPrice({
+const price = await sdk.delta.getDeltaPrice({
   srcToken: USDC,
   destToken: ETH,
   amount: perSlice,
@@ -61,9 +61,9 @@ const price = await sdk.deltaV2.getDeltaPrice({
 });
 
 // approve the TOTAL amount, not a single slice
-await sdk.deltaV2.approveTokenForDelta(totalSrcAmount, USDC);
+await sdk.delta.approveTokenForDelta(totalSrcAmount, USDC);
 
-const auction = await sdk.deltaV2.submitTWAPDeltaOrder({
+const auction = await sdk.delta.submitTWAPDeltaOrder({
   onChainOrderType: "TWAPOrder",
   route: price.route,
   owner: account,
@@ -83,7 +83,7 @@ console.log("twap order id:", auction.id);
 A buy TWAP fixes how much you want to **receive** and caps what you'll spend. Quote a single slice by the per-slice destination amount, then submit with `totalDestAmount` and `maxSrcAmount`:
 
 ```ts
-const auction = await sdk.deltaV2.submitTWAPDeltaOrder({
+const auction = await sdk.delta.submitTWAPDeltaOrder({
   onChainOrderType: "TWAPBuyOrder",
   route: price.route, // single-slice quote; route.origin.output.amount = floor(totalDestAmount / numSlices)
   owner: account,
@@ -101,7 +101,7 @@ const auction = await sdk.deltaV2.submitTWAPDeltaOrder({
 Use the three-step flow when you need to customize signing (a hardware wallet, an async multisig, or batched signing).
 
 ```ts
-const built = await sdk.deltaV2.buildTWAPDeltaOrder({
+const built = await sdk.delta.buildTWAPDeltaOrder({
   onChainOrderType: "TWAPOrder",
   route: price.route,
   owner: account,
@@ -112,9 +112,9 @@ const built = await sdk.deltaV2.buildTWAPDeltaOrder({
   partner: "my-app-name",
 });
 
-const signature = await sdk.deltaV2.signDeltaOrder(built);
+const signature = await sdk.delta.signDeltaOrder(built);
 
-const auction = await sdk.deltaV2.postTWAPDeltaOrder({
+const auction = await sdk.delta.postTWAPDeltaOrder({
   order: built.toSign.value as any,
   signature,
   partner: "my-app-name",
@@ -129,13 +129,13 @@ const auction = await sdk.deltaV2.postTWAPDeltaOrder({
 import { OrderHelpers } from "@velora-dex/sdk";
 
 // poll until every slice has settled
-const updated = await sdk.deltaV2.getDeltaOrderById(auction.id);
+const updated = await sdk.delta.getDeltaOrderById(auction.id);
 if (OrderHelpers.checks.isExecutedAuction(updated)) {
   console.log("twap complete");
 }
 ```
 
-List a user's orders with `sdk.deltaV2.getDeltaOrders` and narrow on `onChainOrderType` (`"TWAPOrder"` / `"TWAPBuyOrder"`) to surface their TWAPs. Cancel the remaining (unsettled) slices with `sdk.deltaV2.cancelDeltaOrders({ orderIds: [auction.id] })`.
+List a user's orders with `sdk.delta.getDeltaOrders` and narrow on `onChainOrderType` (`"TWAPOrder"` / `"TWAPBuyOrder"`) to surface their TWAPs. Cancel the remaining (unsettled) slices with `sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] })`.
 
 Status codes are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
 

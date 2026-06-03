@@ -1,6 +1,6 @@
 ---
 title: "Full SDK"
-description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, sdk.deltaV2, sdk.quote) over a fetcher and contract caller you construct yourself, with a typed transaction-response generic."
+description: "constructFullSDK gives you every namespace (sdk.swap, sdk.delta, sdk.quote) over a fetcher and contract caller you construct yourself, with a typed transaction-response generic."
 keywords: ["sdk", "full", "constructFullSDK"]
 ---
 
@@ -67,8 +67,7 @@ console.log("approval submitted:", hash);
 
 The namespaces are identical to [Simple SDK](/sdk/simple-sdk#available-methods):
 
-- `sdk.deltaV2` is the **recommended** path. Full Delta V2 lifecycle: `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus reused approve/preSign.
-- `sdk.delta`: Delta V1. Same lifecycle, locally-built orders.
+- `sdk.delta`: full Delta lifecycle — `getDeltaPrice`, `submitDeltaOrder`, build/sign/post split, `getDeltaOrders` (paginated), `cancelDeltaOrders`, plus approve/preSign.
 - `sdk.quote` exposes `getQuote`.
 - `sdk.swap`: rate, build, approve, balances, spender, tokens, adapters, swapTx (Market execution path for swaps).
 - `sdk.otc` exposes the AugustusRFQ maker/taker orders used for OTC; see [OTC](/sdk/products/otc).

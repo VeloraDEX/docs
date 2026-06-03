@@ -106,9 +106,8 @@ The returned SDK is namespaced by feature:
 
 | Namespace         | What's inside                                                                                                                                                                                                                                                        | Docs page                                            |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `sdk.deltaV2`     | **Recommended.** `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta](/sdk/products/delta)                          |
-| `sdk.delta`       | Delta V1. Same lifecycle, locally-built orders. See [Delta V1](/sdk/products/delta#delta-v1).                                                                                                                                                                         | [Delta](/sdk/products/delta#delta-v1)                 |
-| `sdk.quote`       | `getQuote` (V1 Delta-with-fallback-to-Market price; no V2 equivalent yet)                                                                                                                                                                                            | [API → Delta /quote](/api-reference/delta/quote)     |
+| `sdk.delta`       | `getDeltaPrice`, `buildDeltaOrder`, `signDeltaOrder`, `postDeltaOrder`, `submitDeltaOrder`, `approveTokenForDelta`, `preSignDeltaOrder`, `getDeltaContract`, `getDeltaOrderById`, `getDeltaOrderByHash`, `getDeltaOrders`, `cancelDeltaOrders`, `getBridgeRoutes`, `isTokenSupportedInDelta` | [Delta](/sdk/products/delta)                          |
+| `sdk.quote`       | `getQuote` — Delta price with fallback to Market                                                                                                                                                                                                                     | [API → Delta /quote](/api-reference/delta/quote)     |
 | `sdk.swap`        | `getRate`, `buildTx`, `approveToken`, `getSpender`, `getBalances`, `getTokens`, `getAdapters`, `swapTx` (Market execution path for swaps)                                                                                                                            | [Market](/sdk/products/swap)                          |
 | `sdk.otc`         | AugustusRFQ maker/taker orders for OTC trades. For target-price limit orders, use the Delta namespace instead.                                                                                                                                                       | [OTC](/sdk/products/otc)                              |
 
@@ -153,17 +152,11 @@ const quote = await sdk.quote.getQuote({
 if ("delta" in quote) {
   await sdk.delta.approveTokenForDelta(amount, USDC);
 
-  const destAmount = BigInt(
-    +(+quote.delta.destAmount * (1 - slippageBps / 10000)).toFixed(0),
-  ).toString(10);
-
   const auction = await sdk.delta.submitDeltaOrder({
-    deltaPrice: quote.delta,
+    route: quote.delta.route, // or pick from quote.delta.alternatives
+    side: quote.delta.side,
     owner: account,
-    srcToken: USDC,
-    destToken: ETH,
-    srcAmount: amount,
-    destAmount,
+    slippage: slippageBps, // SDK applies slippage for you
     partner: "my-app-name",
   });
 
@@ -188,7 +181,7 @@ if ("delta" in quote) {
 }
 ```
 
-See [Swaps → Delta](/sdk/products/delta) for the split build/sign/post flow and order-status polling (including the recommended Delta V2 path), and [Swaps → Market](/sdk/products/swap) for the full Market-Swap walkthrough.
+See [Swaps → Delta](/sdk/products/delta) for the split build/sign/post flow and order-status polling, and [Swaps → Market](/sdk/products/swap) for the full Market-Swap walkthrough.
 
 ## Related pages
 

@@ -1,21 +1,12 @@
 ---
 title: "Limit orders"
-description: "Place gasless, MEV-protected limit orders from the SDK. In Velora, limit orders are Delta orders with a target-price constraint, built through sdk.deltaV2."
-keywords:
-  [
-    "sdk",
-    "limit orders",
-    "delta",
-    "deltaV2",
-    "LIMIT",
-    "target price",
-    "gasless",
-  ]
+description: "Place gasless, MEV-protected limit orders from the SDK. In Velora, limit orders are Delta orders with a target-price constraint, built through sdk.delta."
+keywords: ["sdk", "limit orders", "delta", "LIMIT", "target price", "gasless"]
 ---
 
 In Velora, a **limit order is a Delta order with a target-price constraint**. The user signs once, the [Portikus](/delta/overview) solver network competes to fill it at or better than the limit price, and the user pays no gas. It's the same engine that settles Delta market orders, just with a price condition instead of immediate execution.
 
-You build limit orders through the same `sdk.deltaV2` module as market Delta orders. The only difference is that you pin the output (the limit price) and mark the order `LIMIT` instead of letting it fill at the prevailing market rate.
+You build limit orders through the same `sdk.delta` module as market Delta orders. The only difference is that you pin the output (the limit price) and mark the order `LIMIT` instead of letting it fill at the prevailing market rate.
 
 <Note>
   For the conceptual model (maker/taker, expiry, nonces, how a limit order
@@ -37,22 +28,22 @@ The build → sign → post → poll flow is identical to a [market Delta order]
 
 <Steps>
   <Step title="Get a Delta price">
-    Call `sdk.deltaV2.getDeltaPrice` to discover the current route and the
+    Call `sdk.delta.getDeltaPrice` to discover the current route and the
     contract `spender` to approve. The market quote is your reference point for
     setting the limit.
   </Step>
   <Step title="Approve the source token">
-    Call `sdk.deltaV2.approveTokenForDelta(amount, srcToken)` so the Delta
+    Call `sdk.delta.approveTokenForDelta(amount, srcToken)` so the Delta
     contract can pull the source token. Native tokens skip this step.
   </Step>
   <Step title="Build, sign, and post the limit order">
-    Call `sdk.deltaV2.submitDeltaOrder` with your target output and `type:
+    Call `sdk.delta.submitDeltaOrder` with your target output and `type:
     "LIMIT"`, or run `buildDeltaOrder` → `signDeltaOrder` → `postDeltaOrder`
     yourself when you need control over signing.
   </Step>
   <Step title="Poll until it fills (or expires)">
     A limit order stays `ACTIVE` until a solver can satisfy the limit price.
-    Poll `sdk.deltaV2.getDeltaOrderById` until status is `COMPLETED`, or until
+    Poll `sdk.delta.getDeltaOrderById` until status is `COMPLETED`, or until
     your `deadline` passes.
   </Step>
 </Steps>
@@ -60,7 +51,7 @@ The build → sign → post → poll flow is identical to a [market Delta order]
 ## One-call submit
 
 ```ts
-const price = await sdk.deltaV2.getDeltaPrice({
+const price = await sdk.delta.getDeltaPrice({
   srcToken: USDC,
   destToken: ETH,
   amount: "10000000000", // sell 10,000 USDC
@@ -70,9 +61,9 @@ const price = await sdk.deltaV2.getDeltaPrice({
   partner: "my-app-name",
 });
 
-await sdk.deltaV2.approveTokenForDelta("10000000000", USDC);
+await sdk.delta.approveTokenForDelta("10000000000", USDC);
 
-const auction = await sdk.deltaV2.submitDeltaOrder({
+const auction = await sdk.delta.submitDeltaOrder({
   route: price.route,
   side: price.side,
   owner: account,
@@ -93,7 +84,7 @@ Setting `limitAmount` above the quoted output is what makes this a limit order: 
 Use the three-step flow when you need to customize signing: a hardware wallet, an async multisig, or batched signing across several orders.
 
 ```ts
-const built = await sdk.deltaV2.buildDeltaOrder({
+const built = await sdk.delta.buildDeltaOrder({
   route: price.route,
   side: price.side,
   owner: account,
@@ -102,9 +93,9 @@ const built = await sdk.deltaV2.buildDeltaOrder({
   deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
 });
 
-const signature = await sdk.deltaV2.signDeltaOrder(built);
+const signature = await sdk.delta.signDeltaOrder(built);
 
-const auction = await sdk.deltaV2.postDeltaOrder({
+const auction = await sdk.delta.postDeltaOrder({
   order: built.toSign.value as any,
   signature,
   partner: "my-app-name",
@@ -114,7 +105,7 @@ const auction = await sdk.deltaV2.postDeltaOrder({
 
 In the split flow the limit price (`limitAmount`) is set at **build** time, while `type: "LIMIT"` is passed at **post** time. The one-call `submitDeltaOrder` above takes both together.
 
-If your signer is a smart contract that can't produce an off-chain EIP-712 signature, use `sdk.deltaV2.preSignDeltaOrder` to register the order hash on-chain instead.
+If your signer is a smart contract that can't produce an off-chain EIP-712 signature, use `sdk.delta.preSignDeltaOrder` to register the order hash on-chain instead.
 
 ## Poll for the fill
 
@@ -122,7 +113,7 @@ If your signer is a smart contract that can't produce an off-chain EIP-712 signa
 import { OrderHelpers } from "@velora-dex/sdk";
 
 const intervalId = setInterval(async () => {
-  const updated = await sdk.deltaV2.getDeltaOrderById(auction.id);
+  const updated = await sdk.delta.getDeltaOrderById(auction.id);
   if (OrderHelpers.checks.isExecutedAuction(updated)) {
     clearInterval(intervalId);
     console.log("limit order filled");
@@ -137,7 +128,7 @@ Unlike a market order, a limit order can rest `ACTIVE` for a long time, so poll 
 Filter the paginated order list by `type` to show a user's open limit orders:
 
 ```ts
-const { data, total } = await sdk.deltaV2.getDeltaOrders({
+const { data, total } = await sdk.delta.getDeltaOrders({
   userAddress: account,
   page: 1,
   limit: 100,
@@ -149,7 +140,7 @@ const { data, total } = await sdk.deltaV2.getDeltaOrders({
 ## Cancel a limit order
 
 ```ts
-await sdk.deltaV2.cancelDeltaOrders({ orderIds: [auction.id] });
+await sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] });
 ```
 
 This signs and posts a cancellation. It only succeeds while the order is still open in the auction.

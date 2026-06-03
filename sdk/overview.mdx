@@ -64,16 +64,11 @@ const quote = await simpleSDK.quote.getQuote({
 
 if ("delta" in quote) {
   await simpleSDK.delta.approveTokenForDelta(amount, USDC);
-  const destAmount = BigInt(
-    +(+quote.delta.destAmount * (1 - slippageBps / 10000)).toFixed(0),
-  ).toString(10);
   const auction = await simpleSDK.delta.submitDeltaOrder({
-    deltaPrice: quote.delta,
+    route: quote.delta.route,
+    side: quote.delta.side,
     owner: account,
-    srcToken: USDC,
-    destToken: ETH,
-    srcAmount: amount,
-    destAmount,
+    slippage: slippageBps, // SDK applies slippage for you
     partner: "my-app-name",
   });
 } else {
