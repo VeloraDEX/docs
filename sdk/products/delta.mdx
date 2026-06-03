@@ -120,8 +120,6 @@ setTimeout(() => clearInterval(intervalId), 60_000 * 5);
 
 `OrderHelpers.checks.isExecutedAuction` returns `true` only when same-chain orders show `status === "COMPLETED"`, and crosschain orders also have their destination-chain leg filled.
 
-Order status codes and their meaning are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
-
 ## List orders
 
 `getDeltaOrders` returns a paginated list filtered by user, chain, status, and order type:

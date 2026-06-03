@@ -150,13 +150,6 @@
               "delta/examples/python",
               "delta/examples/rust"
             ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "delta/order-lifecycle-and-status-codes",
-              "delta/eip-712-typed-data-reference"
-            ]
           }
         ]
       },

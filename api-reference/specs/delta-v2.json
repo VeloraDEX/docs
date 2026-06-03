@@ -247,7 +247,7 @@
           { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 } },
           { "name": "chainId", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated chain IDs. Omit for all chains." },
           { "name": "type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["MARKET", "LIMIT"] } },
-          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated `OrderStatusV2` values. See [Order lifecycle](/delta/order-lifecycle-and-status-codes)." },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated `OrderStatusV2` values." },
           { "name": "onChainOrderType", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Order", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] } }
         ],
         "responses": {

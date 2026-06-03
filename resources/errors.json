@@ -163,7 +163,7 @@
       "status": null,
       "match": "EIP-712 signature rejected",
       "cause": "Wallet signed against a different chain id, verifying contract, or version.",
-      "fix": "Verify domain.chainId, domain.verifyingContract, and domain.name/version match what POST /delta/orders/build returned. See /delta/eip-712-typed-data-reference.",
+      "fix": "Verify domain.chainId, domain.verifyingContract, and domain.name/version match what POST /delta/orders/build returned.",
       "docs": "/api-reference/troubleshooting#post-delta-orders-build"
     },
     {
@@ -211,7 +211,7 @@
       "status": 200,
       "match": "Order stays at pending indefinitely",
       "cause": "Solver auction returned no fill (size, pair, or chain conditions).",
-      "fix": "Poll GET /delta/orders/:id; if still pending past your SLA, cancel and re-quote. See /delta/order-lifecycle-and-status-codes.",
+      "fix": "Poll GET /delta/orders/:id; if still pending past your SLA, cancel and re-quote.",
       "docs": "/api-reference/troubleshooting#post-delta-orders"
     },
     {

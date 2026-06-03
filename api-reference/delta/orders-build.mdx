@@ -5,5 +5,5 @@ openapi: "/api-reference/specs/delta.json POST /delta/orders/build"
 ---
 
 <Note>
-  The response is EIP-712 typed data: a domain, a `types` map, and a `message` (the order to sign). See [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) for the exact domain, types, and struct layout.
+  The response is EIP-712 typed data: a domain, a `types` map, and a `message` (the order to sign). Sign it exactly as returned — don't re-sort or re-encode the struct.
 </Note>
