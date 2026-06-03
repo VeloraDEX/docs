@@ -1,0 +1,287 @@
+---
+title: "Delta"
+description: "Submit, sign, and track gasless Delta intents from sdk.delta, where solvers execute swaps on the user's behalf."
+keywords: ["sdk", "delta", "intents", "gasless", "submitDeltaOrder"]
+---
+
+A **swap** in Velora settles through one of two execution paths: **Delta** (this page) or [**Market**](/sdk/products/swap). Delta wraps the [Delta API](/delta/overview): gasless, MEV-protected swaps where the user signs an off-chain order, and a network of solvers (Portikus) competes to fill it. The user pays no gas, and the solver covers execution cost out of their margin.
+
+Delta is also the engine behind two other products in the SDK: [Limit orders](/sdk/products/limit-orders) (a Delta order with a target price) and [TWAP](/sdk/products/twap) (a Delta order split into scheduled slices). This page covers the **market** Delta order, and those pages build on the same flow.
+
+<Note>
+Delta orders are **server-built**: you don't compose EIP-712 typed data locally. `getDeltaPrice` returns a recommended `route` plus `alternatives`, `buildDeltaOrder` returns ready-to-sign typed data, and order history is paginated.
+</Note>
+
+## When to use this
+
+- The user shouldn't pay gas, or doesn't have gas on the source chain.
+- You want MEV protection. Orders fill via private auction, not the public mempool.
+- You want a single signature to settle crosschain. See [Crosschain Delta](/delta/crosschain-delta).
+
+For swaps where the user submits the transaction themselves, see [Market](/sdk/products/swap).
+
+## How it's exposed
+
+Delta lives at two layers in the SDK:
+
+- **`sdk.delta.*`** is the pre-bound bag attached to `constructSimpleSDK` / `constructFullSDK`: `sdk.delta.getDeltaPrice`, `sdk.delta.submitDeltaOrder`, `sdk.delta.signDeltaOrder`, etc. This is what most consumers use.
+- **The bare `construct*` functions and types** are exported at the package root for advanced wiring (e.g., `constructPartialSDK`) and type annotations: `constructBuildDeltaOrder`, `constructSubmitDeltaOrder`, `constructAllDeltaOrdersHandlers`, and types like `DeltaPrice`, `DeltaRoute`, `BuiltDeltaOrder`, `DeltaAuction`, `BridgeRoute`.
+
+## The flow
+
+<Steps>
+  <Step title="Get a Delta price">
+    Call `sdk.delta.getDeltaPrice` with source/destination tokens, amount, decimals, and partner. The response includes the recommended `route` plus `alternatives` and the contract `spender` to approve.
+  </Step>
+  <Step title="Approve the source token (or sign a Permit)">
+    Call `sdk.delta.approveTokenForDelta(amount, srcToken)`, or sign a Permit / Permit2 message with the Delta contract (returned in `price.spender`) as the verifying contract. Native tokens skip this step.
+  </Step>
+  <Step title="Build, sign, and post the order">
+    Either call the one-shot orchestrator `sdk.delta.submitDeltaOrder`, or run the three steps yourself (`buildDeltaOrder` → `signDeltaOrder` → `postDeltaOrder`) when you need control over signing.
+  </Step>
+  <Step title="Poll for execution">
+    Use `sdk.delta.getDeltaOrderById` (or `getDeltaOrderByHash`) on a timer until status is `COMPLETED`.
+  </Step>
+</Steps>
+
+## One-call submit
+
+`submitDeltaOrder` runs build → sign → post in a single call. This is the recommended path for most flows.
+
+```ts
+const price = await sdk.delta.getDeltaPrice({
+  srcToken: USDC,
+  destToken: ETH,
+  amount: "10000000000", // 10,000 USDC
+  srcDecimals: 6,
+  destDecimals: 18,
+  userAddress: account,
+  partner: "my-app-name",
+});
+
+await sdk.delta.approveTokenForDelta("10000000000", USDC);
+
+const auction = await sdk.delta.submitDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  slippage: 50, // 0.5% in bps
+  // beneficiary: anotherAccount, // optional, default = owner
+  // permit: "0x...",              // optional, if you signed a Permit instead of approving
+  // partiallyFillable: true,      // optional, default = fill-or-kill
+});
+
+console.log("auction id:", auction.id);
+```
+
+## Split flow
+
+Use the three-step flow when you need to customize signing: for example, a hardware wallet that prompts on each call, a multisig that signs asynchronously, or batched signing across orders.
+
+```ts
+const built = await sdk.delta.buildDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  slippage: 50,
+});
+
+const signature = await sdk.delta.signDeltaOrder(built);
+
+const auction = await sdk.delta.postDeltaOrder({
+  order: built.toSign.value as any,
+  signature,
+  partner: "my-app-name",
+});
+```
+
+`buildDeltaOrder` returns `{ toSign, orderHash }`. The server has already composed the EIP-712 typed data, and `signDeltaOrder` wraps your contract caller's `signTypedData` to produce the signature. It's generic across order families, so the market, limit, and TWAP flows all sign through the same call.
+
+If your signer is a smart contract (e.g., a multisig or 4337 wallet) that can't produce an off-chain EIP-712 signature, use `sdk.delta.preSignDeltaOrder` to register the order hash on-chain instead.
+
+## Poll for execution
+
+```ts
+import { OrderHelpers } from "@velora-dex/sdk";
+
+const intervalId = setInterval(async () => {
+  const updated = await sdk.delta.getDeltaOrderById(auction.id);
+  if (OrderHelpers.checks.isExecutedAuction(updated)) {
+    clearInterval(intervalId);
+    console.log("filled");
+  }
+}, 3000);
+
+// stop polling after 5 minutes
+setTimeout(() => clearInterval(intervalId), 60_000 * 5);
+```
+
+`OrderHelpers.checks.isExecutedAuction` returns `true` only when same-chain orders show `status === "COMPLETED"`, and crosschain orders also have their destination-chain leg filled.
+
+Order status codes and their meaning are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+
+## List orders
+
+`getDeltaOrders` returns a paginated list filtered by user, chain, status, and order type:
+
+```ts
+const { data, page, limit, total } = await sdk.delta.getDeltaOrders({
+  userAddress: account,
+  page: 1,
+  limit: 100,
+  // status: ["ACTIVE", "COMPLETED"],   // optional filter
+  // chainId: [1, 10],                   // omit for all chains
+  // type: "MARKET",                     // 'MARKET' | 'LIMIT'
+});
+```
+
+Each entry is a `DeltaAuction<T>`, generic over `onChainOrderType`. It may report `'FillableOrder'` for a `partiallyFillable` Standard order; treat it exactly like `'Order'` (identical shape). Use `type: "LIMIT"` to filter for [limit orders](/sdk/products/limit-orders).
+
+## Partner fee
+
+Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to `getDeltaPrice`, `submitDeltaOrder`, `buildDeltaOrder`, and `postDeltaOrder`. The SDK sends these directly to the server, which resolves and validates the fee in one call, so there's no local `getPartnerFee` round-trip.
+
+```ts
+const auction = await sdk.delta.submitDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  partnerAddress: "0xYourFeeCollector",
+  partnerFeeBps: 25, // 0.25%
+  slippage: 50,
+});
+```
+
+See [Monetize](/sdk/monetize) for the full field reference and fee-vs-surplus tradeoffs.
+
+## Cancel an order
+
+```ts
+await sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] });
+```
+
+This signs and posts a cancellation request. It only succeeds for orders that are still open in the auction.
+
+## Crosschain Delta
+
+Pass `destChainId` to `getDeltaPrice` to settle on a different chain than the source. The returned `route` is bridge-aware; submitting the order is identical to same-chain. See [Crosschain Delta](/delta/crosschain-delta) for the full design and [`getBridgeRoutes`](https://github.com/VeloraDEX/sdk/blob/master/src/methods/delta/getBridgeRoutes.ts) for advanced route inspection.
+
+## Other Delta products
+
+Limit orders and TWAP are Delta orders too. They reuse this exact build → sign → post → poll flow with a couple of extra fields:
+
+- **[Limit orders](/sdk/products/limit-orders)**: a Delta order with a target-price constraint and `type: "LIMIT"`.
+- **[TWAP](/sdk/products/twap)** is a Delta order split into time-weighted slices, built with `buildTWAPDeltaOrder` / `submitTWAPDeltaOrder`.
+
+## Migrate from V1 to V2
+
+<Note>
+Only relevant if you're **upgrading an existing integration** from an older SDK version. New integrations can ignore this section — everything above already uses the current API.
+</Note>
+
+Delta V2 keeps the **same `sdk.delta.*` namespace and method names** as V1. What changes is that orders are now **server-built** (you no longer compose EIP-712 typed data locally), pricing is **route-based**, and order history is **paginated**. The on-chain contracts, approval flow, and signature format are unchanged.
+
+### Pricing
+
+`getDeltaPrice` takes the same params, but the response shape changes:
+
+```diff
+  const price = await sdk.delta.getDeltaPrice({
+    srcToken: USDC,
+    destToken: ETH,
+    amount,
+    srcDecimals: 6,
+    destDecimals: 18,
+    userAddress: account,
+    partner: "my-app-name",
+  });
+```
+
+V1 returned a flat `DeltaPrice { srcAmount, destAmount, partner, partnerFee, destToken, ... }`. V2 returns `DeltaPrice { route, alternatives, side, partner: { name, feePercent }, spender }` — swap details now live under `price.route`, and `alternatives` lets users pick a different bridge.
+
+### One-call submit
+
+```diff
+  const auction = await sdk.delta.submitDeltaOrder({
+-   deltaPrice,
+-   owner: account,
+-   srcToken: USDC,
+-   destToken: ETH,
+-   srcAmount: amount,
+-   destAmount,         // you compute the slippage-adjusted destAmount
+-   partner: "my-app-name",
++   route: price.route, // route carries src/dest tokens and amounts
++   side: price.side,
++   owner: account,
++   slippage: 50,       // bps; the SDK applies slippage for you
++   partner: "my-app-name",
+  });
+```
+
+### Split flow (build → sign → post)
+
+```diff
+- const signable = await sdk.delta.buildDeltaOrder({ /* ... */ });
+- const signature = await sdk.delta.signDeltaOrder(signable);
+- const auction = await sdk.delta.postDeltaOrder({
+-   order: signable.data,
++ const built = await sdk.delta.buildDeltaOrder({ /* ... */ });
++ const signature = await sdk.delta.signDeltaOrder(built);
++ const auction = await sdk.delta.postDeltaOrder({
++   order: built.toSign.value as any,
+    signature,
+    partner: "my-app-name",
+  });
+```
+
+`buildDeltaOrder` now returns `{ toSign, orderHash }` from the server (V1 returned `SignableDeltaOrderData` with a locally-composed `.data`). `signDeltaOrder` is unchanged and is generic across the market, limit, and TWAP flows.
+
+### Listing orders
+
+```diff
+- const orders = await sdk.delta.getDeltaOrders({ /* filter */ });
++ const { data, total, hasMore } = await sdk.delta.getDeltaOrders({
++   userAddress: account,
++   page: 1,
++   limit: 100,
++ });
+```
+
+V1 returned a flat `DeltaAuction[]`. V2 returns a paginated `{ data, total, page, limit, hasMore }` envelope, and `userAddress` is required.
+
+### Cancelling
+
+```diff
+- await sdk.delta.cancelLimitDeltaOrders({ orderIds: [orderId] });
++ await sdk.delta.cancelDeltaOrders({ orderIds: [orderId] });
+```
+
+### Bridge inspection
+
+```diff
+- await sdk.delta.getBridgeInfo(/* ... */);
++ await sdk.delta.getBridgeRoutes(/* ... */);
+```
+
+`getBridgeRoutes` returns a flat `routes[]` array instead of V1's nested `srcChainId → destChainId → tokens[]` map.
+
+### What stays the same
+
+- `sdk.delta.*` — same namespace and method names.
+- `approveTokenForDelta`, `getDeltaContract`, `preSignDeltaOrder`, and `getPartnerFee` are unchanged.
+- Type names (`DeltaPrice`, `DeltaAuction`, `BuiltDeltaOrder`) are still imported bare from the package root — only their shapes changed.
+- The on-chain order struct and signature format are identical, so V2 is just a different way to assemble the same on-chain payload.
+
+If you call the HTTP API directly rather than through the SDK, see [Delta V1 → V2 (HTTP API)](/resources/migrations/delta-v1-to-v2).
+
+## Related pages
+
+- [Market](/sdk/products/swap) — the other swap execution path (user-submitted transactions).
+- [Limit orders](/sdk/products/limit-orders): a Delta order with a target price.
+- [TWAP](/sdk/products/twap), a Delta order split into scheduled slices.
+- [Why Delta](/delta/overview). The protocol design.
+- [Monetize](/sdk/monetize) — partner-fee fields.
+- [API reference → Delta](/api-reference/delta/overview) covers the HTTP endpoints.

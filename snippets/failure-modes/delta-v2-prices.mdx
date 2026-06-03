@@ -1,0 +1,10 @@
+| Symptom | Root cause | Fix |
+|---|---|---|
+| 400 `No route` for a same-chain pair                          | Token pair has no liquidity, or `srcDecimals` / `destDecimals` are wrong              | Re-check decimals against the token contract; try `mode=ALL` on [GET /quote](/api-reference/delta/quote) to see whether Market can route it |
+| 400 `No route` for a crosschain pair                          | `destChainId` lane not supported by any active bridge for this token            | Call [GET /delta/v2/prices/bridge-routes](/api-reference/delta-v2/bridge-routes) to see which lanes + tokens are supported |
+| `route.bridge` is `null` on a crosschain quote                | `srcToken` and `destToken` happen to be the same address on different chains and the bridge collapsed | Compare `route.origin.input.token.chainId` vs `route.destination.output.token.chainId` directly; don't infer crosschain from `bridge !== null` alone |
+| `alternatives` is empty                                        | Same-chain quotes never return alternatives — only crosschain | Use `route` directly for same-chain; check `alternatives.length > 0` before showing a bridge picker |
+| `partner.feePercent` higher than expected                     | Registered partner fee + `partnerFeeBps` override compounded                | Set `partnerFeeBps=0` (or omit) to use the registered fee only; passing both stacks them |
+| 400 `Token not supported`                                     | One of `srcToken` / `destToken` isn't whitelisted on `chainId`                  | Call [GET /delta/v2/prices/is-token-supported](/api-reference/delta-v2/is-token-supported) before quoting |
+
+<Note>Updated from support tickets at each release. Last updated: 2026-05-27.</Note>

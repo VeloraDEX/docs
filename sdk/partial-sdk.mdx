@@ -1,0 +1,177 @@
+---
+title: "Partial SDK"
+description: "constructPartialSDK lets bundle-size-sensitive apps import only the construct* functions they call; TypeScript infers the resulting SDK shape from the selection."
+keywords:
+  ["sdk", "partial", "constructPartialSDK", "tree-shaking", "bundle-size"]
+---
+
+`constructPartialSDK` is the tree-shaken entry point. You pick which per-method `construct*` factories you care about, and the resulting SDK has only those methods on it. TypeScript infers the return type from your selection, so calls into unused modules don't compile, and the bundler drops the unused code.
+
+## When to pick this
+
+- You're shipping a browser bundle and every kilobyte counts.
+- You only use a small slice of the SDK, e.g. just `getRate` + `approveToken`, or just the Delta signing flow.
+- You want compile-time guarantees that your build doesn't accidentally call a method you didn't intend to ship.
+
+If you use most of the SDK or run server-side, prefer [Simple SDK](/sdk/simple-sdk) or [Full SDK](/sdk/full-sdk).
+
+## Example: rates and approvals only
+
+The smallest useful Partial SDK: read rates from the API, approve tokens for swaps.
+
+```ts
+import axios from "axios";
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+import {
+  constructPartialSDK,
+  constructAxiosFetcher,
+  constructViemContractCaller,
+  constructGetRate,
+  constructApproveToken,
+} from "@velora-dex/sdk";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const fetcher = constructAxiosFetcher(axios);
+const contractCaller = constructViemContractCaller(walletClient, account);
+
+const sdk = constructPartialSDK(
+  {
+    chainId: 1,
+    fetcher,
+    contractCaller,
+  },
+  constructGetRate,
+  constructApproveToken,
+);
+
+// type is inferred from your selection — only these two methods exist
+const priceRoute = await sdk.getRate({
+  srcToken: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+  destToken: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", // ETH
+  amount: "10000000000",
+  userAddress: account,
+  side: "SELL",
+});
+const hash = await sdk.approveToken(
+  "10000000000",
+  "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+);
+```
+
+## Example: Delta signing only
+
+A front-end that signs Delta orders but does no other reads or writes. The Delta constructors are exported bare from the package root:
+
+```ts
+import {
+  constructPartialSDK,
+  constructAxiosFetcher,
+  constructViemContractCaller,
+  constructGetDeltaPrice,
+  constructBuildDeltaOrder,
+  constructSignDeltaOrder,
+  constructPostDeltaOrder,
+  constructApproveTokenForDelta,
+} from "@velora-dex/sdk";
+
+const fetcher = constructAxiosFetcher(axios);
+const contractCaller = constructViemContractCaller(walletClient, account);
+
+const deltaSDK = constructPartialSDK(
+  { chainId: 1, fetcher, contractCaller },
+  constructGetDeltaPrice,
+  constructBuildDeltaOrder,
+  constructSignDeltaOrder,
+  constructPostDeltaOrder,
+  constructApproveTokenForDelta,
+);
+
+const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
+const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
+const amount = "10000000000";
+
+const price = await deltaSDK.getDeltaPrice({
+  srcToken: USDC,
+  destToken: ETH,
+  amount,
+  srcDecimals: 6,
+  destDecimals: 18,
+  userAddress: account,
+  partner: "my-app-name",
+});
+
+await deltaSDK.approveTokenForDelta(amount, USDC);
+
+const built = await deltaSDK.buildDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  slippage: 50, // 0.5% in bps
+});
+
+const signature = await deltaSDK.signDeltaOrder(built);
+const auction = await deltaSDK.postDeltaOrder({
+  order: built.toSign.value as any,
+  signature,
+  partner: "my-app-name",
+});
+```
+
+Bundlers tree-shake whichever members you don't reference, so this example pulls in only the constructors above.
+
+## Available constructors
+
+Pass any combination of these. Methods on the resulting SDK match the names listed in [Simple SDK → Available methods](/sdk/simple-sdk#available-methods). All constructors are exported bare from the package root.
+
+| Module | Constructors                                                                                                                                                                                                                                                                                                                                                  |
+| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Delta  | `constructGetDeltaPrice`, `constructBuildDeltaOrder`, `constructSignDeltaOrder`, `constructPostDeltaOrder`, `constructSubmitDeltaOrder` (orchestrator), `constructGetDeltaOrders`, `constructCancelDeltaOrder`, `constructApproveTokenForDelta`, `constructPreSignDeltaOrder`, `constructDeltaTokenModule`, `constructGetDeltaContract`, `constructGetPartnerFee`, `constructGetBridgeRoutes`, `constructIsTokenSupportedInDelta`, `constructGetAgentsList` |
+| TWAP   | `constructBuildTWAPDeltaOrder`, `constructPostTWAPDeltaOrder`, `constructSubmitTWAPDeltaOrder`, `constructPreSignTWAPDeltaOrder`                                                                                                                                                                                                                                |
+| Swap   | `constructGetRate`, `constructBuildTx`, `constructApproveToken`, `constructGetBalances`, `constructGetSpender`, `constructGetTokens`, `constructGetAdapters`, `constructSwapTx`                                                                                                                                                                                 |
+| Quote  | `constructGetQuote`                                                                                                                                                                                                                                                                                                                                            |
+
+The full list lives in [`src/index.ts`](https://github.com/VeloraDEX/sdk/blob/master/src/index.ts).
+
+<Tip>
+  Several constructors come in pairs. For example, `constructBuildDeltaOrder` +
+  `constructSignDeltaOrder` + `constructPostDeltaOrder`, or
+  `constructSubmitDeltaOrder` (which orchestrates all three). Use the
+  orchestrator when you want one call; use the individual constructors when you
+  need custom signing (hardware wallet, multisig, deferred submission).
+</Tip>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card
+    title="Choose a variant"
+    icon="code-branch"
+    href="/sdk/choose-a-variant"
+  >
+    Side-by-side comparison of Simple, Full, and Partial.
+  </Card>
+  <Card
+    title="Configure providers"
+    icon="sliders"
+    href="/sdk/configure-providers"
+  >
+    Construct the fetcher and contract caller you'll pass in.
+  </Card>
+  <Card title="Swaps → Delta" icon="bolt" href="/sdk/products/delta">
+    Delta order lifecycle, including the split build/sign/post flow.
+  </Card>
+  <Card
+    title="Swaps → Market"
+    icon="arrows-left-right"
+    href="/sdk/products/swap"
+  >
+    Market-Swap walkthrough using individual constructors.
+  </Card>
+</CardGroup>

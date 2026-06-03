@@ -1,0 +1,158 @@
+---
+title: "Limit orders"
+description: "Place gasless, MEV-protected limit orders from the SDK. In Velora, limit orders are Delta orders with a target-price constraint, built through sdk.delta."
+keywords: ["sdk", "limit orders", "delta", "LIMIT", "target price", "gasless"]
+---
+
+In Velora, a **limit order is a Delta order with a target-price constraint**. The user signs once, the [Portikus](/delta/overview) solver network competes to fill it at or better than the limit price, and the user pays no gas. It's the same engine that settles Delta market orders, just with a price condition instead of immediate execution.
+
+You build limit orders through the same `sdk.delta` module as market Delta orders. The only difference is that you pin the output (the limit price) and mark the order `LIMIT` instead of letting it fill at the prevailing market rate.
+
+<Note>
+  For the conceptual model (maker/taker, expiry, nonces, how a limit order
+  differs from a swap or OTC), see [Product stack → Limit
+  orders](/overview/product-stack/limit-orders).
+</Note>
+
+## When to use this
+
+- The user cares more about a target price than immediate settlement. They're willing to wait for the market to come to them.
+- You want the order to fill gaslessly and with MEV protection when the price condition is met.
+- You want a single signature, with no transaction to submit and nothing to babysit on-chain.
+
+For swaps that should fill at the current market rate, use a market Delta order or a [Market Swap](/sdk/products/swap) instead.
+
+## The flow
+
+The build → sign → post → poll flow is identical to a [market Delta order](/sdk/products/delta), with two extra fields: the target output and the `LIMIT` type.
+
+<Steps>
+  <Step title="Get a Delta price">
+    Call `sdk.delta.getDeltaPrice` to discover the current route and the
+    contract `spender` to approve. The market quote is your reference point for
+    setting the limit.
+  </Step>
+  <Step title="Approve the source token">
+    Call `sdk.delta.approveTokenForDelta(amount, srcToken)` so the Delta
+    contract can pull the source token. Native tokens skip this step.
+  </Step>
+  <Step title="Build, sign, and post the limit order">
+    Call `sdk.delta.submitDeltaOrder` with your target output and `type:
+    "LIMIT"`, or run `buildDeltaOrder` → `signDeltaOrder` → `postDeltaOrder`
+    yourself when you need control over signing.
+  </Step>
+  <Step title="Poll until it fills (or expires)">
+    A limit order stays `ACTIVE` until a solver can satisfy the limit price.
+    Poll `sdk.delta.getDeltaOrderById` until status is `COMPLETED`, or until
+    your `deadline` passes.
+  </Step>
+</Steps>
+
+## One-call submit
+
+```ts
+const price = await sdk.delta.getDeltaPrice({
+  srcToken: USDC,
+  destToken: ETH,
+  amount: "10000000000", // sell 10,000 USDC
+  srcDecimals: 6,
+  destDecimals: 18,
+  userAddress: account,
+  partner: "my-app-name",
+});
+
+await sdk.delta.approveTokenForDelta("10000000000", USDC);
+
+const auction = await sdk.delta.submitDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  type: "LIMIT",
+  limitAmount: "3000000000000000000", // require at least 3 ETH — your limit price
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // expire in 24h
+  // partiallyFillable: true, // optional, default = fill-or-kill
+});
+
+console.log("limit order id:", auction.id);
+```
+
+Setting `limitAmount` above the quoted output is what makes this a limit order: it's the minimum destination amount you'll accept (your limit price), and the solver network only fills once it can deliver at least that much. A `deadline` is strongly recommended; without it the order rests until cancelled.
+
+## Split flow
+
+Use the three-step flow when you need to customize signing: a hardware wallet, an async multisig, or batched signing across several orders.
+
+```ts
+const built = await sdk.delta.buildDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  limitAmount: "3000000000000000000", // minimum dest amount (3 ETH) — your limit price
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
+});
+
+const signature = await sdk.delta.signDeltaOrder(built);
+
+const auction = await sdk.delta.postDeltaOrder({
+  order: built.toSign.value as any,
+  signature,
+  partner: "my-app-name",
+  type: "LIMIT",
+});
+```
+
+In the split flow the limit price (`limitAmount`) is set at **build** time, while `type: "LIMIT"` is passed at **post** time. The one-call `submitDeltaOrder` above takes both together.
+
+If your signer is a smart contract that can't produce an off-chain EIP-712 signature, use `sdk.delta.preSignDeltaOrder` to register the order hash on-chain instead.
+
+## Poll for the fill
+
+```ts
+import { OrderHelpers } from "@velora-dex/sdk";
+
+const intervalId = setInterval(async () => {
+  const updated = await sdk.delta.getDeltaOrderById(auction.id);
+  if (OrderHelpers.checks.isExecutedAuction(updated)) {
+    clearInterval(intervalId);
+    console.log("limit order filled");
+  }
+}, 5000);
+```
+
+Unlike a market order, a limit order can rest `ACTIVE` for a long time, so poll on a relaxed interval (or drive your UI from the order list). Status codes are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+
+## List limit orders
+
+Filter the paginated order list by `type` to show a user's open limit orders:
+
+```ts
+const { data, total } = await sdk.delta.getDeltaOrders({
+  userAddress: account,
+  page: 1,
+  limit: 100,
+  type: "LIMIT",
+  // status: ["ACTIVE"], // optional — only open orders
+});
+```
+
+## Cancel a limit order
+
+```ts
+await sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] });
+```
+
+This signs and posts a cancellation. It only succeeds while the order is still open in the auction.
+
+## Partner fee
+
+Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`) to `getDeltaPrice`, `submitDeltaOrder`, `buildDeltaOrder`, and `postDeltaOrder`, exactly as with market Delta orders. See [Monetize](/sdk/monetize) for the full field reference.
+
+## Related pages
+
+- [Swaps → Delta](/sdk/products/delta): the full Delta order flow this builds on.
+- [TWAP](/sdk/products/twap), the other scheduled Delta-based order type.
+- [Product stack → Limit orders](/overview/product-stack/limit-orders) — the conceptual model.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes). What each status means.
+- [API reference → Delta](/api-reference/delta/overview) covers the HTTP endpoints behind the module.

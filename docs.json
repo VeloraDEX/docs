@@ -86,13 +86,21 @@
               "sdk/install",
               "sdk/choose-a-variant",
               "sdk/simple-sdk",
-              "sdk/composable-sdk",
+              "sdk/full-sdk",
+              "sdk/partial-sdk",
               {
-                "group": "Modules",
+                "group": "Products",
                 "pages": [
-                  "sdk/modules/swap",
-                  "sdk/modules/limit-orders",
-                  "sdk/modules/delta"
+                  {
+                    "group": "Swaps",
+                    "pages": [
+                      "sdk/products/delta",
+                      "sdk/products/swap"
+                    ]
+                  },
+                  "sdk/products/limit-orders",
+                  "sdk/products/twap",
+                  "sdk/products/otc"
                 ]
               },
               "sdk/configure-providers",
@@ -235,12 +243,44 @@
             ]
           },
           {
-            "group": "Delta API",
+            "group": "Delta API V2",
+            "pages": [
+              "api-reference/delta-v2/overview",
+              "api-reference/delta-v2/prices",
+              "api-reference/delta-v2/bridge-routes",
+              "api-reference/delta-v2/bridge-protocols",
+              "api-reference/delta-v2/strategies",
+              "api-reference/delta-v2/is-token-supported",
+              "api-reference/delta-v2/orders-build",
+              "api-reference/delta-v2/orders-submit",
+              "api-reference/delta-v2/orders-cancel",
+              "api-reference/delta-v2/orders-list",
+              "api-reference/delta-v2/orders-get-by-id",
+              "api-reference/delta-v2/orders-get-by-hash",
+              "api-reference/delta-v2/orders-fillable-balance",
+              "api-reference/delta-v2/agents-list"
+            ]
+          },
+          {
+            "group": "Delta API V1",
             "pages": [
               "api-reference/delta/overview",
               "api-reference/delta/quote",
+              "api-reference/delta/prices",
+              "api-reference/delta/bridge-info",
+              "api-reference/delta/bridge-protocols",
+              "api-reference/delta/strategies",
+              "api-reference/delta/is-token-supported",
+              "api-reference/delta/partner-fee",
               "api-reference/delta/orders-build",
-              "api-reference/delta/orders"
+              "api-reference/delta/orders",
+              "api-reference/delta/orders-cancel",
+              "api-reference/delta/orders-list",
+              "api-reference/delta/orders-get-by-id",
+              "api-reference/delta/orders-get-by-hash",
+              "api-reference/delta/orders-fillable-balance",
+              "api-reference/delta/orderbook",
+              "api-reference/delta/agents-list"
             ]
           },
           {
@@ -273,6 +313,7 @@
             "group": "Migrations",
             "pages": [
               "resources/migrations/index",
+              "resources/migrations/delta-v1-to-v2",
               "resources/migrations/market-to-delta-parallel",
               "resources/migrations/market-to-delta-replace",
               "resources/migrations/augustus-v5-to-v6-2",

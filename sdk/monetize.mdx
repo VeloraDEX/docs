@@ -1,15 +1,85 @@
 ---
-title: "Monetize (fee config)"
-description: "Configure partner fees on SDK calls and collect revenue per trade."
-keywords: ["sdk","fees","monetization"]
+title: "Monetize"
+description: "Add partner fees or surplus share to every SDK call. The same partner key works across Delta orders, Market Swaps, and quotes."
+keywords: ["sdk", "fees", "monetization", "partner", "partnerFee", "takeSurplus"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Every quote, swap, and Delta call accepts a `partner` string and optional fee overrides. The fee is collected on-chain at settlement and routed to your partner address, with no extra integration needed.
 
-## When to use this
+## Quick setup
 
-## Quickstart
+If you've registered your partner key with Velora, just pass `partner` and the server resolves the fee config:
 
-## Examples
+```ts
+const auction = await sdk.delta.submitDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  slippage: 50,
+});
+```
+
+To override the registered defaults per call, pass the fee fields directly:
+
+```ts
+const auction = await sdk.delta.submitDeltaOrder({
+  route: price.route,
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  partnerAddress: "0xYourFeeCollector",
+  partnerFeeBps: 25, // 0.25%
+  partnerTakesSurplus: false,
+  slippage: 50,
+});
+```
+
+<Note>
+Delta sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them in one call and encodes the fee into the on-chain order — no local round-trip needed.
+</Note>
+
+If you need to obtain the registered defaults programmatically (e.g., to show "0.25% fee" in your UI), call `getPartnerFee` directly:
+
+```ts
+const { partnerAddress, partnerFee, takeSurplus } =
+  await sdk.delta.getPartnerFee({ partner: "my-app-name" });
+```
+
+## Fields
+
+| Field | Type | Description |
+|---|---|---|
+| `partner` | `string` | Your partner-key string (e.g. `"my-app-name"`). Used for attribution; required for partner features. |
+| `partnerAddress` | `string` | Optional. Ethereum address that receives the fee. Overrides the address registered for `partner`. |
+| `partnerFeeBps` | `number` | Optional. Fee in basis points. `25` = 0.25%. Max `200` (2%). |
+| `partnerTakesSurplus` | `boolean` | Optional. When `true`, you receive a share of swap surplus instead of a fixed fee. Defaults to `false`. |
+
+<Note>
+**Precedence.** If both `partnerFeeBps` and `partnerTakesSurplus` are set, `partnerFeeBps` wins. To take surplus instead, set `partnerTakesSurplus: true` and **omit** `partnerFeeBps`.
+</Note>
+
+## Fee vs surplus: which to pick
+
+A fixed fee gives predictable per-trade revenue but worsens the user-facing quote; a surplus share is variable but leaves the quote untouched. For the full comparison (including how the split between partner, user, and Velora differs across Delta and Market), see [Monetization](/overview/monetization).
+
+## Where it applies
+
+- **Delta**: pass `partner` (and overrides) to `sdk.delta.getDeltaPrice`, `sdk.delta.submitDeltaOrder`, `sdk.delta.buildDeltaOrder`, and `sdk.delta.postDeltaOrder`. The server encodes the fee into the on-chain order.
+- **Market Swap**: pass `partner` to `sdk.swap.getRate` (inside `options: { partner }`) and `sdk.swap.buildTx` (top-level). Fee is taken from the destination token at settlement.
+- **Quote**: pass `partner` to `sdk.quote.getQuote`. The returned `priceRoute` / `deltaPrice` already accounts for the fee, so the `destAmount` you show users is the net amount.
+
+The fee is collected on-chain at settlement; there is no off-chain accounting step on your side.
+
+## Production tips
+
+- **Load `partner` from an environment variable.** Different builds (staging, production, white-label) can use different keys without code changes.
+- **Audit `partnerAddress`.** Once a swap settles, fees pay to that address on-chain. Treat it like any treasury address.
+- **Don't ship per-call overrides** unless you genuinely vary fees by route or user tier. Registering defaults with Velora keeps your client code simpler and lets you adjust fees without redeploying.
 
 ## Related pages
+
+- [Pro API accounts](/overview/pro-api-accounts): register a partner key and set defaults.
+- [Widget → Monetize](/widget/monetize) — same fee mechanics for the embeddable widget.
+- [Swaps → Delta](/sdk/products/delta) covers the full Delta order flow with partner attribution.
+- [Swaps → Market](/sdk/products/swap), the full Market-Swap flow with partner attribution.

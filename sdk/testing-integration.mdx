@@ -1,15 +1,146 @@
 ---
-title: "Testing integration"
-description: "Test your SDK integration against staging endpoints and verify expected behavior."
-keywords: ["sdk","testing","staging"]
+title: "Test your integration"
+description: "Test SDK flows without burning mainnet funds. Fork mainnet locally, mock the fetcher for unit tests, and verify partner attribution end-to-end."
+keywords: ["sdk", "testing", "fork", "hardhat", "anvil", "mock", "fetcher"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The SDK calls real Velora APIs and real on-chain contracts. To test integrations safely, fork mainnet for end-to-end flows and mock the fetcher for unit tests.
 
 ## When to use this
 
-## Quickstart
+- You're adding the SDK to a project for the first time and want to verify the flow before pointing it at production.
+- You're writing CI tests that should not depend on network connectivity or mainnet balances.
+- You're reproducing a bug a user reported and need a deterministic environment.
 
-## Examples
+## Fork mainnet for end-to-end tests
+
+Velora's contracts (Augustus router, Delta, AugustusRFQ) deploy to production networks only; there's no testnet deployment. The standard pattern is to fork mainnet (or your target chain) and impersonate a funded account.
+
+### Tenderly
+
+Tenderly Virtual TestNets (forks) are the most widely used option: a hosted fork with a public RPC, a block explorer, and unlimited faucet, so you don't run a node locally and your whole team can share one environment. Create a fork in the [Tenderly dashboard](https://dashboard.tenderly.co) (or via the API), then point the SDK at its RPC URL:
+
+```ts
+import { createWalletClient, http } from "viem";
+import { mainnet } from "viem/chains";
+import { constructSimpleSDK } from "@velora-dex/sdk";
+
+const account = "0x1111111111111111111111111111111111111111"; // a funded address
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: http(process.env.TENDERLY_FORK_RPC_URL),
+});
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, fetch },
+  { viemClient: walletClient, account },
+);
+
+// run a swap / Delta flow against the fork — real API responses, fake balances
+```
+
+Fund or impersonate any account with Tenderly's `tenderly_setBalance` / `tenderly_setErc20Balance` RPC methods (or the dashboard), so you don't need a real whale address. Because the RPC is hosted, the same fork works from CI without spinning up a node.
+
+### Anvil (Foundry)
+
+```bash
+anvil --fork-url https://eth-mainnet.alchemyapi.io/v2/$ALCHEMY_KEY
+```
+
+Connect the SDK to the local RPC and impersonate a known USDC whale:
+
+```ts
+import { createWalletClient, createTestClient, http } from "viem";
+import { mainnet } from "viem/chains";
+import { constructSimpleSDK } from "@velora-dex/sdk";
+
+const account = "0x1111111111111111111111111111111111111111"; // a funded address
+
+const testClient = createTestClient({
+  chain: mainnet,
+  mode: "anvil",
+  transport: http("http://127.0.0.1:8545"),
+});
+await testClient.impersonateAccount({ address: account });
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: http("http://127.0.0.1:8545"),
+});
+
+const sdk = constructSimpleSDK(
+  { chainId: 1, fetch },
+  { viemClient: walletClient, account },
+);
+
+// run a swap / Delta flow against the fork — real API responses, fake balances
+```
+
+### Hardhat
+
+The SDK's own tests use a Hardhat fork seeded via the `PROVIDER_URL` env var. The same approach works for your integration:
+
+```js
+// hardhat.config.ts
+networks: {
+  hardhat: {
+    forking: { url: process.env.PROVIDER_URL },
+  },
+},
+```
+
+Run with `PROVIDER_URL=https://mainnet... npx hardhat test`. The Velora SDK exposes overrides for impersonation via your provider; see the SDK's [own hardhat config](https://github.com/VeloraDEX/sdk/blob/master/hardhat.config.ts) for a reference.
+
+<Note>
+  Forking only spoofs the chain state. Quotes still come from the real Velora
+  API. Account-specific endpoints (allowance lookups against the impersonated
+  address) work because the fork's RPC returns the impersonated account's
+  storage.
+</Note>
+
+## Mock the fetcher in unit tests
+
+For unit tests that shouldn't touch the network, pass a custom `FetcherFunction` that returns canned responses. The contract caller is still real, but no HTTP request leaves your process.
+
+```ts
+import { constructSimpleSDK, type FetcherFunction } from "@velora-dex/sdk";
+
+const fixtures: Record<string, any> = {
+  "GET /prices": {
+    priceRoute: { srcAmount: "1000", destAmount: "999" /* ... */ },
+  },
+};
+
+const mockFetcher: FetcherFunction = async ({ url, method }) => {
+  const key = `${method.toUpperCase()} ${new URL(url).pathname}`;
+  if (key in fixtures) return fixtures[key];
+  throw new Error(`unexpected request: ${key}`);
+};
+
+const sdk = constructSimpleSDK({ chainId: 1, fetcher: mockFetcher });
+
+const rate = await sdk.swap.getRate({
+  srcToken: "0x...",
+  destToken: "0x...",
+  amount: "1000",
+  userAddress: "0x...",
+});
+expect(rate.destAmount).toBe("999");
+```
+
+This pattern is also handy in CI: every test is deterministic and runs offline.
+
+## Debugging tips
+
+- **Check `partner`.** A missing or unknown partner key surfaces as `400` on quote/order endpoints. Confirm it's set on every SDK call and matches the partner registered with Velora.
+- **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing, because the EIP-712 domain includes `chainId`.
+- **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing. The SDK's internal retries and partner-fee resolution can issue requests you don't expect.
+- **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, see [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+- **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market Swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
 
 ## Related pages
+
+- [Troubleshooting](/api-reference/troubleshooting): known failure modes per endpoint.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes), covering Delta order statuses and recovery.
+- [Configure providers](/sdk/configure-providers) — fetcher and caller setup.

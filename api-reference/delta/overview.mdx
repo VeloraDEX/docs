@@ -1,13 +1,48 @@
 ---
-title: "Delta API"
-description: "OpenAPI reference for the Velora Delta intents API."
-keywords: ["delta","intents","api"]
+title: "Delta V1 API"
+sidebarTitle: "Overview"
+description: "Local EIP-712 order building, flat order lists, and the unified /quote endpoint with Market fallback. Shares on-chain contracts with Delta V2."
+keywords: ["delta", "delta v1", "api-reference"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Delta V1 is the original Delta protocol surface. The on-chain contracts and settlement model are identical to [Delta V2](/api-reference/delta-v2/overview); V1 differs in how clients assemble and consume orders:
 
-## Parameters
+- **Locally built orders.** Clients compose EIP-712 typed data themselves from a `/delta/prices` (or `/quote`) response. `POST /delta/orders/build` returns the `data` / `domain` / `types` triple to sign.
+- **Flat price.** `GET /delta/prices` returns a single `DeltaPrice` (or `BridgePrice` for crosschain) — no `route` / `alternatives` envelope.
+- **Flat order list.** `GET /delta/orders` returns a plain array, paginated by `page` / `limit` query params (no `total` / `hasMore` envelope).
+- **Locally resolved partner fee.** Clients call `GET /prices/partnerfee/{chainId}` themselves to look up the registered fee config (the V1 SDK caches it).
+- **Unified quote.** `GET /quote` returns either a `delta` block or a `market` block (or both with `mode=ALL`) — useful when you want Delta with automatic Market fallback. V2 doesn't have an equivalent endpoint.
 
-## Examples
+[Delta V2](/api-reference/delta-v2/overview) is recommended for new integrations. V1 remains fully supported.
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/quote` | Unified Delta-with-fallback-to-Market price |
+| `GET` | `/delta/prices` | Delta price (same-chain or crosschain) |
+| `GET` | `/delta/prices/bridge-info` | Supported crosschain lanes (srcChainId → destChainId → tokens) |
+| `GET` | `/delta/prices/bridge-protocols` | Active bridge protocols (slug, name, icon) |
+| `GET` | `/delta/prices/strategies/{chainId}` | Delta yield strategies with APR |
+| `GET` | `/delta/prices/is-token-supported` | Quick token-support check |
+| `GET` | `/prices/partnerfee/{chainId}` | Resolve registered partner-fee config (shared with Market) |
+| `POST` | `/delta/orders/build` | EIP-712 typed data ready to sign |
+| `POST` | `/delta/orders` | Submit a signed order |
+| `POST` | `/delta/orders/cancel` | Sign-and-post cancellation |
+| `GET` | `/delta/orders` | List a user's orders (flat array) |
+| `GET` | `/delta/orders/{orderId}` | Order by UUID |
+| `GET` | `/delta/orders/hash/{hash}` | Order by EIP-712 hash |
+| `GET` | `/delta/orders/fillablebalance/...` | Fillable balance for limit-order sizing |
+| `GET` | `/delta/orders/orderbook/{chainId}/{agent}` | Agent-facing orderbook slice (operators only) |
+| `GET` | `/delta/agents/list/{chainId}` | List active auction agents |
+
+## SDK shortcut
+
+This V1 HTTP surface has no SDK wrapper. For the SDK's Delta methods (`sdk.delta.*`) and a 5-minute walkthrough, see [SDK → Delta](/sdk/products/delta).
 
 ## Related pages
+
+- [Why Delta](/delta/overview) — protocol overview.
+- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes) — V1 status model end-to-end.
+- [Delta V2 API](/api-reference/delta-v2/overview) — the recommended surface.
+- [SDK → Delta](/sdk/products/delta) — TypeScript examples.

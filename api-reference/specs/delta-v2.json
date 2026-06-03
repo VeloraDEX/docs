@@ -1,0 +1,606 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Velora Delta API V2",
+    "version": "2.0.0",
+    "description": "Velora Delta API V2 — server-built EIP-712 orders, route-based pricing with alternatives, paginated order history, and a unified status model. Ships alongside Delta V1; both protocols share the same on-chain contracts."
+  },
+  "servers": [
+    { "url": "https://api.velora.xyz", "description": "Production" }
+  ],
+  "paths": {
+    "/delta/v2/prices": {
+      "get": {
+        "summary": "Get a Delta V2 price (same-chain or crosschain)",
+        "description": "Returns a recommended `route` plus `alternatives` (up to a few bridge options for crosschain). Pass the returned `route` and `side` verbatim to `POST /delta/v2/orders/build`.",
+        "operationId": "deltaV2Prices",
+        "parameters": [
+          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 }, "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 8453, 42161, 43114." },
+          { "name": "srcToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0x6B175474E89094C44Da98b954EedeAC495271d0F" } },
+          { "name": "destToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }, "description": "Destination token. For crosschain quotes, the destination token on `destChainId`." },
+          { "name": "amount", "in": "query", "required": true, "schema": { "type": "string", "example": "1000000000000000000" }, "description": "Source amount (SELL) or destination amount (BUY), in raw token units." },
+          { "name": "srcDecimals", "in": "query", "required": true, "schema": { "type": "integer", "example": 18 } },
+          { "name": "destDecimals", "in": "query", "required": true, "schema": { "type": "integer", "example": 6 } },
+          { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
+          { "name": "destChainId", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Omit for same-chain. When set, response `route.bridge` is populated." },
+          { "name": "userAddress", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "beneficiary", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Address that receives the destination token. Defaults to `userAddress`." },
+          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon", "example": "my-app-name" }, "description": "Partner key. Defaults to `anon` (1bps fee)." },
+          { "name": "partnerFeeBps", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0, "maximum": 200 }, "description": "Override partner fee in basis points (max 200 = 2%)." },
+          { "name": "maxImpact", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Maximum price impact in % (default 15)." },
+          { "name": "maxUSDImpact", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Maximum price impact in USD." },
+          { "name": "includeAgents", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of agent names to include." },
+          { "name": "excludeAgents", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of agent names to exclude." },
+          { "name": "includeBridges", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated bridge protocol names to include (crosschain only)." },
+          { "name": "excludeBridges", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated bridge protocol names to exclude." },
+          { "name": "allowBridgeAndSwap", "in": "query", "required": false, "schema": { "type": "boolean", "default": true }, "description": "Allow combining bridge + on-chain swap. Forced to `false` for BUY side." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recommended route plus alternatives.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PriceV2" }
+              }
+            }
+          },
+          "400": { "description": "Invalid parameters or no route" },
+          "422": { "description": "Unsupported chain or token" }
+        }
+      }
+    },
+    "/delta/v2/prices/bridge-routes": {
+      "get": {
+        "summary": "List supported crosschain bridge routes",
+        "description": "Returns the set of `(srcChainId, destChainId, tokens)` triples that the relayer can quote.",
+        "operationId": "deltaV2BridgeRoutes",
+        "parameters": [
+          { "name": "bridges", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated bridge protocol names (e.g., `acrossv3,stargatev2`). Omit to list every active bridge." },
+          { "name": "allowBridgeAndSwap", "in": "query", "required": false, "schema": { "type": "boolean", "default": true } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Flat list of supported routes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "routes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "srcChainId": { "type": "integer" },
+                          "destChainId": { "type": "integer" },
+                          "tokens": { "type": "array", "items": { "type": "string" }, "description": "Token addresses bridgeable on this lane." }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delta/v2/prices/bridge-protocols": {
+      "get": {
+        "summary": "List active bridge protocols",
+        "description": "Display catalogue of every bridge protocol currently active in the relayer's `BridgeApi`. Useful for rendering a bridge picker.",
+        "operationId": "deltaV2BridgeProtocols",
+        "responses": {
+          "200": {
+            "description": "Active bridge protocols.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bridgeProtocols": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "protocol": { "type": "string", "description": "Stable protocol slug. Use this for `includeBridges` / `excludeBridges` filters on `GET /delta/v2/prices`." },
+                          "displayName": { "type": "string" },
+                          "icon": { "type": "string", "description": "Absolute URL to a 1:1 SVG icon hosted on cdn.velora.xyz." }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delta/v2/prices/strategies/{chainId}": {
+      "get": {
+        "summary": "List Delta yield strategies (with APR) for a chain",
+        "description": "Returns the on-chain Delta-token vaults wired for `ProductiveOrder` swaps, keyed by the underlying token address. APRs are refreshed server-side every 3 hours; `apr` is `null` when the strategy is too new to compute.",
+        "operationId": "deltaV2Strategies",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Map of `underlyingTokenAddress → { address, strategies }`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "address": { "type": "string", "description": "Delta token (dToken) wrapper address." },
+                      "strategies": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "vault": { "type": "string", "description": "ERC-4626 vault address. Pass this as `strategy` to `POST /delta/v2/orders/build` for a `ProductiveOrder`." },
+                            "name": { "type": "string" },
+                            "apr": {
+                              "type": "object",
+                              "nullable": true,
+                              "properties": {
+                                "gross": { "type": "string", "description": "Gross APR as a decimal string (e.g. `\"0.052\"` = 5.2%)." },
+                                "net": { "type": "string", "description": "Net APR after fees, decimal string." }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Unsupported chain" }
+        }
+      }
+    },
+    "/delta/v2/prices/is-token-supported": {
+      "get": {
+        "summary": "Check whether a token is supported for Delta on a chain",
+        "operationId": "deltaV2IsTokenSupported",
+        "parameters": [
+          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 } },
+          { "name": "token", "in": "query", "required": true, "schema": { "type": "string", "example": "0x6B175474E89094C44Da98b954EedeAC495271d0F" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token support flag.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "supported": { "type": "boolean" } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delta/v2/orders/build": {
+      "post": {
+        "summary": "Build a signable Delta V2 order from a route",
+        "description": "Returns EIP-712 typed data ready to sign and the order hash. Pass the unmodified `route` from `GET /delta/v2/prices`. Use `orderType` to select Standard / External / Productive / TWAP families.",
+        "operationId": "deltaV2OrdersBuild",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BuildOrderV2Request" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "EIP-712 typed data ready to sign.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BuiltOrderV2" }
+              }
+            }
+          },
+          "400": { "description": "Invalid params (missing TWAP totals, mismatched slice amounts, etc.)" }
+        }
+      }
+    },
+    "/delta/v2/orders": {
+      "post": {
+        "summary": "Submit a signed Delta V2 order",
+        "description": "Validates EIP-712 signature, nonce, balance, and allowance, then enrolls the order into the sealed-bid auction.",
+        "operationId": "deltaV2OrdersSubmit",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubmitOrderV2Request" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Order accepted.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
+              }
+            }
+          },
+          "400": { "description": "Invalid signature, expired, or balance/allowance failure" }
+        }
+      },
+      "get": {
+        "summary": "List a user's Delta V2 orders (paginated)",
+        "operationId": "deltaV2OrdersList",
+        "parameters": [
+          { "name": "userAddress", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 } },
+          { "name": "chainId", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated chain IDs. Omit for all chains." },
+          { "name": "type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["MARKET", "LIMIT"] } },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated `OrderStatusV2` values. See [Order lifecycle](/delta/order-lifecycle-and-status-codes)." },
+          { "name": "onChainOrderType", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Order", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated envelope.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/DeltaAuction" } },
+                    "total": { "type": "integer" },
+                    "page": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "hasMore": { "type": "boolean" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/delta/v2/orders/cancel": {
+      "post": {
+        "summary": "Cancel one or more Delta V2 orders",
+        "description": "Sign-and-post cancellation. Only succeeds for orders still open in the auction (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`).",
+        "operationId": "deltaV2OrdersCancel",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["orderIds", "signature"],
+                "properties": {
+                  "orderIds": { "type": "array", "items": { "type": "string", "format": "uuid" }, "minItems": 1, "maxItems": 100 },
+                  "signature": { "type": "string", "description": "EIP-712 signature over the cancellation payload." }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancellation accepted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cancelled": { "type": "array", "items": { "type": "string", "format": "uuid" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid signature or order already settled" }
+        }
+      }
+    },
+    "/delta/v2/orders/fillablebalance/{chainId}/{userAddress}/{tokenAddress}": {
+      "get": {
+        "summary": "Compute a user's fillable balance for limit orders",
+        "description": "Returns the user's wallet balance **minus** any source-token already committed to open limit orders on a chain. Use this when sizing a new limit order so it doesn't double-commit funds.\n\n`tokenAddress` is an optional trailing path segment — **omit it** (`/delta/v2/orders/fillablebalance/{chainId}/{userAddress}`) to get the fillable balance for every token with open commitments. With `tokenAddress` set, the response holds a single entry for that token (or `\"0\"` if the user has no open commitments on it).",
+        "operationId": "deltaV2OrdersFillableBalance",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } },
+          { "name": "userAddress", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "tokenAddress", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Source token to inspect. Omit the entire segment to get balances for every committed token." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Map of `tokenAddress → fillableBalance` (raw token units as a string).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { "type": "string" },
+                  "example": {
+                    "0x6B175474E89094C44Da98b954EedeAC495271d0F": "500000000000000000"
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Unsupported chain" }
+        }
+      }
+    },
+    "/delta/v2/orders/{orderId}": {
+      "get": {
+        "summary": "Get a Delta V2 order by ID",
+        "operationId": "deltaV2OrderById",
+        "parameters": [
+          { "name": "orderId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
+              }
+            }
+          },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/delta/v2/orders/hash/{hash}": {
+      "get": {
+        "summary": "Get a Delta V2 order by EIP-712 hash",
+        "operationId": "deltaV2OrderByHash",
+        "parameters": [
+          { "name": "hash", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Order hash returned by `POST /delta/v2/orders/build`." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeltaAuction" }
+              }
+            }
+          },
+          "404": { "description": "Order not found" }
+        }
+      }
+    },
+    "/delta/v2/agents/list/{chainId}": {
+      "get": {
+        "summary": "List active agents competing in the auction for a chain",
+        "description": "Use the names returned here to filter pricing via the `includeAgents` / `excludeAgents` params on `GET /delta/v2/prices`.",
+        "operationId": "deltaV2AgentsList",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of agent names.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                }
+              }
+            }
+          },
+          "400": { "description": "Unsupported chain" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Token": {
+        "type": "object",
+        "properties": {
+          "chainId": { "type": "integer" },
+          "address": { "type": "string" }
+        }
+      },
+      "TokenAmount": {
+        "type": "object",
+        "properties": {
+          "token": { "$ref": "#/components/schemas/Token" },
+          "amount": { "type": "string" },
+          "amountUSD": { "type": "string" }
+        }
+      },
+      "RouteStep": {
+        "type": "object",
+        "properties": {
+          "input": { "$ref": "#/components/schemas/TokenAmount" },
+          "output": { "$ref": "#/components/schemas/TokenAmount" }
+        }
+      },
+      "RouteBridge": {
+        "type": "object",
+        "nullable": true,
+        "properties": {
+          "protocol": { "type": "string" },
+          "estimatedTimeMs": { "type": "integer" },
+          "tags": { "type": "array", "items": { "type": "string", "enum": ["recommended", "fastest", "best-return"] } },
+          "contractParams": {
+            "type": "object",
+            "properties": {
+              "protocolSelector": { "type": "string" },
+              "outputToken": { "type": "string" },
+              "scalingFactor": { "type": "integer" },
+              "protocolData": { "type": "string" }
+            }
+          }
+        }
+      },
+      "Route": {
+        "type": "object",
+        "properties": {
+          "origin": { "$ref": "#/components/schemas/RouteStep" },
+          "destination": { "$ref": "#/components/schemas/RouteStep" },
+          "bridge": { "$ref": "#/components/schemas/RouteBridge" },
+          "fees": {
+            "type": "object",
+            "properties": {
+              "gas": { "$ref": "#/components/schemas/TokenAmount" },
+              "bridge": { "type": "array", "items": { "$ref": "#/components/schemas/TokenAmount" } }
+            }
+          }
+        }
+      },
+      "PriceV2": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Request id (echo for support tickets)." },
+          "side": { "type": "string", "enum": ["SELL", "BUY"] },
+          "inputToken": { "$ref": "#/components/schemas/Token" },
+          "outputToken": { "$ref": "#/components/schemas/Token" },
+          "route": { "$ref": "#/components/schemas/Route" },
+          "alternatives": { "type": "array", "items": { "$ref": "#/components/schemas/Route" }, "description": "Up to N additional routes (crosschain only)." },
+          "partner": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "feePercent": { "type": "number", "description": "Resolved partner fee in percent (0.05 = 0.05%)." }
+            }
+          },
+          "spender": { "type": "string", "description": "Delta contract address; approve this as ERC-20 spender." }
+        }
+      },
+      "BuildOrderV2Request": {
+        "type": "object",
+        "required": ["route", "owner"],
+        "properties": {
+          "side": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" },
+          "route": { "$ref": "#/components/schemas/Route", "description": "Pass the unmodified `route` from `GET /delta/v2/prices`. The chain ID is derived from the route." },
+          "owner": { "type": "string" },
+          "beneficiary": { "type": "string", "description": "Defaults to `owner`." },
+          "deadline": { "type": "integer", "description": "Unix seconds. Defaults to now + 1 hour." },
+          "nonce": { "type": "string" },
+          "permit": { "type": "string", "description": "Permit / Permit2 payload, or `0x` if approved on-chain." },
+          "slippage": { "type": "integer", "minimum": 0, "maximum": 10000, "default": 100, "description": "Slippage in basis points." },
+          "limitAmount": { "type": "string", "description": "Override the SDK-computed destAmount (SELL) / srcAmount (BUY)." },
+          "metadata": { "type": "string", "default": "0x" },
+          "partiallyFillable": { "type": "boolean", "default": false },
+          "partnerAddress": { "type": "string", "description": "Defaults to zero address." },
+          "partnerFeeBps": { "type": "integer", "minimum": 0, "maximum": 200, "default": 0 },
+          "partnerTakesSurplus": { "type": "boolean", "default": false },
+          "capSurplus": { "type": "boolean", "default": true },
+          "orderType": { "type": "string", "enum": ["Order", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"], "default": "Order" },
+          "handler": { "type": "string", "description": "Required for `ExternalOrder`." },
+          "data": { "type": "string", "description": "Required for `ExternalOrder`. Handler-specific encoded bytes." },
+          "strategy": { "type": "string", "description": "Required for `ProductiveOrder`." },
+          "useShares": { "type": "boolean", "default": true },
+          "interval": { "type": "integer", "minimum": 60, "description": "Required for TWAP. Slice interval in seconds." },
+          "numSlices": { "type": "integer", "minimum": 2, "description": "Required for TWAP." },
+          "totalSrcAmount": { "type": "string", "description": "Required for `TWAPOrder`. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`." },
+          "totalDestAmount": { "type": "string", "description": "Required for `TWAPBuyOrder`. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`." },
+          "maxSrcAmount": { "type": "string", "description": "Required for `TWAPBuyOrder`. Maximum total source the user is willing to spend." }
+        }
+      },
+      "BuiltOrderV2": {
+        "type": "object",
+        "properties": {
+          "toSign": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "version": { "type": "string" },
+                  "chainId": { "type": "integer" },
+                  "verifyingContract": { "type": "string" }
+                }
+              },
+              "types": { "type": "object", "description": "EIP-712 typed-data field definitions." },
+              "value": { "type": "object", "description": "The on-chain Order struct values, ready to be signed and submitted." }
+            }
+          },
+          "orderHash": { "type": "string", "description": "EIP-712 hash. Use for status lookup before the order id is assigned." }
+        }
+      },
+      "SubmitOrderV2Request": {
+        "type": "object",
+        "required": ["chainId", "order", "signature", "partner"],
+        "properties": {
+          "chainId": { "type": "integer" },
+          "order": { "type": "object", "description": "The `toSign.value` returned by `POST /delta/v2/orders/build`, sent verbatim." },
+          "signature": { "type": "string", "description": "EIP-712 signature over `order`." },
+          "type": { "type": "string", "enum": ["MARKET", "LIMIT"], "default": "MARKET" },
+          "partner": { "type": "string", "example": "my-app-name" },
+          "referrerAddress": { "type": "string" },
+          "partiallyFillable": { "type": "boolean", "default": false },
+          "includeAgents": { "type": "array", "items": { "type": "string" } },
+          "excludeAgents": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "DeltaAuction": {
+        "type": "object",
+        "description": "V2 order shape returned by every order endpoint (reads and posts). `input` and `output` carry the *expected* + *executed* amounts so you don't need to compute fill-percent yourself. `onChainOrderType` selects the family the `order` struct belongs to.",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "status": { "type": "string", "enum": ["PENDING", "AWAITING_SIGNATURE", "ACTIVE", "SUSPENDED", "CANCELLING", "BRIDGING", "COMPLETED", "FAILED", "EXPIRED", "CANCELLED", "REFUNDED"] },
+          "side": { "type": "string", "enum": ["SELL", "BUY"] },
+          "type": { "type": "string", "enum": ["MARKET", "LIMIT"] },
+          "onChainOrderType": { "type": "string", "enum": ["Order", "FillableOrder", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] },
+          "input": {
+            "type": "object",
+            "description": "Source-side token movement. SELL: `{ chainId, token, amount }`. BUY: `{ chainId, token, expectedAmount, executedAmount }`.",
+            "properties": {
+              "chainId": { "type": "integer" },
+              "token": { "type": "string" },
+              "amount": { "type": "string" },
+              "expectedAmount": { "type": "string", "nullable": true },
+              "executedAmount": { "type": "string", "nullable": true }
+            }
+          },
+          "output": {
+            "type": "object",
+            "description": "Destination-side token movement. SELL: `{ chainId, token, expectedAmount, executedAmount }`. BUY: `{ chainId, token, amount }`.",
+            "properties": {
+              "chainId": { "type": "integer" },
+              "token": { "type": "string" },
+              "amount": { "type": "string" },
+              "expectedAmount": { "type": "string", "nullable": true },
+              "executedAmount": { "type": "string", "nullable": true }
+            }
+          },
+          "owner": { "type": "string" },
+          "beneficiary": { "type": "string" },
+          "orderHash": { "type": "string" },
+          "partner": { "type": "string" },
+          "order": { "type": "object", "description": "The signed on-chain Order struct." },
+          "transactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "originTx": { "type": "string" },
+                "destinationTx": { "type": "string", "nullable": true, "description": "Set for crosschain orders once the fill lands on `destChainId`." },
+                "filledPercent": { "type": "number", "description": "0–100." },
+                "spentAmount": { "type": "string", "nullable": true },
+                "receivedAmount": { "type": "string", "nullable": true }
+              }
+            }
+          },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" },
+          "expiresAt": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  }
+}

@@ -1,15 +1,194 @@
 ---
 title: "Configure providers"
-description: "Wire your own RPC providers, signer, and chain config into the SDK."
-keywords: ["sdk","providers","rpc"]
+description: "Wire your wallet library (viem, ethers v5/v6, web3) and HTTP client (axios, fetch, custom) into the SDK."
+keywords:
+  ["sdk", "providers", "viem", "ethers", "web3", "axios", "fetch", "wagmi"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The SDK separates **what** (the Velora methods) from **how it talks to the chain and the API**. You wire two things:
 
-## When to use this
+- A **contract caller** bridges between the SDK's `transactCall` / `signTypedDataCall` / `staticCall` interface and your wallet library.
+- A **fetcher** bridges between the SDK's `FetcherFunction` and your HTTP client.
 
-## Quickstart
+[Simple SDK](/sdk/simple-sdk) builds both for you from a single options object. [Full SDK](/sdk/full-sdk) and [Partial](/sdk/partial-sdk) SDKs take them as constructor arguments.
 
-## Examples
+## Contract callers
+
+### viem
+
+```ts
+import { createWalletClient, custom } from "viem";
+import { mainnet } from "viem/chains";
+import { constructViemContractCaller } from "@velora-dex/sdk";
+
+const walletClient = createWalletClient({
+  chain: mainnet,
+  transport: custom(window.ethereum!),
+});
+const [account] = await walletClient.getAddresses();
+
+const contractCaller = constructViemContractCaller(walletClient, account);
+```
+
+Write methods resolve to a viem `Hex` (the transaction hash).
+
+<Tip>
+For sending the result of `sdk.swap.buildTx` via viem, the SDK exports `txParamsToViemTxParams` to cast all string-numbers to `BigInt`:
+
+```ts
+import { txParamsToViemTxParams } from "@velora-dex/sdk";
+
+const tx = await sdk.swap.buildTx({
+  /* ... */
+});
+const viemTx = txParamsToViemTxParams(tx);
+const hash = await walletClient.sendTransaction({ ...viemTx, account });
+```
+
+</Tip>
+
+### ethers v5
+
+```ts
+import { ethers } from "ethers";
+import { constructEthersContractCaller } from "@velora-dex/sdk";
+
+const contractCaller = constructEthersContractCaller(
+  {
+    ethersProviderOrSigner: signer, // JsonRpcProvider, Wallet, or Web3Provider
+    EthersContract: ethers.Contract,
+  },
+  account,
+);
+```
+
+Write methods resolve to `ethers.ContractTransaction`. You can call `.wait()` directly on the result.
+
+### ethers v6
+
+```ts
+import { ethers } from "ethers";
+import { constructEthersV6ContractCaller } from "@velora-dex/sdk";
+
+const contractCaller = constructEthersV6ContractCaller(
+  {
+    ethersV6ProviderOrSigner: signer,
+    EthersV6Contract: ethers.Contract,
+  },
+  account,
+);
+```
+
+Write methods resolve to ethers v6's `ContractTransactionResponse`.
+
+### web3.js
+
+```ts
+import Web3 from "web3";
+import { constructWeb3ContractCaller } from "@velora-dex/sdk";
+
+const web3 = new Web3(Web3.givenProvider);
+const contractCaller = constructWeb3ContractCaller(web3, account);
+```
+
+Write methods resolve to web3's `PromiEvent<TransactionReceipt>`. Listen on `transactionHash` for early notification:
+
+```ts
+const eventfulTx = await sdk.swap.approveToken(amount, USDC);
+eventfulTx.once("transactionHash", (hash: string) =>
+  console.log("tx sent:", hash),
+);
+```
+
+## Fetchers
+
+### axios
+
+```ts
+import axios from "axios";
+import { constructAxiosFetcher } from "@velora-dex/sdk";
+
+const fetcher = constructAxiosFetcher(axios);
+```
+
+### fetch (Node 18+ and the browser)
+
+```ts
+import { constructFetchFetcher } from "@velora-dex/sdk";
+
+const fetcher = constructFetchFetcher(fetch);
+```
+
+### Custom fetcher
+
+Any HTTP client works: implement `FetcherFunction` and pass it through. Useful for adding retries, logging, header injection, or wrapping an unusual transport.
+
+```ts
+import { constructSimpleSDK, type FetcherFunction } from "@velora-dex/sdk";
+
+const customFetcher: FetcherFunction = async (options) => {
+  // requestParams may include AbortSignal — honor it for cancellation
+  const res = await myHttpClient(options.url, {
+    method: options.method,
+    headers: options.headers,
+    body: options.method === "POST" ? options.data : undefined,
+    signal: options.requestParams?.signal,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.body;
+};
+
+const sdk = constructSimpleSDK({
+  chainId: 1,
+  fetcher: customFetcher,
+});
+```
+
+For richer error semantics, throw a `FetcherError` and the SDK will re-throw it untouched so calling code can `isFetcherError(err)` and inspect the response.
+
+## wagmi recipe
+
+If your app already uses [wagmi](https://wagmi.sh), reuse the viem wallet client it manages:
+
+```ts
+import axios from "axios";
+import { useAccount, useWalletClient } from "wagmi";
+import {
+  constructPartialSDK,
+  constructAxiosFetcher,
+  constructViemContractCaller,
+  constructGetRate,
+  constructBuildTx,
+  constructApproveToken,
+} from "@velora-dex/sdk";
+
+function useVeloraSDK() {
+  const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+
+  if (!walletClient || !address) return null;
+
+  const fetcher = constructAxiosFetcher(axios);
+  const contractCaller = constructViemContractCaller(walletClient, address);
+
+  return constructPartialSDK(
+    {
+      chainId: walletClient.chain.id,
+      fetcher,
+      contractCaller,
+    },
+    constructGetRate,
+    constructBuildTx,
+    constructApproveToken,
+  );
+}
+```
+
+Memoize the result (with `useMemo` on the wallet client and address) to avoid rebuilding the SDK on every render.
 
 ## Related pages
+
+- [Install](/sdk/install) covers peer dependencies for each wallet library.
+- [Simple SDK](/sdk/simple-sdk): uses these callers and fetchers via a single options object.
+- [Full SDK](/sdk/full-sdk) — takes the caller and fetcher you construct here.
+- [Partial SDK](/sdk/partial-sdk), same wiring, smallest bundle.
