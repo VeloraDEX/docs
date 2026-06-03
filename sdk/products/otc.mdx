@@ -1,12 +1,12 @@
 ---
 title: "OTC"
 description: "Settle a direct trade between two known counterparties from the SDK. A maker signs an AugustusRFQ order naming a specific taker, and that taker fills it on-chain."
-keywords: ["sdk", "otc", "rfq", "augustusRFQ", "p2p", "maker", "taker", "limitOrders"]
+keywords: ["sdk", "otc", "rfq", "augustusRFQ", "p2p", "maker", "taker", "otcOrders"]
 ---
 
-**OTC** (over-the-counter) is a direct trade negotiated between two known counterparties rather than discovered through a public route. In the SDK it's a signed AugustusRFQ order, exposed under the `sdk.otc` namespace: a **maker** signs the terms off-chain naming a specific **taker**, and only that taker can fill the order on-chain.
+**OTC** (over-the-counter) is a direct trade negotiated between two known counterparties rather than discovered through a public route. In the SDK it's a signed AugustusRFQ order, exposed under the `sdk.otcOrders` namespace: a **maker** signs the terms off-chain naming a specific **taker**, and only that taker can fill the order on-chain.
 
-Mechanically it's the same signed-order flow as a classic on-chain limit order. The difference is the **`taker`** field. Set it to a counterparty's address and the order is a private, fillable-by-one OTC trade (`P2P`); leave it open and anyone could fill it.
+Mechanically it's a signed on-chain order whose defining field is the **`taker`**: you name the counterparty's address, and only that address can fill the order — a private, fillable-by-one OTC trade (`P2P`).
 
 <Note>
 This is for **bilateral, counterparty-specific** trades. For open, target-price orders that any solver can fill, use [Limit orders](/sdk/products/limit-orders) (Delta) instead; those are gasless and MEV-protected. For the conceptual difference, see [Product stack → OTC](/overview/product-stack/otc).
@@ -24,16 +24,16 @@ OTC has two sides. The **maker** builds and signs the order (gasless, off-chain)
 
 <Steps>
   <Step title="Maker approves the maker asset">
-    The maker approves AugustusRFQ to pull the asset they're selling: `sdk.otc.approveMakerTokenForLimitOrder(makerAmount, makerAsset)`.
+    The maker approves AugustusRFQ to pull the asset they're selling: `sdk.otcOrders.approveMakerTokenForOTCOrder(makerAmount, makerAsset)`.
   </Step>
   <Step title="Maker signs and posts the order">
-    The maker builds an order naming the intended `taker`, signs the EIP-712 typed data, and posts it: `sdk.otc.submitP2POrder({ ...terms, taker })`. No gas, no transaction.
+    The maker builds an order naming the intended `taker`, signs the EIP-712 typed data, and posts it: `sdk.otcOrders.submitOTCOrder({ ...terms, taker })`. No gas, no transaction.
   </Step>
   <Step title="Taker approves the taker asset">
-    The taker approves AugustusRFQ for the asset they're paying with: `sdk.otc.approveTakerTokenForFillingP2POrderDirectly(takerAmount, takerAsset)`.
+    The taker approves AugustusRFQ for the asset they're paying with: `sdk.otcOrders.approveTakerTokenForOTCOrder(takerAmount, takerAsset)`.
   </Step>
   <Step title="Taker fills on-chain">
-    The taker submits the fill: `sdk.otc.fillOrderDirectly({ order, signature })`. AugustusRFQ verifies the signature and the named taker, then settles the swap.
+    The taker submits the fill: `sdk.otcOrders.fillOTCOrder({ order, signature })`. AugustusRFQ verifies the signature and the named taker, then settles the swap.
   </Step>
 </Steps>
 
@@ -44,13 +44,13 @@ const USDC = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48";
 const ETH = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE";
 
 // 1. Approve the asset the maker is selling
-await sdk.otc.approveMakerTokenForLimitOrder(
+await sdk.otcOrders.approveMakerTokenForOTCOrder(
   "10000000000", // 10,000 USDC
   USDC,
 );
 
 // 2. Build, sign, and post in one call — `taker` is what makes it OTC
-const order = await sdk.otc.submitP2POrder({
+const order = await sdk.otcOrders.submitOTCOrder({
   maker: account,
   taker: counterparty, // the intended counterparty — only this address can fill
   makerAsset: USDC,
@@ -64,7 +64,7 @@ const order = await sdk.otc.submitP2POrder({
 // (API, your backend, or any off-chain channel)
 ```
 
-To split the steps (e.g. to sign with a hardware wallet), use `sdk.otc.buildLimitOrder` → `sdk.otc.signLimitOrder` → `sdk.otc.postP2POrder`.
+To split the steps (e.g. to sign with a hardware wallet), use `sdk.otcOrders.buildOTCOrder` → `sdk.otcOrders.signOTCOrder` → `sdk.otcOrders.postOTCOrder`.
 
 ## Taker: fill the order
 
@@ -72,13 +72,13 @@ The taker receives the maker's signed order, approves the asset they're paying w
 
 ```ts
 // 1. Approve the asset the taker is paying with (skip for native ETH)
-await sdk.otc.approveTakerTokenForFillingP2POrderDirectly(
+await sdk.otcOrders.approveTakerTokenForOTCOrder(
   order.takerAmount,
   order.takerAsset,
 );
 
 // 2. Fill directly against AugustusRFQ
-const tx = await sdk.otc.fillOrderDirectly({
+const tx = await sdk.otcOrders.fillOTCOrder({
   order, // the maker's order data
   signature: order.signature, // the maker's signature
 });
@@ -90,24 +90,18 @@ The fill reverts if the order is expired, already filled, or the caller isn't th
 
 ```ts
 // Maker: list your OTC orders
-const mine = await sdk.otc.getLimitOrders({
-  maker: account,
-  type: "P2P",
-});
+const mine = await sdk.otcOrders.getOTCOrders({ maker: account });
 
 // Taker: list orders addressed to you
-const forMe = await sdk.otc.getLimitOrders({
-  taker: account,
-  type: "P2P",
-});
+const forMe = await sdk.otcOrders.getOTCOrders({ taker: account });
 
 // Maker: cancel an unfilled order on-chain
-await sdk.otc.cancelLimitOrder(orderHash);
+await sdk.otcOrders.cancelOTCOrder(orderHash);
 ```
 
 Cancellation here is an on-chain call to AugustusRFQ, so it costs gas, unlike the gasless `cancelDeltaOrders` flow for Delta orders.
 
-`sdk.otc.getLimitOrdersContract()` returns the AugustusRFQ address for the active chain; see [Chains & contracts](/resources/chains-and-contracts) for all deployments.
+`sdk.otcOrders.getOTCOrdersContract()` returns the AugustusRFQ address for the active chain; see [Chains & contracts](/resources/chains-and-contracts) for all deployments.
 
 ## Related pages
 
