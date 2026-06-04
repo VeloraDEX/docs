@@ -13,7 +13,7 @@ The OTC API settles a direct trade between two known counterparties. A **maker**
 - **Verifiable settlement.** The fill resolves on-chain through AugustusRFQ, so the outcome is auditable and non-custodial.
 
 <Note>
-  Want an **open, target-price order** any solver can fill — gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /quote`](/api-reference/quote/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta-v2/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
+  Want an **open, target-price order** any solver can fill — gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /quote`](/api-reference/quote/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
 </Note>
 
 ## Lifecycle
@@ -91,7 +91,7 @@ Every step is wrapped by [`sdk.otcOrders.*`](/sdk/products/otc) — maker approv
 ## Related pages
 
 - [OTC, conceptually](/overview/product-stack/otc) — when the counterparty matters as much as the price.
-- [Delta V2 overview](/api-reference/delta-v2/overview) — open, gasless, MEV-protected limit orders (`type=LIMIT`).
+- [Delta V2 overview](/api-reference/delta/overview) — open, gasless, MEV-protected limit orders (`type=LIMIT`).
 - [SDK → OTC](/sdk/products/otc) — maker and taker flows in TypeScript.
 - [Chains & contracts](/resources/chains-and-contracts) — AugustusRFQ deployment addresses.
 - [AugustusRFQ security audit](/resources/security/audits/augustus-rfq) — the settlement contract's audit history.
