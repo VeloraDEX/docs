@@ -282,13 +282,6 @@
         "tab": "Resources",
         "groups": [
           {
-            "group": "Guides",
-            "pages": [
-              "guides/permit-and-permit2-patterns",
-              "guides/mev-protection-patterns"
-            ]
-          },
-          {
             "group": "Migrations",
             "pages": [
               "resources/migrations/index",

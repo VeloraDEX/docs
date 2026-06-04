@@ -60,7 +60,7 @@ You `POST /transactions/:chainId` with the full `priceRoute` from step 1, the us
 
 If the source token is an ERC-20, the user must approve the Augustus v6.2 router as a spender before the swap. This is a standard `approve(spender, amount)` call. Native source tokens (ETH, MATIC, etc.) skip this step — `value` is sent with the swap tx directly.
 
-You can avoid this round-trip by passing `permit` or `permit2` data in the build call. See [Permit & Permit2 patterns](/guides/permit-and-permit2-patterns).
+You can avoid this round-trip by passing `permit` or `permit2` data in the build call.
 
 ### 4. Settle
 
@@ -87,5 +87,4 @@ The user signs the swap transaction and broadcasts it. The Augustus router pulls
 
 - [Quickstart](/overview/quickstart) — run the flow end-to-end with cURL.
 - [Market API reference](/api-reference/market/overview) — endpoints, parameters, response schemas.
-- [Permit & Permit2 patterns](/guides/permit-and-permit2-patterns) — skip the separate approve transaction.
 - [Augustus router](/resources/chains-and-contracts) — per-chain router addresses.

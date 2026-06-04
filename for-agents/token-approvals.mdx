@@ -62,7 +62,6 @@ Agent rules for Permit/Permit2:
 - Detect Permit/Permit2 capability **before** asking the user for an on-chain `approve` — collect the signature instead when supported.
 - A Permit/Permit2 signature is a user authorization, not a free no-op. Confirm with the user before requesting the signature, the same way you would confirm an on-chain approval.
 - Permit/Permit2 signatures bind to a specific spender, amount, deadline, and (for Permit2) nonce. If you requote into a different mode, the existing signature is **not transferable** — collect a new one for the new spender.
-- For the canonical patterns (when to use Permit vs Permit2, per-token quirks, deadline handling), link out to [Permit & Permit2 patterns](/guides/permit-and-permit2-patterns).
 
 ## Allowance checks before signing
 
@@ -135,9 +134,6 @@ If the user accepts a quote, the approval lands on the matching spender, then th
   </Card>
   <Card title="Five-call recipe" icon="repeat" href="/for-agents/five-call-recipe">
     The canonical agent loop: quote, build, authorize, submit, track.
-  </Card>
-  <Card title="Permit & Permit2 patterns" icon="signature" href="/guides/permit-and-permit2-patterns">
-    General-purpose reference for Permit and Permit2 signing flows.
   </Card>
   <Card title="Chains & contracts" icon="link" href="/resources/chains-and-contracts">
     Per-chain contract addresses for Augustus, Delta, and AugustusRFQ.

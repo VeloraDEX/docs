@@ -187,7 +187,7 @@
       "status": 400,
       "match": "Permit / Permit2 required",
       "cause": "The token requires Permit or Permit2 and the build request didn't include the payload.",
-      "fix": "Detect Permit/Permit2 capability up front; see /guides/permit-and-permit2-patterns.",
+      "fix": "Detect Permit/Permit2 capability up front and include the payload in the build request.",
       "docs": "/api-reference/troubleshooting#post-delta-orders-build"
     },
     {

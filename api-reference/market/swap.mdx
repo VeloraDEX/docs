@@ -59,7 +59,7 @@ A `200` returns two objects:
 
 <Steps>
   <Step title="Approve (ERC-20 source only)">
-    Approve the Augustus v6.2 router (`txParams.to`) to spend `srcToken` — a standard `approve(to, amount)`. Native sources (ETH, etc.) skip this; the amount rides along in `txParams.value`. To drop the extra transaction, switch to the two-step flow with [Permit / Permit2](/guides/permit-and-permit2-patterns).
+    Approve the Augustus v6.2 router (`txParams.to`) to spend `srcToken` — a standard `approve(to, amount)`. Native sources (ETH, etc.) skip this; the amount rides along in `txParams.value`. To drop the extra transaction, switch to the two-step flow and pass Permit / Permit2 data in the build call.
   </Step>
   <Step title="Estimate gas">
     Run `eth_estimateGas` on `txParams` (or simulate the call). The response omits `gas` by design — never broadcast with a hardcoded limit.

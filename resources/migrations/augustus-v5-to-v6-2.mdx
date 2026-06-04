@@ -4,8 +4,6 @@ description: "Contract-integrator upgrade: calldata diffs, removed TokenTransfer
 keywords: ["migration","augustus","v5","v6.2","contracts"]
 ---
 
-<Note>This page is a stub. Full content lands in Workstream C.2.</Note>
-
 ## What breaks if you do nothing
 
 Calldata returned by `POST /transactions` now targets Augustus v6.2 by default. If your contract integration hardcoded the v5 router or `TokenTransferProxy` address, those approvals and contract calls will silently route to a deprecated surface.
