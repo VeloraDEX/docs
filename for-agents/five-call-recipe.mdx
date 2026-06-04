@@ -33,20 +33,21 @@ The exact endpoint sequence depends on the selected execution path. Use [Decisio
 Use Delta when the user wants gasless execution, MEV protection, solver competition, or a Delta-only flow.
 
 ```text
-1. GET /quote?mode=DELTA
-2. POST /delta/orders/build
-3. Ask the user to sign the EIP-712 typed data
-4. POST /delta/orders
-5. GET /delta/orders/:id until filled, failed, or expired
+1. GET /v2/quote?mode=DELTA
+2. POST /delta/v2/orders/build
+   - pass the returned delta.route verbatim
+   - set owner to the user's address
+3. Ask the user to sign the returned toSign EIP-712 payload
+4. POST /delta/v2/orders with order=toSign.value, signature, chainId, and partner
+5. GET /delta/v2/orders/{orderId} until COMPLETED, FAILED, or EXPIRED
 ```
 
 Agent rules:
 
 - Use `chainId`, not `network`, on quote requests.
 - Include a `partner` value on quote requests. Use the app or project partner key; examples use `my-app-name` only as a placeholder.
-- Keep the top-level `delta` object and its matching `hmac` together.
-- Pass the `delta` object forward unchanged.
-- Do not grant approval to Augustus for a Delta order.
+- Pass the `delta.route` from the quote response into `/delta/v2/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
+- Do not grant approval to Augustus for a Delta order; approve the Delta contract (the `spender` from the quote response).
 - Track by Delta order ID, not by transaction hash.
 
 ## Market Swap
@@ -164,7 +165,7 @@ Agent rules:
   <Card title="Decision tables" icon="route" href="/for-agents/decision-tables">
     Route user intent and API responses to the next action.
   </Card>
-  <Card title="Delta quote" icon="code" href="/api-reference/delta-v2/quote">
+  <Card title="Delta quote" icon="code" href="/api-reference/delta/quote">
     Quote Delta, Market, or auto-routed paths.
   </Card>
   <Card title="Market transaction" icon="code" href="/api-reference/market/transactions">

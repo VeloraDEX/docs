@@ -32,7 +32,7 @@
     "404": {
       "redirect": false,
       "title": "Page not found",
-      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta-v2/overview) · [Market API](/api-reference/market/prices)."
+      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta/quote) · [Market API](/api-reference/market/prices)."
     }
   },
   "api": {
@@ -238,21 +238,21 @@
           {
             "group": "Delta API",
             "pages": [
-              "api-reference/delta-v2/overview",
-              "api-reference/delta-v2/quote",
-              "api-reference/delta-v2/prices",
-              "api-reference/delta-v2/bridge-routes",
-              "api-reference/delta-v2/bridge-protocols",
-              "api-reference/delta-v2/strategies",
-              "api-reference/delta-v2/is-token-supported",
-              "api-reference/delta-v2/orders-build",
-              "api-reference/delta-v2/orders-submit",
-              "api-reference/delta-v2/orders-cancel",
-              "api-reference/delta-v2/orders-list",
-              "api-reference/delta-v2/orders-get-by-id",
-              "api-reference/delta-v2/orders-get-by-hash",
-              "api-reference/delta-v2/orders-fillable-balance",
-              "api-reference/delta-v2/agents-list"
+              "api-reference/delta/overview",
+              "api-reference/delta/quote",
+              "api-reference/delta/prices",
+              "api-reference/delta/bridge-routes",
+              "api-reference/delta/bridge-protocols",
+              "api-reference/delta/strategies",
+              "api-reference/delta/is-token-supported",
+              "api-reference/delta/orders-build",
+              "api-reference/delta/orders-submit",
+              "api-reference/delta/orders-cancel",
+              "api-reference/delta/orders-list",
+              "api-reference/delta/orders-get-by-id",
+              "api-reference/delta/orders-get-by-hash",
+              "api-reference/delta/orders-fillable-balance",
+              "api-reference/delta/agents-list"
             ]
           },
           {
@@ -260,6 +260,7 @@
             "pages": [
               "api-reference/market/overview",
               "api-reference/market/prices",
+              "api-reference/market/quote",
               "api-reference/market/transactions",
               "api-reference/market/swap"
             ]

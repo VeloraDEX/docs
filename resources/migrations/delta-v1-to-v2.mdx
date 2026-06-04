@@ -25,20 +25,20 @@ V2 keeps the same on-chain settlement model but cleans up the protocol surface:
 
 | V1 | V2 | Notes |
 |---|---|---|
-| `GET /delta/prices` | [`GET /delta/v2/prices`](/api-reference/delta-v2/prices) | Response carries `route` + `alternatives`; `price.hmac` removed |
-| `GET /delta/prices/bridge-info` | [`GET /delta/v2/prices/bridge-routes`](/api-reference/delta-v2/bridge-routes) | Flat `routes[]` array instead of nested `srcChainId → destChainId → tokens[]` map |
-| `GET /delta/prices/bridge-protocols` | [`GET /delta/v2/prices/bridge-protocols`](/api-reference/delta-v2/bridge-protocols) | Same shape |
-| `GET /delta/prices/strategies/{chainId}` | [`GET /delta/v2/prices/strategies/{chainId}`](/api-reference/delta-v2/strategies) | Same shape |
-| `GET /delta/prices/is-token-supported` | [`GET /delta/v2/prices/is-token-supported`](/api-reference/delta-v2/is-token-supported) | Same shape |
+| `GET /delta/prices` | [`GET /delta/v2/prices`](/api-reference/delta/prices) | Response carries `route` + `alternatives`; `price.hmac` removed |
+| `GET /delta/prices/bridge-info` | [`GET /delta/v2/prices/bridge-routes`](/api-reference/delta/bridge-routes) | Flat `routes[]` array instead of nested `srcChainId → destChainId → tokens[]` map |
+| `GET /delta/prices/bridge-protocols` | [`GET /delta/v2/prices/bridge-protocols`](/api-reference/delta/bridge-protocols) | Same shape |
+| `GET /delta/prices/strategies/{chainId}` | [`GET /delta/v2/prices/strategies/{chainId}`](/api-reference/delta/strategies) | Same shape |
+| `GET /delta/prices/is-token-supported` | [`GET /delta/v2/prices/is-token-supported`](/api-reference/delta/is-token-supported) | Same shape |
 | `GET /prices/partnerfee/{chainId}` | _Not needed_ | Pass `partner` / `partnerAddress` / `partnerFeeBps` raw on every V2 call |
-| `POST /delta/orders/build` | [`POST /delta/v2/orders/build`](/api-reference/delta-v2/orders-build) | Different body — pass `route` (not `price` + `hmac`); response wraps typed data in `toSign` |
-| `POST /delta/orders` | [`POST /delta/v2/orders`](/api-reference/delta-v2/orders-submit) | Submit `order: built.toSign.value` instead of `data` from V1 build |
-| `POST /delta/orders/cancel` | [`POST /delta/v2/orders/cancel`](/api-reference/delta-v2/orders-cancel) | Same shape |
-| `GET /delta/orders` | [`GET /delta/v2/orders`](/api-reference/delta-v2/orders-list) | Wraps array in `{ data, total, page, limit, hasMore }` |
-| `GET /delta/orders/{orderId}` | [`GET /delta/v2/orders/{orderId}`](/api-reference/delta-v2/orders-get-by-id) | New response shape — `input` / `output` carry expected + executed amounts |
-| `GET /delta/orders/hash/{hash}` | [`GET /delta/v2/orders/hash/{hash}`](/api-reference/delta-v2/orders-get-by-hash) | Same as above |
-| `GET /delta/orders/fillablebalance/...` | [`GET /delta/v2/orders/fillablebalance/...`](/api-reference/delta-v2/orders-fillable-balance) | Same shape |
-| `GET /delta/agents/list/{chainId}` | [`GET /delta/v2/agents/list/{chainId}`](/api-reference/delta-v2/agents-list) | Same shape |
+| `POST /delta/orders/build` | [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build) | Different body — pass `route` (not `price` + `hmac`); response wraps typed data in `toSign` |
+| `POST /delta/orders` | [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) | Submit `order: built.toSign.value` instead of `data` from V1 build |
+| `POST /delta/orders/cancel` | [`POST /delta/v2/orders/cancel`](/api-reference/delta/orders-cancel) | Same shape |
+| `GET /delta/orders` | [`GET /delta/v2/orders`](/api-reference/delta/orders-list) | Wraps array in `{ data, total, page, limit, hasMore }` |
+| `GET /delta/orders/{orderId}` | [`GET /delta/v2/orders/{orderId}`](/api-reference/delta/orders-get-by-id) | New response shape — `input` / `output` carry expected + executed amounts |
+| `GET /delta/orders/hash/{hash}` | [`GET /delta/v2/orders/hash/{hash}`](/api-reference/delta/orders-get-by-hash) | Same as above |
+| `GET /delta/orders/fillablebalance/...` | [`GET /delta/v2/orders/fillablebalance/...`](/api-reference/delta/orders-fillable-balance) | Same shape |
+| `GET /delta/agents/list/{chainId}` | [`GET /delta/v2/agents/list/{chainId}`](/api-reference/delta/agents-list) | Same shape |
 | `GET /quote` (mode=ALL) | _No V2 equivalent_ | If you rely on the Delta-or-Market fallback, stay on V1 `/quote` |
 
 ## Steps
@@ -265,5 +265,5 @@ V2: just pass `partner` on every call (`/delta/v2/prices`, `/delta/v2/orders/bui
 
 ## Related pages
 
-- [Delta V2 API overview](/api-reference/delta-v2/overview) — the recommended surface.
+- [Delta V2 API overview](/api-reference/delta/overview) — the recommended surface.
 - [SDK → Migrate from V1 to V2](/sdk/products/delta#migrate-from-v1-to-v2) — same migration at the TypeScript SDK level.

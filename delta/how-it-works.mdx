@@ -19,16 +19,16 @@ sequenceDiagram
   participant Delta as Delta contract<br/>0x...c96d
 
   User->>DApp: "Swap 1000 USDC for USDT"
-  DApp->>API: GET /quote?mode=DELTA
-  API-->>DApp: priceRoute + delta payload (hmac)
+  DApp->>API: GET /v2/quote?mode=DELTA
+  API-->>DApp: delta block (route + alternatives + spender)
 
-  DApp->>API: POST /delta/orders/build<br/>(delta payload as `price`)
-  API-->>DApp: EIP-712 typed data
+  DApp->>API: POST /delta/v2/orders/build<br/>(route from prices)
+  API-->>DApp: toSign (EIP-712) + orderHash
 
   DApp->>User: Request signature
   User-->>DApp: ERC-2098 compact signature
 
-  DApp->>API: POST /delta/orders<br/>(order + signature)
+  DApp->>API: POST /delta/v2/orders<br/>(order + signature)
   API->>OS: Persist signed order
 
   rect rgb(232, 245, 233)
@@ -42,8 +42,8 @@ sequenceDiagram
   Delta-->>User: destToken delivered
 
   loop Until terminal status
-    DApp->>API: GET /delta/orders/:id
-    API-->>DApp: status = PENDING / EXECUTED / FAILED
+    DApp->>API: GET /delta/v2/orders/{orderId}
+    API-->>DApp: status = PENDING / COMPLETED / FAILED
   end
 ```
 
@@ -51,27 +51,27 @@ sequenceDiagram
 
 ### 1. Quote
 
-You call `GET /quote?mode=DELTA` — or `mode=ALL` to let Velora pick the path (see [Trading modes](/integrate/trading-modes)). The API returns a `delta` payload containing the indicative price, the expected `destAmount`, the deadline, the partner-and-fee header, and an `hmac` you must pass through verbatim in step 2.
+You call `GET /v2/quote?mode=DELTA`. The API returns a `delta` block with a recommended `route`, optional `alternatives` (crosschain), the resolved `partner` fee, and the `spender` address to approve. There's no separate integrity token to carry forward — you pass `delta.route` into the build step.
 
 ### 2. Build
 
-You `POST /delta/orders/build` with the entire `delta` object from step 1 as the `price` field. The API returns EIP-712 typed data — domain (`name=Portikus, version=2.0.0, verifyingContract=0x...c96d`), types, and the order struct to sign.
+You `POST /delta/v2/orders/build` with the unmodified `delta.route` from step 1 and `owner` set to the user's address. The API returns `{ toSign: { domain, types, value }, orderHash }` — the server composes the EIP-712 domain, types, and order struct for you.
 
 <Warning>
-  Pass the `delta` payload **verbatim**. Mutating any field (including `hmac`) will cause the build call to reject.
+  Pass `delta.route` **verbatim** from the quote response. Reordering or re-encoding it will cause the build call to reject.
 </Warning>
 
 ### 3. Sign
 
-The user signs the typed data returned by the build step (step 2) with their wallet — that response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries — viem, ethers v6, wagmi — produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
+The user signs the returned `toSign` typed data with their wallet — the build response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries — viem, ethers v6, wagmi — produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
 
 ### 4. Auction
 
-You `POST /delta/orders` with the order + signature. The order server persists it and broadcasts to the **Portikus solver network**. Solvers compete on price and execution quality. The winning solver commits to fill the order with their own capital — they take on inventory and settlement risk in exchange for the spread.
+You `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and broadcasts to the **Portikus solver network**. Solvers compete on price and execution quality. The winning solver commits to fill the order with their own capital — they take on inventory and settlement risk in exchange for the spread.
 
 ### 5. Settle
 
-The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain). The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. You track progress via `GET /delta/orders/:id` until the order reaches a terminal status (`EXECUTED`, `EXPIRED`, or `FAILED`).
+The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain). The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. You track progress via `GET /delta/v2/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, or `CANCELLED`).
 
 ## Why this design
 

@@ -9,6 +9,262 @@
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
   "paths": {
+    "/v2/quote": {
+      "get": {
+        "summary": "Get a Delta V2 quote (Delta price, optional Market fallback)",
+        "description": "Unified V2 entry point. Returns a `delta` block (a Delta V2 price with `route` + `alternatives`) and, depending on `mode`, an optional `market` block. With `mode=DELTA` the response carries the `delta` block only; pass `delta.route` verbatim to `POST /delta/v2/orders/build`. The `delta` block has the same shape as the `GET /delta/v2/prices` response — there is no `hmac` in V2.",
+        "operationId": "deltaV2Quote",
+        "parameters": [
+          {
+            "name": "chainId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 1
+            },
+            "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 8453, 42161, 43114."
+          },
+          {
+            "name": "srcToken",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+            }
+          },
+          {
+            "name": "destToken",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+            },
+            "description": "Destination token. For crosschain quotes, the destination token on `destChainId`."
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1000000000000000000"
+            },
+            "description": "Source amount (SELL) or destination amount (BUY), in raw token units."
+          },
+          {
+            "name": "srcDecimals",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 18
+            }
+          },
+          {
+            "name": "destDecimals",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 6
+            }
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALL",
+                "DELTA",
+                "MARKET"
+              ],
+              "default": "ALL"
+            },
+            "description": "Which execution path to return. `DELTA` returns the `delta` block only; `MARKET` returns the `market` block only; `ALL` (default) lets Velora pick and may fall back to Market."
+          },
+          {
+            "name": "side",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SELL",
+                "BUY"
+              ],
+              "default": "SELL"
+            }
+          },
+          {
+            "name": "destChainId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Omit for same-chain. When set, the `delta` block's `route.bridge` is populated."
+          },
+          {
+            "name": "userAddress",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "beneficiary",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Address that receives the destination token. Defaults to `userAddress`."
+          },
+          {
+            "name": "partner",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "anon",
+              "example": "my-app-name"
+            },
+            "description": "Partner key. Defaults to `anon` (1bps fee)."
+          },
+          {
+            "name": "partnerFeeBps",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "description": "Override partner fee in basis points (max 200 = 2%)."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Delta quote, optionally with a Market block depending on `mode`.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "delta": {
+                      "allOf": [
+                        {
+                          "$ref": "#/components/schemas/PriceV2"
+                        }
+                      ],
+                      "description": "Delta V2 price. Present for `mode=DELTA` and `mode=ALL` (when Delta can price). Pass `delta.route` verbatim to `POST /delta/v2/orders/build`."
+                    },
+                    "market": {
+                      "type": "object",
+                      "description": "Market route block. Same shape as the GET /prices `priceRoute` field. Present when `mode` is ALL or MARKET."
+                    },
+                    "fallbackReason": {
+                      "type": "object",
+                      "description": "Set when Delta couldn't price and the response fell back to Market.",
+                      "properties": {
+                        "errorType": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "delta": {
+                    "id": "4899cda3-795d-467d-a5e2-c6633415ecc0",
+                    "side": "SELL",
+                    "inputToken": {
+                      "chainId": 10,
+                      "address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
+                    },
+                    "outputToken": {
+                      "chainId": 10,
+                      "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                    },
+                    "route": {
+                      "origin": {
+                        "input": {
+                          "token": {
+                            "chainId": 10,
+                            "address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
+                          },
+                          "amount": "1000000",
+                          "amountUSD": "0.9995570000"
+                        },
+                        "output": {
+                          "token": {
+                            "chainId": 10,
+                            "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                          },
+                          "amount": "560908985930384",
+                          "amountUSD": "0.9950301048"
+                        }
+                      },
+                      "destination": {
+                        "input": {
+                          "token": {
+                            "chainId": 10,
+                            "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                          },
+                          "amount": "560908985930384",
+                          "amountUSD": "0.9950301048"
+                        },
+                        "output": {
+                          "token": {
+                            "chainId": 10,
+                            "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                          },
+                          "amount": "560908985930384",
+                          "amountUSD": "0.9950301048"
+                        }
+                      },
+                      "bridge": null,
+                      "fees": {
+                        "gas": {
+                          "token": {
+                            "chainId": 10,
+                            "address": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+                          },
+                          "amount": "388230",
+                          "amountUSD": "0.0007580000"
+                        },
+                        "bridge": []
+                      }
+                    },
+                    "partner": {
+                      "name": "paraswap.io-orders",
+                      "feePercent": 0
+                    },
+                    "spender": "0x76e0ebb8d4c6dccb3fdedab7a3e1c87036719a42",
+                    "alternatives": []
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or no route"
+          },
+          "422": {
+            "description": "Unsupported chain or token"
+          }
+        }
+      }
+    },
     "/delta/v2/prices": {
       "get": {
         "summary": "Get a Delta V2 price (same-chain or crosschain)",
