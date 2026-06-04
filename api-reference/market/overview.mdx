@@ -1,13 +1,58 @@
 ---
 title: "Overview"
-description: "OpenAPI reference for the Velora Market aggregation API."
-keywords: ["market api","openapi","aggregation"]
+description: "Best price across every DEX and AMM on 10+ EVM chains, returned as ready-to-broadcast Augustus v6.2 calldata. Price, build, sign, send — plain HTTPS, no key to start."
+keywords: ["market api", "dex aggregator", "swap api", "openapi", "augustus", "velora"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Market API is Velora's DEX aggregator as plain HTTPS. One request finds the best route across every DEX and AMM on 10+ EVM chains; the next turns it into calldata you sign and broadcast yourself. No SDK to install, no key to get started — pass any `partner` string to tag your app.
 
-## Parameters
+- **Best execution.** Routing splits across DEXs, AMMs, and AugustusRFQ liquidity to maximize the amount out.
+- **Calldata, not custody.** Responses are ready-to-broadcast `txParams` for the [Augustus v6.2](/resources/chains-and-contracts) router — your user signs, you stay non-custodial.
+- **Inspect or fuse.** Two-step ([`/prices`](/api-reference/market/prices) → [`/transactions`](/api-reference/market/transactions)) when you want to cache or display the route; one-shot [`/swap`](/api-reference/market/swap) when latency matters.
+- **Monetize.** Pass `partner` / `partnerFeeBps` raw — the server validates, encodes, and routes fees and positive slippage. See [Monetization](/overview/monetization).
 
-## Examples
+<Note>
+  Want gasless, MEV-protected swaps instead of self-broadcast calldata? Call
+  [`GET /quote`](/api-reference/delta-v2/quote) with `mode=ALL` and Velora returns a
+  Delta intent or a Market route — whichever is better. See [Trading modes](/integrate/trading-modes).
+</Note>
+
+## Lifecycle
+
+<Steps>
+  <Step title="Price">
+    `GET /prices` — returns the optimal `priceRoute` (`destAmount`, `gasCostUSD`, `bestRoute`, and an `hmac` integrity tag).
+  </Step>
+  <Step title="Build">
+    `POST /transactions/:network` — turns the `priceRoute` into a broadcastable `txParams` envelope. Attach `permit` / `permit2` here to skip the approve tx.
+  </Step>
+  <Step title="Approve">
+    ERC-20 `approve(to, amount)` against the Augustus v6.2 router (`txParams.to`). Native sources (ETH) skip this — the amount rides in `txParams.value`.
+  </Step>
+  <Step title="Send">
+    Estimate gas locally, sign `txParams`, and broadcast. Settlement is atomic: it reverts if the delivered amount falls below the slippage-adjusted minimum.
+  </Step>
+</Steps>
+
+<Tip>
+  In a hurry? [`GET /swap`](/api-reference/market/swap) fuses price + build into one call — at lower rate limits and without RFQ liquidity.
+</Tip>
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | [`/prices`](/api-reference/market/prices) | Best route for a token pair — inspect, display, or cache it |
+| `POST` | [`/transactions/:network`](/api-reference/market/transactions) | Build ready-to-broadcast calldata from a `priceRoute` |
+| `GET` | [`/swap`](/api-reference/market/swap) | Route + ready-to-broadcast tx in a single call |
+
+## SDK shortcut
+
+Every endpoint is wrapped by [`sdk.swap.*`](/sdk/products/swap) — the SDK handles the price → build orchestration, allowance checks, and partner-fee defaults. For a 5-minute walkthrough see [SDK → Market](/sdk/products/swap).
 
 ## Related pages
+
+- [How Market works](/market/how-it-works) — price → build → approve → settle, end to end.
+- [Market examples](/market/examples/typescript) — copy-paste TypeScript, Python, Go, and Rust.
+- [Troubleshooting](/api-reference/troubleshooting) — Market failure modes by symptom, cause, and fix.
+- [Pro API accounts](/overview/pro-api-accounts) — higher RPS, quotas, and SLA support.
