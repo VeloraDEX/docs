@@ -4,10 +4,44 @@ description: "OpenAPI reference for the Velora Market aggregation API."
 keywords: ["market api","openapi","aggregation"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Market is Velora's classic swap aggregator: best-price routing across DEXs with atomic on-chain settlement. Unlike [Delta](/api-reference/delta-v2/overview), there are no solvers or auctions — the **user** signs and submits the transaction themselves. It's a two-step flow: price, then build calldata.
 
-## Parameters
+- **Aggregated pricing.** `GET /prices` returns a `priceRoute` — the routed path and expected output across the available DEXs for a token pair.
+- **Calldata building.** `POST /transactions/{network}` turns that `priceRoute` plus a `userAddress` into a ready-to-send Augustus transaction. The wallet broadcasts it.
+- **Tunable routing.** `GET /prices` accepts `side` (`SELL` / `BUY`), `version` (`5` / `6.2`, default `6.2`), DEX `includeDEXS` / `excludeDEXS`, partner-fee fields, and impact controls.
 
-## Examples
+## Lifecycle
+
+<Steps>
+  <Step title="Price">
+    `GET /prices` — returns a `priceRoute` for the token pair, amount, and side.
+  </Step>
+  <Step title="Approve">
+    ERC-20 `approve` against the `TokenTransferProxy`, or sign a Permit / Permit2 message. Native tokens skip this.
+  </Step>
+  <Step title="Build">
+    `POST /transactions/{network}` — pass the `priceRoute`, `userAddress`, and slippage (or `destAmount`); receive a fully-populated transaction.
+  </Step>
+  <Step title="Send">
+    Broadcast the transaction from the user's wallet. The API is no longer in the loop after this.
+  </Step>
+</Steps>
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/prices` | Market route (`priceRoute`) for a token pair |
+| `POST` | `/transactions/{network}` | Build Augustus v6.2 swap calldata from a `priceRoute` |
+
+## SDK shortcut
+
+This surface is wrapped by [`sdk.swap`](/sdk/products/swap) (the namespace predates the Delta/Market rename) — `getRate`, `approveToken`, and `buildTx` handle the price → approve → build flow. For a walkthrough see [SDK → Market](/sdk/products/swap).
 
 ## Related pages
+
+- [Why Market](/market/overview) — protocol overview.
+- [How it works](/market/how-it-works) — the aggregation and settlement flow end-to-end.
+- [SDK → Market](/sdk/products/swap) — TypeScript examples.
+- [`GET /prices`](/api-reference/market/prices) · [`POST /transactions/{network}`](/api-reference/market/transactions) — the endpoint references.
+- [Troubleshooting](/api-reference/troubleshooting) — Market failure modes.

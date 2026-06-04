@@ -4,10 +4,14 @@ description: "OpenAPI reference for the Velora OTC API — fungible-token over-t
 keywords: ["otc","rfq","augustus","api"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+OTC (over-the-counter, formerly Augustus RFQ) is a direct trade between two known counterparties rather than a swap discovered through a public route. A **maker** signs an EIP-712 order off-chain naming a specific **taker**; only that taker can fill it on-chain through the AugustusRFQ contract — a private, counterparty-specific, fillable-by-one order.
 
-## Parameters
-
-## Examples
+<Note>
+  Detailed per-endpoint reference lands with the full OTC OpenAPI spec. Today the surface exposes `POST /rfq/orders` — submit a signed AugustusRFQ order.
+</Note>
 
 ## Related pages
+
+- [Product stack → OTC](/overview/product-stack/otc) — concepts: maker/taker, off-book negotiation, restricted fill.
+- [SDK → OTC](/sdk/products/otc) — the `sdk.otcOrders.*` build → sign → fill flow.
+- [Limit orders](/sdk/products/limit-orders) — the open, gasless, target-price alternative (Delta).

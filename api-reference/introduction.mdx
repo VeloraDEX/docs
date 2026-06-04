@@ -4,19 +4,35 @@ description: "Three OpenAPI-driven surfaces: Delta (intents), Market (aggregatio
 keywords: ["api","reference","openapi"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Velora exposes three OpenAPI-driven API surfaces, all served from `https://api.velora.xyz` and settling through the same on-chain contracts (Augustus v6.2, Delta, and the Fee Vault):
+
+- **Delta** — gasless intent/auction orders, MEV-protected and crosschain-capable. [V2](/api-reference/delta-v2/overview) is recommended for new integrations; [V1](/api-reference/delta/overview) remains fully supported.
+- **Market** — classic atomic DEX aggregation. Best-price routing across DEXs; the user signs and submits the transaction themselves.
+- **OTC** — bilateral over-the-counter orders (formerly Augustus RFQ). A maker signs an order naming a specific taker, who fills it on-chain.
 
 <Tip>
   Need contract addresses at runtime? Read [`/resources/contracts.json`](/resources/contracts.json) — canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable index: [Chains & contracts](/resources/chains-and-contracts).
 </Tip>
 
-## When to use this
+## Which surface do you need?
 
-## How it works
+| Surface | Use when | Settlement | SDK namespace |
+|---|---|---|---|
+| [Delta](/api-reference/delta-v2/overview) | You want gasless, MEV-protected, or crosschain swaps settled by solvers | Off-chain signed intent, on-chain auction fill | `sdk.delta` |
+| [Market](/api-reference/market/overview) | The user has gas and wants the cheapest atomic on-chain swap | User-submitted Augustus v6.2 transaction | `sdk.swap` |
+| [OTC](/api-reference/rfq/overview) | The counterparty is known and the trade should stay off-book until it settles | Named taker fills a signed order on-chain | `sdk.otcOrders` |
 
-## Examples
+## Conventions
+
+- **Base URL:** `https://api.velora.xyz`.
+- **Endpoint pages** in this reference render from the OpenAPI specs under `api-reference/specs/` (`delta-v2.json`, `delta.json`, `market.json`, `rfq.json`).
+- **Errors:** every documented failure mode lives on [Troubleshooting](/api-reference/troubleshooting), mirrored machine-readably in [`errors.json`](/resources/errors.json).
 
 ## Related pages
+
+- [Chains & contracts](/resources/chains-and-contracts) — addresses, with [`contracts.json`](/resources/contracts.json) as the machine-readable companion.
+- [Troubleshooting](/api-reference/troubleshooting) — failure modes, with [`errors.json`](/resources/errors.json) as the machine-readable companion.
+- [Delta V2 API](/api-reference/delta-v2/overview) · [Market API](/api-reference/market/overview) · [OTC API](/api-reference/rfq/overview) — the three surface overviews.
 
 - [Chains & contracts](/resources/chains-and-contracts) — addresses, with [`contracts.json`](/resources/contracts.json) as the machine-readable companion.
 - [Troubleshooting](/api-reference/troubleshooting) — failure modes, with [`errors.json`](/resources/errors.json) as the machine-readable companion.
