@@ -1,22 +1,63 @@
 ---
 title: "Introduction"
-description: "Three OpenAPI-driven surfaces: Delta (intents), Market (aggregation), and OTC (fungible limit orders)."
-keywords: ["api","reference","openapi"]
+description: "The Velora REST API — gasless Swap (Delta) intents, Market aggregation, and OTC orders across 10+ EVM chains. Plain HTTPS, language-agnostic, no key to start."
+keywords: ["api", "reference", "openapi", "velora"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora REST API is best execution as plain HTTPS — gasless intents, DEX aggregation, and on-chain OTC across 10+ EVM chains. Any language, any stack, any wallet. No SDK to install, and no key to get started.
+
+## Three APIs, one base URL
+
+Everything lives under `https://api.velora.xyz`.
+
+<CardGroup cols={3}>
+  <Card title="Swap API" icon="bolt" href="/api-reference/delta-v2/overview">
+    **Delta** intents — gasless, MEV-protected swaps and signed orders, same-chain or crosschain. One signature.
+  </Card>
+  <Card title="Market API" icon="chart-line" href="/api-reference/market/overview">
+    Best price across every DEX and AMM, returned as ready-to-send calldata.
+  </Card>
+  <Card title="OTC API" icon="handshake" href="/api-reference/rfq/overview">
+    Fungible-token over-the-counter orders, with optional partial fills.
+  </Card>
+</CardGroup>
+
+## Your first call
+
+No key required — pass any `partner` string to tag your app. Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
+
+```bash
+curl -s "https://api.velora.xyz/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+The response carries either a `delta` block (gasless — sign and submit later) or a `market` block (calldata — submit now). Branch on whichever is present. See [Trading modes](/integrate/trading-modes), or the [Quickstart](/overview/quickstart) for SDK and Widget versions.
+
+## Auth & rate limits
+
+`partner` is your free, no-signup ID — pass `&partner=<your-app-name>` on any endpoint. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
 
 <Tip>
-  Need contract addresses at runtime? Read [`/resources/contracts.json`](/resources/contracts.json) — canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable index: [Chains & contracts](/resources/chains-and-contracts).
+  Need contract addresses at runtime? [`contracts.json`](/resources/contracts.json) has canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable: [Chains & contracts](/resources/chains-and-contracts).
 </Tip>
 
-## When to use this
+## Next steps
 
-## How it works
-
-## Examples
-
-## Related pages
-
-- [Chains & contracts](/resources/chains-and-contracts) — addresses, with [`contracts.json`](/resources/contracts.json) as the machine-readable companion.
-- [Troubleshooting](/api-reference/troubleshooting) — failure modes, with [`errors.json`](/resources/errors.json) as the machine-readable companion.
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/overview/quickstart">
+    First quote in 60 seconds — cURL, SDK, or Widget.
+  </Card>
+  <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">
+    Common failure modes by endpoint — symptom, cause, fix.
+  </Card>
+</CardGroup>
