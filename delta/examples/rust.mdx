@@ -4,7 +4,7 @@ description: "End-to-end Rust example — call the Velora Delta API to quote a g
 keywords: ["api","delta","rust","reqwest","tokio","example","intent"]
 ---
 
-A minimal Rust program that calls `GET /quote?mode=DELTA` and prints the indicative `destAmount`, `deadline`, and `hmac` from the returned `delta` payload. Uses `reqwest` with `tokio`.
+A minimal Rust program that calls `GET /v2/quote?mode=DELTA` and prints the recommended route's expected output and the `spender` from the returned `delta` block. Uses `reqwest` with `tokio`.
 
 ## File tree
 
@@ -31,16 +31,29 @@ cargo add serde --features derive
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-struct Delta {
-    #[serde(rename = "destAmount")]
-    dest_amount: String,
-    deadline: i64,
-    hmac: String,
+struct TokenAmount {
+    amount: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct RouteStep {
+    output: TokenAmount,
+}
+
+#[derive(Deserialize, Debug)]
+struct Route {
+    origin: RouteStep,
+}
+
+#[derive(Deserialize, Debug)]
+struct DeltaPrice {
+    route: Route,
+    spender: String,
 }
 
 #[derive(Deserialize, Debug)]
 struct QuoteResponse {
-    delta: Delta,
+    delta: DeltaPrice,
 }
 
 #[tokio::main]
@@ -59,7 +72,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ];
 
     let res = reqwest::Client::new()
-        .get("https://api.velora.xyz/quote")
+        .get("https://api.velora.xyz/v2/quote")
         .query(&params)
         .send()
         .await?
@@ -67,9 +80,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .json::<QuoteResponse>()
         .await?;
 
-    println!("destAmount: {}", res.delta.dest_amount);
-    println!("deadline:   {}", res.delta.deadline);
-    println!("hmac:       {}", res.delta.hmac);
+    println!("expected output: {}", res.delta.route.origin.output.amount);
+    println!("spender:         {}", res.delta.spender);
 
     Ok(())
 }
@@ -81,14 +93,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 cargo run
 ```
 
-You should see the indicative `destAmount` (USDC, 6 decimals), the order `deadline` (unix seconds), and the `hmac` you must pass through verbatim when building the order.
+You should see the recommended route's expected output (USDC, 6 decimals) and the `spender` address to approve before building the order.
 
 ## Next: build, sign, submit
 
-Pass the whole `delta` object into `POST /delta/orders/build` (as the `price` field) to get EIP-712 typed data — its exact shape is documented in [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference). Sign it with an ERC-2098 compact signature, then `POST /delta/orders` with the order + signature. See [Delta → How it works](/delta/how-it-works).
+Pass the unmodified `delta.route` into `POST /delta/v2/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }` — the typed-data shape is documented in [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference). Sign `toSign` with an ERC-2098 compact signature, then `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /delta/v2/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
 
 <Warning>
-  Pass the `delta` payload **verbatim** to `/delta/orders/build`. Mutating any field (including `hmac`) will cause the build call to reject.
+  Pass `delta.route` **verbatim** to `/delta/v2/orders/build`. Reordering or re-encoding it will cause the build call to reject.
 </Warning>
 
 ## Related pages

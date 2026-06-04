@@ -24,19 +24,19 @@ Delta is Velora's intent protocol. Instead of building, signing, and submitting 
 The full lifecycle is four calls — quote, build, sign, submit — and then you poll for status:
 
 ```bash
-# 1. Get a Delta quote
-curl "https://api.velora.xyz/quote?...&mode=DELTA&partner=my-app-name"
+# 1. Get a Delta quote (returns a delta block: route + alternatives + spender)
+curl "https://api.velora.xyz/v2/quote?...&mode=DELTA&partner=my-app-name"
 
-# 2. Build the order (returns EIP-712 typed data)
-curl -X POST "https://api.velora.xyz/delta/orders/build" -d @price.json
+# 2. Build the order from the route (returns toSign + orderHash)
+curl -X POST "https://api.velora.xyz/delta/v2/orders/build" -d @build.json
 
-# 3. Sign the typed data with the user's wallet (ERC-2098 compact)
+# 3. Sign the returned toSign with the user's wallet (ERC-2098 compact)
 
 # 4. Submit the signed order
-curl -X POST "https://api.velora.xyz/delta/orders" -d @signed.json
+curl -X POST "https://api.velora.xyz/delta/v2/orders" -d @signed.json
 
 # 5. Poll status
-curl "https://api.velora.xyz/delta/orders/:id"
+curl "https://api.velora.xyz/delta/v2/orders/{orderId}"
 ```
 
 Walk through the full flow in the **[Quickstart →](/overview/quickstart)**

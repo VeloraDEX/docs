@@ -23,16 +23,16 @@ sequenceDiagram
   participant Dest as Destination chain
 
   User->>DApp: "Swap on chain A, receive on chain B"
-  DApp->>API: GET /quote?mode=DELTA&chainId=A&destChainId=B
+  DApp->>API: GET /v2/quote?mode=DELTA&chainId=A&destChainId=B
   API->>Bridge: Price supported bridge routes
   Bridge-->>API: estimated time, fees, destination amount
-  API-->>DApp: delta payload + bridgeInfo + availableBridges
+  API-->>DApp: delta block<br/>(route.bridge populated)
 
-  DApp->>API: POST /delta/orders/build<br/>(delta payload as `price`)
-  API-->>DApp: EIP-712 typed data<br/>(destination chain + bridge params)
+  DApp->>API: POST /delta/v2/orders/build<br/>(route from prices)
+  API-->>DApp: toSign (EIP-712)<br/>(destination chain + bridge params)
   DApp->>User: Request signature
   User-->>DApp: Signed intent
-  DApp->>API: POST /delta/orders
+  DApp->>API: POST /delta/v2/orders
   API->>OS: Persist signed order
 
   rect rgb(232, 245, 233)
@@ -57,7 +57,7 @@ Use crosschain Delta when:
 
 - The user starts on one supported EVM chain and wants output on another.
 - You want one user signature instead of a manual swap, bridge, and destination-chain claim flow.
-- Your integration already uses Delta orders and can pass the `delta` quote block through to `POST /delta/orders/build` unchanged.
+- Your integration already uses Delta orders and can pass the `delta.route` from the quote response through to `POST /delta/v2/orders/build` unchanged.
 - You can show bridge-specific timing clearly: destination delivery is asynchronous after source-chain settlement.
 
 Keep same-chain Delta for routes where `chainId` and `destChainId` are the same or where no supported bridge route is available.
@@ -66,11 +66,11 @@ Keep same-chain Delta for routes where `chainId` and `destChainId` are the same 
 
 The integration shape stays close to the standard [Delta flow](/delta/how-it-works). The main difference is that the quote and order include a bridge leg.
 
-- Add `destChainId` to `GET /quote`. `chainId` remains the source chain.
-- Request `mode=DELTA` for crosschain quotes. Market mode is same-chain execution.
-- Treat the returned `delta` block as the source of truth. Pass it verbatim into `POST /delta/orders/build`.
-- Read `delta.bridgeInfo` for the selected bridge route: protocol name, estimated time, destination amount after bridge, and fees.
-- Use `delta.availableBridges` when you want to show alternative bridge routes.
+- Add `destChainId` to `GET /v2/quote`. `chainId` remains the source chain.
+- When `destChainId` is set, the `delta` block's `route.bridge` is populated and `delta.alternatives` lists other bridge routes.
+- Treat the returned `delta.route` as the source of truth. Pass it verbatim into `POST /delta/v2/orders/build`.
+- Read `delta.route.bridge` for the selected bridge route and `delta.route.fees` for gas and bridge fees.
+- Use `delta.alternatives` when you want to show other bridge routes.
 - After source-chain settlement, expect an intermediate `BRIDGING` state before `COMPLETED`.
 
 <Warning>
@@ -82,7 +82,7 @@ The integration shape stays close to the standard [Delta flow](/delta/how-it-wor
 Request a Delta quote with a destination chain:
 
 ```bash cURL
-curl -s "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "srcDecimals=18" \
   --data-urlencode "destToken=0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" \
@@ -101,13 +101,13 @@ Then use the same build, sign, and submit calls as a same-chain Delta order:
 
 <Steps>
   <Step title="Build the order">
-    Send the returned `delta` object as `price` in `POST /delta/orders/build`, together with its `hmac`.
+    Send the returned `delta.route` in `POST /delta/v2/orders/build`, with `owner` set to the user's address.
   </Step>
   <Step title="Request the signature">
-    Ask the user to sign the returned EIP-712 typed data. The typed data includes the destination chain and bridge parameters.
+    Ask the user to sign the returned `toSign` typed data. It includes the destination chain and bridge parameters.
   </Step>
   <Step title="Submit and poll">
-    Submit the order with `POST /delta/orders`, then poll the order endpoint until the status reaches a terminal state.
+    Submit the order with `POST /delta/v2/orders`, then poll `GET /delta/v2/orders/{orderId}` until the status reaches a terminal state.
   </Step>
 </Steps>
 
@@ -145,7 +145,7 @@ Source-chain bridge initiation is not the same as destination-chain completion. 
 ## Related pages
 
 - [How Delta works](/delta/how-it-works) — the same-chain Delta lifecycle.
-- [Delta quote endpoint](/api-reference/delta/quote) — quote parameters and response shape.
+- [Delta quote endpoint](/api-reference/quote/quote) — quote parameters and response shape.
 - [Order lifecycle & status codes](/delta/order-lifecycle-and-status-codes) — track `BRIDGING` and terminal states.
 - [Trading modes](/integrate/trading-modes) — when to request Delta, Market, or automatic routing.
 - [Chains and contracts](/resources/chains-and-contracts) — supported chains and public contract references.
