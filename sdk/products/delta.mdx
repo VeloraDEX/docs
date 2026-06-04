@@ -120,8 +120,6 @@ setTimeout(() => clearInterval(intervalId), 60_000 * 5);
 
 `OrderHelpers.checks.isExecutedAuction` returns `true` only when same-chain orders show `status === "COMPLETED"`, and crosschain orders also have their destination-chain leg filled.
 
-Order status codes and their meaning are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
-
 ## List orders
 
 `getDeltaOrders` returns a paginated list filtered by user, chain, status, and order type:
@@ -284,4 +282,4 @@ If you call the HTTP API directly rather than through the SDK, see [Delta V1 →
 - [TWAP](/sdk/products/twap), a Delta order split into scheduled slices.
 - [Why Delta](/delta/overview). The protocol design.
 - [Monetize](/sdk/monetize) — partner-fee fields.
-- [API reference → Delta](/api-reference/delta/overview) covers the HTTP endpoints.
+- [API reference → Delta](/api-reference/delta-v2/overview) covers the HTTP endpoints.

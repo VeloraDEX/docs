@@ -92,7 +92,7 @@ const others = delta.alternatives;         // crosschain only
 
 ## Next: build, sign, submit
 
-Pass the unmodified `delta.route` into `POST /delta/v2/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }` — the typed-data shape is documented in [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference). Sign `toSign` with an ERC-2098 compact signature, then `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /delta/v2/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
+Pass the unmodified `delta.route` into `POST /delta/v2/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }`. Sign `toSign` with an ERC-2098 compact signature, then `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /delta/v2/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
 
 <Warning>
   Pass `delta.route` **verbatim** to `/delta/v2/orders/build`. Reordering or re-encoding it will cause the build call to reject.
@@ -102,6 +102,5 @@ Pass the unmodified `delta.route` into `POST /delta/v2/orders/build` (with `owne
 
 - [Delta overview](/delta/overview) — when to use Delta intents.
 - [Delta → How it works](/delta/how-it-works) — quote → build → sign → auction → settle.
-- [Delta API reference](/api-reference/delta/overview) — full parameter list.
-- [The EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) — domain and types.
+- [Delta API reference](/api-reference/delta-v2/overview) — full parameter list.
 - [SDK](/sdk/overview) — typed TypeScript wrapper if you'd rather not handle HTTP yourself.

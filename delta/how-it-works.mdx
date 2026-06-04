@@ -63,7 +63,7 @@ You `POST /delta/v2/orders/build` with the unmodified `delta.route` from step 1 
 
 ### 3. Sign
 
-The user signs the returned `toSign` typed data with their wallet — see [the EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) for the domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries — viem, ethers v6, wagmi — produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
+The user signs the returned `toSign` typed data with their wallet — the build response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries — viem, ethers v6, wagmi — produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
 
 ### 4. Auction
 
@@ -93,6 +93,4 @@ The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c
 ## Related pages
 
 - [Quickstart](/overview/quickstart) — run the flow end-to-end with cURL.
-- [Order lifecycle & status codes](/delta/order-lifecycle-and-status-codes) — every status an order can reach.
-- [The EIP-712 typed-data reference](/delta/eip-712-typed-data-reference) — exact domain, types, and struct layout.
 - [Delta contract](/resources/chains-and-contracts) — on-chain entry point and per-chain addresses.

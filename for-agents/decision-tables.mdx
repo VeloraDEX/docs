@@ -30,7 +30,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | API result | Next action | Preserve | Do not |
 |---|---|---|---|
-| Top-level response field is `delta` | Continue the Delta order flow with [`POST /delta/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
+| Top-level response field is `delta` | Continue the Delta order flow with [`POST /delta/v2/orders/build`](/api-reference/delta-v2/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
 | Top-level response field is `market` | Continue the Market transaction flow with [`POST /transactions/:network`](/api-reference/market/transactions). | Pass the returned `market` object into the transaction build step. | Do not try to submit it as a Delta order. |
 | Response has neither `delta` nor `market` | Stop the flow and surface the no-route result. | Keep the user's original tokens, chain, amount, and mode for retry suggestions. | Do not fabricate a quote, route, gas estimate, or output amount. |
 | Quote expired, HMAC invalid, or build rejected | Requote, then rebuild from the fresh response. | Use the newest `delta`, `hmac`, or `market` object. | Do not reuse stale quote payloads. |
@@ -53,7 +53,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | Flow | User signs | User pays gas | Submit with | Track with |
 |---|---|---|---|---|
 | Market Swap | On-chain transaction | Yes | Wallet transaction send | Transaction hash |
-| Delta Swap | EIP-712 typed data | No | [`POST /delta/orders`](/api-reference/delta/orders) | Delta order ID and status |
+| Delta Swap | EIP-712 typed data | No | [`POST /delta/v2/orders`](/api-reference/delta-v2/orders-submit) | Delta order ID and status |
 | Delta `LIMIT` order | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` with `order=toSign.value`, `signature`, `type=LIMIT`, `chainId`, and `partner` | Order ID and fill status |
 | Delta TWAP | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` after signing the built `TWAPOrder` or `TWAPBuyOrder` payload | Slice execution and order status |
 | AugustusRFQ OTC flow | RFQ order or fill transaction, depending on the integration | Depends on fill path | AugustusRFQ flow | RFQ order/fill state |

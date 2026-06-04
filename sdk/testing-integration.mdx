@@ -136,11 +136,10 @@ This pattern is also handy in CI: every test is deterministic and runs offline.
 - **Check `partner`.** A missing or unknown partner key surfaces as `400` on quote/order endpoints. Confirm it's set on every SDK call and matches the partner registered with Velora.
 - **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing, because the EIP-712 domain includes `chainId`.
 - **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing. The SDK's internal retries and partner-fee resolution can issue requests you don't expect.
-- **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, see [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+- **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, the auction likely returned no fill — cancel and re-quote.
 - **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market Swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
 
 ## Related pages
 
 - [Troubleshooting](/api-reference/troubleshooting): known failure modes per endpoint.
-- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes), covering Delta order statuses and recovery.
 - [Configure providers](/sdk/configure-providers) — fetcher and caller setup.

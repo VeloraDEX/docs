@@ -150,13 +150,6 @@
               "delta/examples/python",
               "delta/examples/rust"
             ]
-          },
-          {
-            "group": "Reference",
-            "pages": [
-              "delta/order-lifecycle-and-status-codes",
-              "delta/eip-712-typed-data-reference"
-            ]
           }
         ]
       },
@@ -243,7 +236,7 @@
             ]
           },
           {
-            "group": "Delta API V2",
+            "group": "Delta API",
             "pages": [
               "api-reference/delta-v2/overview",
               "api-reference/delta-v2/prices",
@@ -262,32 +255,12 @@
             ]
           },
           {
-            "group": "Delta API V1",
-            "pages": [
-              "api-reference/delta/overview",
-              "api-reference/delta/prices",
-              "api-reference/delta/bridge-info",
-              "api-reference/delta/bridge-protocols",
-              "api-reference/delta/strategies",
-              "api-reference/delta/is-token-supported",
-              "api-reference/delta/partner-fee",
-              "api-reference/delta/orders-build",
-              "api-reference/delta/orders",
-              "api-reference/delta/orders-cancel",
-              "api-reference/delta/orders-list",
-              "api-reference/delta/orders-get-by-id",
-              "api-reference/delta/orders-get-by-hash",
-              "api-reference/delta/orders-fillable-balance",
-              "api-reference/delta/orderbook",
-              "api-reference/delta/agents-list"
-            ]
-          },
-          {
             "group": "Market API",
             "pages": [
               "api-reference/market/overview",
               "api-reference/market/prices",
-              "api-reference/market/transactions"
+              "api-reference/market/transactions",
+              "api-reference/market/swap"
             ]
           },
           {

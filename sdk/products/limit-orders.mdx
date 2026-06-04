@@ -121,7 +121,7 @@ const intervalId = setInterval(async () => {
 }, 5000);
 ```
 
-Unlike a market order, a limit order can rest `ACTIVE` for a long time, so poll on a relaxed interval (or drive your UI from the order list). Status codes are documented under [Delta → Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes).
+Unlike a market order, a limit order can rest `ACTIVE` for a long time, so poll on a relaxed interval (or drive your UI from the order list).
 
 ## List limit orders
 
@@ -154,5 +154,4 @@ Pass `partner` (and optionally `partnerAddress`, `partnerFeeBps`, `partnerTakesS
 - [Swaps → Delta](/sdk/products/delta): the full Delta order flow this builds on.
 - [TWAP](/sdk/products/twap), the other scheduled Delta-based order type.
 - [Product stack → Limit orders](/overview/product-stack/limit-orders) — the conceptual model.
-- [Order lifecycle and status codes](/delta/order-lifecycle-and-status-codes). What each status means.
-- [API reference → Delta](/api-reference/delta/overview) covers the HTTP endpoints behind the module.
+- [API reference → Delta](/api-reference/delta-v2/overview) covers the HTTP endpoints behind the module.

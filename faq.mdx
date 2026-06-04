@@ -26,7 +26,7 @@ If the user can wait a few seconds and doesn't want to pay gas, prefer **Delta**
 
 For **Market**, pass `slippage` (basis points) on the quote — or set `destAmount` directly as a hard floor. Omitting both returns `400`.
 
-For **Delta**, slippage is applied at the build step. Pass `slippage` to [`POST /delta/orders/build`](/api-reference/delta/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /delta/orders`](/api-reference/delta/orders). The signed `order.destAmount` is the limit-order floor — solvers must deliver at least that amount or the fill doesn't settle.
+For **Delta**, slippage is applied at the build step. Pass `slippage` to [`POST /delta/v2/orders/build`](/api-reference/delta-v2/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /delta/v2/orders`](/api-reference/delta-v2/orders-submit). The signed `order.destAmount` is the limit-order floor — solvers must deliver at least that amount or the fill doesn't settle.
 
 ### What slippage tolerance should I use?
 
@@ -69,11 +69,11 @@ A `400` with `{"errorType":"PricingError"}` from `/quote` or `/prices` means nei
 
 ### Why hasn't my limit order filled?
 
-A signed Delta order fills only when a solver can hit your limit price and net the spread. If the market hasn't reached your price, it stays pending; if it expires past the `deadline`, it transitions to `EXPIRED`; if your token allowance to the Delta contract was revoked or balance moved, it transitions to `FAILED` post-acceptance. Walk the lifecycle in [Order lifecycle & status codes](/delta/order-lifecycle-and-status-codes), and confirm your approval points at the Delta contract per [Token approvals for agents](/for-agents/token-approvals).
+A signed Delta order fills only when a solver can hit your limit price and net the spread. If the market hasn't reached your price, it stays pending; if it expires past the `deadline`, it transitions to `EXPIRED`; if your token allowance to the Delta contract was revoked or balance moved, it transitions to `FAILED` post-acceptance. Confirm your approval points at the Delta contract per [Token approvals for agents](/for-agents/token-approvals).
 
 ### How do I cancel a pending order?
 
-Cancellation mechanism depends on the order type. **Non-ETH Delta orders** cancel off-chain via signed typed data — no gas. **ETH-source Delta orders** cancel on-chain via `withdrawAndCancel` (one tx that withdraws the ETH and invalidates the order). **OTC orders** cancel on-chain. Walk the full transitions in [Order lifecycle & status codes](/delta/order-lifecycle-and-status-codes).
+Cancellation mechanism depends on the order type. **Non-ETH Delta orders** cancel off-chain via signed typed data — no gas. **ETH-source Delta orders** cancel on-chain via `withdrawAndCancel` (one tx that withdraws the ETH and invalidates the order). **OTC orders** cancel on-chain.
 
 ## Fees & monetization
 

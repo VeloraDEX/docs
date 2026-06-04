@@ -1,0 +1,105 @@
+---
+title: "/swap"
+description: "Price and calldata in one call — GET /prices and POST /transactions fused into a single Market request."
+openapi: "/api-reference/specs/market.json GET /swap"
+---
+
+`GET /swap` fuses the two Market steps into one request: it runs aggregator [pricing](/api-reference/market/prices) and [calldata generation](/api-reference/market/transactions) server-side and hands back both the `priceRoute` and ready-to-broadcast `txParams`. One round-trip takes you from "what's the rate?" to a transaction you can sign and send.
+
+<Note>
+  Prefer the two-step flow ([`GET /prices`](/api-reference/market/prices) → [`POST /transactions/:network`](/api-reference/market/transactions)) when you need to inspect or cache the route before committing, manage allowances yourself, or attach `permit` / `permit2` data. `/swap` trades that control for a single call.
+</Note>
+
+## When to use it
+
+| Reach for `/swap` when… | Use the two-step flow when… |
+|---|---|
+| You want the fastest path from quote to signable tx | You need to inspect, display, or cache the `priceRoute` first |
+| One server round-trip matters (latency, simplicity) | You attach `permit` / `permit2` to skip the approve tx |
+| Server-built calldata with defaults is fine | You need RFQ liquidity or finer routing/fee control |
+
+## Response
+
+A `200` returns two objects:
+
+- **`priceRoute`** — the routing plan: `bestRoute`, `srcAmount` / `destAmount`, `gasCost` / `gasCostUSD`, `srcUSD` / `destUSD`, `contractMethod`, `version`, and an `hmac` integrity tag. Same shape as [`GET /prices`](/api-reference/market/prices).
+- **`txParams`** — a broadcastable tx envelope: `from`, `to` (the Augustus v6.2 router), `value`, `data` (encoded swap), `gasPrice`, and `chainId`. **No `gas` field** — estimate it locally.
+
+```json
+{
+  "priceRoute": {
+    "blockNumber": 20184108,
+    "network": 1,
+    "srcToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "srcDecimals": 6,
+    "srcAmount": "1000000",
+    "destToken": "0x6b175474e89094c44da98b954eedeac495271d0f",
+    "destDecimals": 18,
+    "destAmount": "997620341641628401",
+    "bestRoute": ["…"],
+    "gasCostUSD": "5.932529",
+    "contractMethod": "swapExactAmountIn",
+    "version": "6.2",
+    "hmac": "…"
+  },
+  "txParams": {
+    "from": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "to": "0x6a000f20005980200259b80c5102003040001068",
+    "value": "0",
+    "data": "0xe3ead59e…",
+    "gasPrice": "16000000000",
+    "chainId": 1
+  }
+}
+```
+
+## Broadcasting the transaction
+
+`txParams` is ready to send, but `/swap` runs **no allowance or balance checks** and returns **no `gas` field**. Before broadcasting:
+
+<Steps>
+  <Step title="Approve (ERC-20 source only)">
+    Approve the Augustus v6.2 router (`txParams.to`) to spend `srcToken` — a standard `approve(to, amount)`. Native sources (ETH, etc.) skip this; the amount rides along in `txParams.value`. To drop the extra transaction, switch to the two-step flow with [Permit / Permit2](/guides/permit-and-permit2-patterns).
+  </Step>
+  <Step title="Estimate gas">
+    Run `eth_estimateGas` on `txParams` (or simulate the call). The response omits `gas` by design — never broadcast with a hardcoded limit.
+  </Step>
+  <Step title="Sign & send">
+    Sign `txParams` with the user's wallet and broadcast. Settlement is atomic: the swap completes or reverts, and it reverts if the delivered amount falls below the slippage-adjusted minimum.
+  </Step>
+</Steps>
+
+## Limitations
+
+<Warning>
+  `/swap` runs at **lower rate limits** than the individual endpoints ([Pro API accounts](/overview/pro-api-accounts) lift them) and **excludes RFQ liquidity** (AugustusRFQ). For best price across every venue — or to inspect the route before building — use [`GET /prices`](/api-reference/market/prices).
+</Warning>
+
+- **No allowance/balance validation** — your client must ensure the user has approved and funded the swap.
+- **No `gas` field** — always estimate locally before broadcasting.
+- **Swap & Transfer and fees** don't apply to the `swapOnUniswap*` / `swapOnZeroXv*` contract methods. When you set a `receiver` or a partner fee, constrain routing with `includeContractMethods=simpleSwap,multiSwap,megaSwap`.
+- **Tax tokens** — DEXs and methods that can't handle transfer-fee tokens are filtered out; declare the fee via `srcTokenTransferFee` / `destTokenTransferFee`.
+
+## Key parameters
+
+- **`userAddress`** (required) — the caller, used as the tx `from` and for fee/surplus accounting.
+- **`slippage`** — basis points: `100` = 1%, `250` = 2.5%, max `10000`.
+- **`version`** — defaults to `6.2` (Augustus v6.2).
+- **`partner` / `partnerFeeBps` / `partnerAddress`** — monetize the swap; `isSurplusToUser` and `isDirectFeeTransfer` control surplus and fee routing. See [Monetization](/overview/monetization).
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="GET /prices" icon="magnifying-glass-dollar" href="/api-reference/market/prices">
+    Pricing only — inspect or cache the route before building.
+  </Card>
+  <Card title="POST /transactions/:network" icon="file-signature" href="/api-reference/market/transactions">
+    Build calldata from a priceRoute you already hold.
+  </Card>
+  <Card title="Market — how it works" icon="route" href="/market/how-it-works">
+    Price → build → approve → settle, end to end.
+  </Card>
+  <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">
+    Market failure modes — symptom, cause, fix.
+  </Card>
+</CardGroup>
