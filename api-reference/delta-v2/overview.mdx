@@ -1,10 +1,11 @@
 ---
-title: "Delta V2 API"
+title: "Swap API"
+sidebarTitle: "Swap API"
 description: "Server-built EIP-712 orders, route-based pricing with alternatives, paginated history, and a unified status model. Recommended path for new Delta integrations."
 keywords: ["delta", "delta v2", "api-reference"]
 ---
 
-Delta V2 is the recommended path for Delta integrations. The on-chain contracts and settlement model are identical to [Delta V1](/api-reference/delta/overview); the protocol surface changes for the better:
+Delta V2 is the recommended path for Delta integrations. The on-chain contracts and settlement model are unchanged from [Delta V1](/resources/migrations/delta-v1-to-v2); the protocol surface changes for the better:
 
 - **Server-built orders.** `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign — clients don't compose `domain`, `types`, and `value` locally.
 - **Route-based pricing.** `GET /delta/v2/prices` returns a recommended `route` plus `alternatives` so users can pick a different bridge or path.
@@ -61,4 +62,4 @@ Every endpoint is wrapped by [`sdk.delta.*`](/sdk/products/delta) — the SDK ha
 
 - [Why Delta](/delta/overview) — protocol overview.
 - [SDK → Delta](/sdk/products/delta) — TypeScript examples.
-- [Delta V1 API](/api-reference/delta/overview) — the V1 surface, still fully supported.
+- [Migrating from Delta V1](/resources/migrations/delta-v1-to-v2) — endpoint-by-endpoint guide from the V1 surface.

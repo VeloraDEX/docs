@@ -32,7 +32,7 @@
     "404": {
       "redirect": false,
       "title": "Page not found",
-      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta/quote) · [Market API](/api-reference/market/prices)."
+      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta-v2/overview) · [Market API](/api-reference/market/prices)."
     }
   },
   "api": {
@@ -236,9 +236,10 @@
             ]
           },
           {
-            "group": "Delta API V2",
+            "group": "Delta API",
             "pages": [
               "api-reference/delta-v2/overview",
+              "api-reference/delta-v2/quote",
               "api-reference/delta-v2/prices",
               "api-reference/delta-v2/bridge-routes",
               "api-reference/delta-v2/bridge-protocols",
@@ -252,28 +253,6 @@
               "api-reference/delta-v2/orders-get-by-hash",
               "api-reference/delta-v2/orders-fillable-balance",
               "api-reference/delta-v2/agents-list"
-            ]
-          },
-          {
-            "group": "Delta API V1",
-            "pages": [
-              "api-reference/delta/overview",
-              "api-reference/delta/quote",
-              "api-reference/delta/prices",
-              "api-reference/delta/bridge-info",
-              "api-reference/delta/bridge-protocols",
-              "api-reference/delta/strategies",
-              "api-reference/delta/is-token-supported",
-              "api-reference/delta/partner-fee",
-              "api-reference/delta/orders-build",
-              "api-reference/delta/orders",
-              "api-reference/delta/orders-cancel",
-              "api-reference/delta/orders-list",
-              "api-reference/delta/orders-get-by-id",
-              "api-reference/delta/orders-get-by-hash",
-              "api-reference/delta/orders-fillable-balance",
-              "api-reference/delta/orderbook",
-              "api-reference/delta/agents-list"
             ]
           },
           {
