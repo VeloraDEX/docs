@@ -55,7 +55,7 @@ Most ERC-20 tokens support either EIP-2612 **Permit** (signed off-chain, single-
 How it surfaces in Velora flows:
 
 - **Market.** Pass the signed `permit` or `permit2` payload into [`POST /transactions/:network`](/api-reference/market/transactions). Augustus v6.2 consumes it on the swap call — no separate approve transaction is needed.
-- **Delta orders/build.** Pass the signed `permit` or `permit2` payload into [`POST /delta/orders/build`](/api-reference/delta/orders-build). If the token requires Permit/Permit2 and the payload is missing, the build call rejects with `400 Permit / Permit2 required` — see the [Delta orders/build failure modes](/api-reference/delta/orders-build#failure-modes).
+- **Delta orders/build.** Pass the signed `permit` or `permit2` payload into [`POST /delta/orders/build`](/api-reference/delta/orders-build). If the token requires Permit/Permit2 and the payload is missing, the build call rejects with `400 Permit / Permit2 required` — see the [Delta orders/build failure modes](/api-reference/troubleshooting).
 
 Agent rules for Permit/Permit2:
 
@@ -80,7 +80,7 @@ Agent rule: never request an approval before the quote response is final and you
 
 | Symptom | Likely cause | Agent recovery |
 |---|---|---|
-| Approval transaction confirms but the next swap/order still reverts with `insufficient allowance` | Approval was granted to the wrong spender (e.g., Augustus instead of the Delta contract, or vice versa). | Re-read the quote response, identify the correct spender from the spender matrix above, and request a fresh approval to that contract. See the [Delta orders/build failure modes](/api-reference/delta/orders-build#failure-modes) row for "Approval reverts before signing". |
+| Approval transaction confirms but the next swap/order still reverts with `insufficient allowance` | Approval was granted to the wrong spender (e.g., Augustus instead of the Delta contract, or vice versa). | Re-read the quote response, identify the correct spender from the spender matrix above, and request a fresh approval to that contract. See the [Delta orders/build failure modes](/api-reference/troubleshooting) row for "Approval reverts before signing". |
 | Approval confirms on chain A but the swap is on chain B | Wallet was on a different network when the approve was signed. | Ask the user to switch to the quote's chain and re-approve there. Allowances are per-chain. |
 | `400 Invalid srcToken` on quote or build for native ETH | Sent `0x0` or lowercase `0xeee...e` instead of the canonical placeholder. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) and requote. |
 | `400 Permit / Permit2 required` from `POST /delta/orders/build` | Token requires Permit/Permit2 and no payload was attached. | Collect the signed Permit or Permit2 payload up front and include it in the build request. Falling back to a separate `approve` transaction is not supported for these tokens. |
