@@ -18,7 +18,7 @@ You are building a React component that runs a Velora Crosschain Delta flow with
 
 Requirements:
 - The user holds (say) USDC on Polygon. They want to end up with aUSDC supplied to Aave v3 on Base. One signature.
-- Use Velora's Crosschain Delta API. Endpoints: `GET /quote` (with the Crosschain params per [Crosschain Delta docs]), `POST /delta/orders/build`, `POST /delta/orders`.
+- Use Velora's Crosschain Delta V2 API. Endpoints: `GET /v2/quote` (with `mode=DELTA` and `destChainId` per [Crosschain Delta docs]), `POST /delta/v2/orders/build`, `POST /delta/v2/orders`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - The solver fills on Base; you provide a post-fill calldata hook that calls `aavePool.supply(USDC, amount, user, 0)` against Aave v3's Base pool address.
 - Read the Aave v3 pool address from a constants file (do NOT hardcode in component code).
@@ -28,9 +28,9 @@ Requirements:
 Reference these docs and follow them exactly:
 - https://docs.velora.xyz/delta/overview
 - https://docs.velora.xyz/delta/crosschain-delta
-- https://docs.velora.xyz/api-reference/delta/quote
-- https://docs.velora.xyz/api-reference/delta/orders-build
-- https://docs.velora.xyz/api-reference/delta/orders
+- https://docs.velora.xyz/api-reference/quote/v2-quote
+- https://docs.velora.xyz/api-reference/delta-v2/orders-build
+- https://docs.velora.xyz/api-reference/delta-v2/orders-submit
 - https://docs.velora.xyz/delta/order-lifecycle-and-status-codes
 
 Do NOT chain the Aave deposit as a separate signed transaction — it must be part of the Delta fill. Do NOT skip the order-status poll between fill and deposit.

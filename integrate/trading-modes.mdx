@@ -4,7 +4,7 @@ description: "Choose between mode=DELTA, mode=MARKET, and mode=ALL on Velora's /
 keywords: ["mode","trading modes","delta","market","fallback","quote"]
 ---
 
-The `mode` query parameter on [`GET /quote`](/api-reference/delta/quote) tells Velora which execution path to consider: `DELTA`, `MARKET`, or `ALL`.
+The `mode` query parameter on [`GET /quote`](/api-reference/quote/quote) tells Velora which execution path to consider: `DELTA`, `MARKET`, or `ALL`.
 
 **`mode=ALL`** is the default for clients that don't want to commit upfront. Velora evaluates both paths server-side, picks the winner, and returns **one response shape** — either a `delta` block or a `market` block, never both. Clients must branch on which block is present, not on the mode they requested.
 

@@ -19,25 +19,25 @@ You are working in a Next.js 14 App Router project with Wagmi v2 and Viem alread
 Build a `/swap-gasless` page that lets the user place a Velora Delta intent for any ERC-20 → any ERC-20.
 
 Requirements:
-- Use the Velora Delta REST API at `https://api.velora.xyz`. Endpoints: `GET /quote` (with `mode=DELTA`), `POST /delta/orders/build`, `POST /delta/orders`, `GET /delta/orders/:id`.
+- Use the Velora Delta V2 REST API at `https://api.velora.xyz`. Endpoints: `GET /v2/quote` (with `mode=DELTA`), `POST /delta/v2/orders/build`, `POST /delta/v2/orders`, `GET /delta/v2/orders/{orderId}`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
-- Always include `slippage` (basis points) in the quote — omitting it returns 400.
-- Pass the `delta` block returned by the quote verbatim to `/delta/orders/build` as `price`. Do not normalize, sort, or re-stringify it. Include the `hmac` from the same quote response.
-- Use Viem's `signTypedData` to sign the EIP-712 payload returned by `/delta/orders/build`. Then submit to `/delta/orders`.
-- Poll `GET /delta/orders/:id` and display lifecycle states (`pending` → `filled` / `failed`).
-- Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain — fetch from /resources/chains-and-contracts or read it from the typed-data `domain.verifyingContract`.
+- Pass `slippage` (basis points) to `POST /delta/v2/orders/build`; it defaults to 100 (1%) if omitted.
+- Pass the `delta.route` returned by `/v2/quote` verbatim to `/delta/v2/orders/build`, with `owner` set to the user address. Do not normalize, sort, or re-stringify it.
+- Use Viem's `signTypedData` to sign the `toSign` payload returned by `/delta/v2/orders/build`. Then submit to `/delta/v2/orders` with `order` set to `toSign.value`, the `signature`, `chainId`, and `partner`.
+- Poll `GET /delta/v2/orders/{orderId}` and display lifecycle states (`PENDING` → `COMPLETED` / `FAILED`).
+- Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain — fetch from /resources/chains-and-contracts, use the `delta.spender` from the quote response, or read it from the typed-data `domain.verifyingContract`.
 
 Reference these docs and follow them exactly:
 - https://docs.velora.xyz/delta/overview
 - https://docs.velora.xyz/delta/how-it-works
-- https://docs.velora.xyz/api-reference/delta/quote
-- https://docs.velora.xyz/api-reference/delta/orders-build
-- https://docs.velora.xyz/api-reference/delta/orders
+- https://docs.velora.xyz/api-reference/quote/v2-quote
+- https://docs.velora.xyz/api-reference/delta-v2/orders-build
+- https://docs.velora.xyz/api-reference/delta-v2/orders-submit
 - https://docs.velora.xyz/delta/eip-712-typed-data-reference
 - https://docs.velora.xyz/delta/order-lifecycle-and-status-codes
 
-Do NOT mutate the `delta` block between quote and build. Do NOT grant approval to Augustus — Delta has its own spender contract.
+Do NOT mutate the `delta.route` between quote and build. Do NOT grant approval to Augustus — Delta has its own spender contract.
 ```
 
 ```text Cursor
@@ -53,5 +53,5 @@ Do NOT mutate the `delta` block between quote and build. Do NOT grant approval t
 ## End-state check
 
 - The user signs **once** (EIP-712 typed data) and pays **no gas**.
-- The order transitions through `pending` → `filled` and the user receives the `destToken`.
+- The order transitions through `PENDING` → `COMPLETED` and the user receives the `destToken`.
 - The token approval was granted to the Delta contract address from the typed-data domain, not Augustus.
