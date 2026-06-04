@@ -32,7 +32,7 @@
     "404": {
       "redirect": false,
       "title": "Page not found",
-      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/quote/quote) · [Market API](/api-reference/market/prices)."
+      "description": "Try the search above, or browse: [Quickstart](/overview/quickstart) · [Delta API](/api-reference/delta/quote) · [Market API](/api-reference/market/prices)."
     }
   },
   "api": {
@@ -239,6 +239,7 @@
             "group": "Delta API",
             "pages": [
               "api-reference/delta/overview",
+              "api-reference/delta/quote",
               "api-reference/delta/prices",
               "api-reference/delta/bridge-routes",
               "api-reference/delta/bridge-protocols",
@@ -259,6 +260,7 @@
             "pages": [
               "api-reference/market/overview",
               "api-reference/market/prices",
+              "api-reference/market/quote",
               "api-reference/market/transactions",
               "api-reference/market/swap"
             ]
@@ -272,13 +274,6 @@
               "api-reference/rfq/orders-list-maker",
               "api-reference/rfq/orders-list-taker",
               "api-reference/rfq/fillable-balance"
-            ]
-          },
-          {
-            "group": "Quote API",
-            "pages": [
-              "api-reference/quote/v2-quote",
-              "api-reference/quote/quote"
             ]
           }
         ]
@@ -392,8 +387,6 @@
     { "source": "/integrate/examples/typescript", "destination": "/market/examples/typescript", "permanent": true },
     { "source": "/integrate/examples/go", "destination": "/market/examples/go", "permanent": true },
     { "source": "/integrate/examples/python", "destination": "/market/examples/python", "permanent": true },
-    { "source": "/integrate/examples/rust", "destination": "/market/examples/rust", "permanent": true },
-    { "source": "/api-reference/delta/quote", "destination": "/api-reference/quote/quote", "permanent": true },
-    { "source": "/api-reference/delta-v2/quote", "destination": "/api-reference/quote/v2-quote", "permanent": true }
+    { "source": "/integrate/examples/rust", "destination": "/market/examples/rust", "permanent": true }
   ]
 }

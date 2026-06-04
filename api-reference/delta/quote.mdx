@@ -4,6 +4,8 @@ description: "Unified Delta V2 quote — a route-based delta price with optional
 openapi: "/api-reference/specs/delta-v2.json GET /v2/quote"
 ---
 
+One call, best execution. `GET /v2/quote` is the entry point of the Delta flow: it returns a `delta` block — a gasless, MEV-protected intent price — and, with `mode=ALL`, falls back to a ready-to-build Market route when no solver can fill. You never compare routes client-side; `fallbackReason` tells you why a downgrade happened. See [Trading modes](/integrate/trading-modes) for the `mode` semantics.
+
 <Note>
   With `mode=DELTA` the response carries a single `delta` block — a Delta V2 price with `route` + `alternatives` (no `hmac`). Pass `delta.route` verbatim to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build). For the raw price object without the quote envelope, use [`GET /delta/v2/prices`](/api-reference/delta/prices).
 </Note>
