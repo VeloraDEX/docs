@@ -11,7 +11,7 @@ Delta V1 is the original Delta protocol surface. The on-chain contracts and sett
 - **Flat price.** `GET /delta/prices` returns a single `DeltaPrice` (or `BridgePrice` for crosschain) — no `route` / `alternatives` envelope.
 - **Flat order list.** `GET /delta/orders` returns a plain array, paginated by `page` / `limit` query params (no `total` / `hasMore` envelope).
 - **Locally resolved partner fee.** Clients call `GET /prices/partnerfee/{chainId}` themselves to look up the registered fee config (the V1 SDK caches it).
-- **Unified quote.** `GET /quote` returns either a `delta` block or a `market` block (or both with `mode=ALL`) — useful when you want Delta with automatic Market fallback. V2 doesn't have an equivalent endpoint.
+- **Unified quote.** `GET /quote` returns either a `delta` block or a `market` block (or both with `mode=ALL`) — useful when you want Delta with automatic Market fallback. V2 offers the same via [`GET /v2/quote`](/api-reference/quote/v2-quote).
 
 [Delta V2](/api-reference/delta-v2/overview) is recommended for new integrations. V1 remains fully supported.
 
@@ -19,7 +19,6 @@ Delta V1 is the original Delta protocol surface. The on-chain contracts and sett
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/quote` | Unified Delta-with-fallback-to-Market price |
 | `GET` | `/delta/prices` | Delta price (same-chain or crosschain) |
 | `GET` | `/delta/prices/bridge-info` | Supported crosschain lanes (srcChainId → destChainId → tokens) |
 | `GET` | `/delta/prices/bridge-protocols` | Active bridge protocols (slug, name, icon) |
