@@ -267,7 +267,12 @@
           {
             "group": "OTC API",
             "pages": [
-              "api-reference/rfq/overview"
+              "api-reference/rfq/overview",
+              "api-reference/rfq/orders-submit",
+              "api-reference/rfq/orders-get-by-hash",
+              "api-reference/rfq/orders-list-maker",
+              "api-reference/rfq/orders-list-taker",
+              "api-reference/rfq/fillable-balance"
             ]
           }
         ]

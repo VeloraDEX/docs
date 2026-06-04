@@ -1,0 +1,26 @@
+---
+title: "GET /ft/fillablebalance/:chainId/:account"
+description: "A maker's fillable balance per token — the lesser of balance, AugustusRFQ allowance, and amount not reserved by live orders."
+openapi: "/api-reference/specs/rfq.json GET /ft/fillablebalance/{chainId}/{account}"
+---
+
+Return the maker's fillable balance per token: the lesser of the account's token balance, its AugustusRFQ allowance, and the amount not already reserved by live orders. Call it before posting a new order so the `makerAmount` is actually backed — an order that exceeds the fillable balance is stored as `SUSPENDED` until the maker tops up balance or allowance.
+
+The response maps each lowercase token address to its fillable balance in raw units. Scope to a single token by appending its address: `GET /ft/fillablebalance/:chainId/:account/:token`.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OTC overview" icon="handshake" href="/api-reference/rfq/overview">
+    Lifecycle, endpoints, and order states end to end.
+  </Card>
+  <Card title="POST /ft/p2p/:chainId" icon="file-signature" href="/api-reference/rfq/orders-submit">
+    Post an order sized against this balance.
+  </Card>
+  <Card title="Chains & contracts" icon="link" href="/resources/chains-and-contracts">
+    AugustusRFQ addresses to approve, per chain.
+  </Card>
+  <Card title="SDK → OTC" icon="code" href="/sdk/products/otc">
+    The SDK checks fillable balance before posting.
+  </Card>
+</CardGroup>

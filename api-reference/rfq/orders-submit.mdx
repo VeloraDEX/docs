@@ -1,0 +1,30 @@
+---
+title: "POST /ft/p2p/:chainId"
+description: "Post a maker-signed AugustusRFQ order. The server validates the EIP-712 signature, stores the order, and returns it with its orderHash."
+openapi: "/api-reference/specs/rfq.json POST /ft/p2p/{chainId}/"
+---
+
+Submit a maker-signed order to the OTC book. The maker builds the order, signs the EIP-712 typed data, and posts the order fields plus the `signature` here — no gas, no transaction. The server verifies the signature against the [AugustusRFQ](/resources/chains-and-contracts) `verifyingContract`, stores the order, and returns it with an `orderHash` and an initial `state`.
+
+<Note>
+  The `taker` field is what makes an order OTC. Set it to the intended counterparty's address and only that address can fill the order (`type` `P2P`). The EIP-712 domain is `name: "AUGUSTUS RFQ"`, `version: "1"`, the order's `chainId`, and `verifyingContract` set to the AugustusRFQ address for that chain.
+</Note>
+
+Size the order against [`GET /ft/fillablebalance/:chainId/:account`](/api-reference/rfq/fillable-balance) first — if `makerAmount` exceeds the maker's balance or AugustusRFQ allowance, the order is accepted but lands in `SUSPENDED`. To skip a separate approve transaction, encode `permitMakerAsset`.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OTC overview" icon="handshake" href="/api-reference/rfq/overview">
+    Lifecycle, endpoints, and order states end to end.
+  </Card>
+  <Card title="GET /ft/order/:orderHash" icon="magnifying-glass" href="/api-reference/rfq/orders-get-by-hash">
+    Read back the order you just posted.
+  </Card>
+  <Card title="SDK → OTC" icon="code" href="/sdk/products/otc">
+    `sdk.otcOrders.submitOTCOrder` wraps build → sign → post.
+  </Card>
+  <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">
+    Signature and order-shape failures — symptom, cause, fix.
+  </Card>
+</CardGroup>

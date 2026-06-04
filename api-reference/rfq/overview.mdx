@@ -1,13 +1,98 @@
 ---
 title: "Overview"
-description: "OpenAPI reference for the Velora OTC API — fungible-token over-the-counter orders, formerly Augustus RFQ."
-keywords: ["otc","rfq","augustus","api"]
+description: "Fungible-token over-the-counter settlement as plain HTTPS — a maker signs an AugustusRFQ order naming a specific taker, posts it, and that counterparty fills it on-chain. Formerly Augustus RFQ."
+keywords: ["otc","rfq","augustus","augustusRFQ","p2p","maker","taker","api"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The OTC API settles a direct trade between two known counterparties. A **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain, posts it over plain HTTPS, and the named **taker** fills it on-chain. The defining field is `taker`: name an address and only that address can fill (a private, P2P trade); leave it as the zero address and anyone can. No SDK to install, no key to start — pass any `partner` string to tag your app.
 
-## Parameters
+- **Counterparty-restricted.** Name the `taker` and the order is fillable by exactly one address — bilateral OTC, not a public order.
+- **Custom off-book terms.** Maker sets price, size, token pair, and `expiry` directly; nothing is exposed as a public order before it settles.
+- **Gasless to offer.** The maker only signs (EIP-712) and posts — no transaction. The taker pays gas on the fill.
+- **Partial fills.** A taker can fill less than the full `makerAmount`; the order stays live for the remainder until `expiry`.
+- **Verifiable settlement.** The fill resolves on-chain through AugustusRFQ, so the outcome is auditable and non-custodial.
 
-## Examples
+<Note>
+  Want an **open, target-price order** any solver can fill — gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /quote`](/api-reference/delta-v2/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta-v2/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
+</Note>
+
+## Lifecycle
+
+<Steps>
+  <Step title="Approve">
+    The maker approves the **AugustusRFQ** contract to pull the `makerAsset` they're selling. AugustusRFQ is its own contract — not the Augustus v6.2 router. Native ETH must be wrapped first.
+  </Step>
+  <Step title="Build & sign">
+    The maker builds the order (`nonceAndMeta`, `expiry`, `makerAsset`, `takerAsset`, `makerAmount`, `takerAmount`, `maker`, `taker`) and signs the EIP-712 typed data. The domain is `name: "AUGUSTUS RFQ"`, `version: "1"`, `chainId`, and `verifyingContract` set to the AugustusRFQ address.
+  </Step>
+  <Step title="Post">
+    `POST /ft/p2p/{chainId}/` with the signed order and `signature`. The server returns the stored order with its `orderHash` and `state`. Size against `GET /ft/fillablebalance/{chainId}/{address}` first — it returns the lesser of the maker's balance, allowance, and unreserved amount.
+  </Step>
+  <Step title="Deliver">
+    Hand the signed order to the taker over any off-chain channel — your backend, the API listing endpoints, or directly.
+  </Step>
+  <Step title="Fill">
+    The taker approves AugustusRFQ for the `takerAsset`, then calls `AugustusRFQ.fillOrder` on-chain. The contract verifies the signature and the named taker, then settles atomically. This is an on-chain transaction, not a REST call — the fill reverts if the order is expired, already filled, or the caller isn't the named taker.
+  </Step>
+</Steps>
+
+## Endpoints
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | [`/ft/p2p/{chainId}/`](/api-reference/rfq/orders-submit) | Post a signed maker order — body carries the order fields plus `signature` and optional `permitMakerAsset` |
+| `GET` | [`/ft/order/{orderHash}`](/api-reference/rfq/orders-get-by-hash) | Fetch a single order by hash |
+| `GET` | [`/ft/p2p/{chainId}/maker/{address}`](/api-reference/rfq/orders-list-maker) | List a maker's orders — `limit`, `offset`, `orderBy`, `hideSmallBalances` |
+| `GET` | [`/ft/p2p/{chainId}/taker/{address}`](/api-reference/rfq/orders-list-taker) | List orders addressed to a taker |
+| `GET` | [`/ft/fillablebalance/{chainId}/{address}`](/api-reference/rfq/fillable-balance) | Maker's fillable balance for order sizing, optionally scoped to a token |
+
+Everything lives under `https://api.velora.xyz`. **Filling** and **cancelling** are on-chain calls to AugustusRFQ, not REST endpoints (see [Filling an order](#filling-an-order) and [Cancelling an order](#cancelling-an-order)). AugustusRFQ is deployed on Ethereum, Arbitrum, Avalanche, Base, BSC, Gnosis, Optimism, and Polygon; see [Chains & contracts](/resources/chains-and-contracts) for per-chain addresses and availability.
+
+## Filling an order
+
+Once the maker has posted an order, the named taker can fill it **programmatically** or through a **Velora interface** — both settle through the same `AugustusRFQ.fillOrder` call on-chain.
+
+- **Programmatically.** Approve AugustusRFQ for the `takerAsset`, then call `fillOrder` directly, or use [`sdk.otcOrders.fillOTCOrder({ order, signature })`](/sdk/products/otc), which encodes and submits the transaction for you. Best when the taker is a bot, backend, or market-maker system.
+- **Velora app.** Every order has a shareable fill link keyed on its `orderHash` — hand it to the counterparty and they approve and fill from the web app:
+
+  ```text
+  https://app.velora.xyz/#/FT/OTC/{orderHash}
+  ```
+
+- **Embeddable widget.** The same OTC fill flow runs inside the [Velora Widget](/widget/overview), so partners can offer it in-app without sending users to `app.velora.xyz`.
+
+Whichever path the taker uses, the contract verifies the signature and the named taker and settles atomically; the fill reverts if the order is expired, already filled, or the caller isn't the named taker.
+
+## Cancelling an order
+
+There is no cancel endpoint. A maker cancels by sending a transaction to the AugustusRFQ contract — the same contract that verifies fills — so cancellation costs gas. This is the one place the OTC flow differs sharply from Delta, where cancellation is a gasless signed message to the relayer.
+
+AugustusRFQ exposes two methods, both taking the order's `orderHash` (the EIP-712 hash returned when the order was posted):
+
+| Method | Signature | Use |
+|---|---|---|
+| `cancelOrder` | `cancelOrder(bytes32 orderHash)` | Cancel a single order |
+| `cancelOrders` | `cancelOrders(bytes32[] orderHashes)` | Cancel many in one transaction — cheaper than one tx each |
+
+Cancelling marks the hash as cancelled on-chain, so any later `fillOrder` against it reverts. Send it from the maker wallet. Once the transaction is indexed, the order's `state` flips to `CANCELLED` and its `transactionHash` is populated. From the SDK, use [`sdk.otcOrders.cancelOTCOrder(orderHash)`](/sdk/products/otc).
+
+<Tip>
+  Letting an order lapse past its `expiry` makes it unfillable with no transaction and no gas. For short-lived orders, a tight `expiry` is often cheaper than an explicit cancel.
+</Tip>
+
+## Order states
+
+An order reports one of six states: `DRAFT`, `PENDING`, `FULFILLED`, `CANCELLED`, `SUSPENDED` (the maker's balance or allowance dropped below the order), and `EXPIRED`. Always re-check `expiry` against the current block before filling.
+
+## SDK shortcut
+
+Every step is wrapped by [`sdk.otcOrders.*`](/sdk/products/otc) — maker approvals, build → sign → post (`submitOTCOrder`), taker approval and `fillOTCOrder`, plus `getOTCOrders` and `cancelOTCOrder`. For a copy-paste maker/taker walkthrough see [SDK → OTC](/sdk/products/otc).
 
 ## Related pages
+
+- [OTC, conceptually](/overview/product-stack/otc) — when the counterparty matters as much as the price.
+- [Delta V2 overview](/api-reference/delta-v2/overview) — open, gasless, MEV-protected limit orders (`type=LIMIT`).
+- [SDK → OTC](/sdk/products/otc) — maker and taker flows in TypeScript.
+- [Chains & contracts](/resources/chains-and-contracts) — AugustusRFQ deployment addresses.
+- [AugustusRFQ security audit](/resources/security/audits/augustus-rfq) — the settlement contract's audit history.
+- [Troubleshooting](/api-reference/troubleshooting) — failure modes by symptom, cause, and fix.
