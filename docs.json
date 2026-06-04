@@ -260,7 +260,8 @@
             "pages": [
               "api-reference/market/overview",
               "api-reference/market/prices",
-              "api-reference/market/transactions"
+              "api-reference/market/transactions",
+              "api-reference/market/swap"
             ]
           },
           {

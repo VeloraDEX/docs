@@ -40,7 +40,7 @@
           { "name": "destTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on destToken transfers." },
           { "name": "srcTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in BPS charged only on DEX swaps for srcToken." },
           { "name": "destTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in BPS charged only on DEX swaps for destToken." },
-          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["5", "6.2"], "default": "6.2" }, "description": "Protocol version. Use \"5\" for legacy v5; default is \"6.2\"." },
+          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["6.2"], "default": "6.2" }, "description": "Protocol version. Augustus v6.2." },
           { "name": "excludeContractMethodsWithoutFeeModel", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Exclude contract methods that don't support the fee model." },
           { "name": "ignoreBadUsdPrice", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the USD-price availability check." }
         ],
@@ -50,6 +50,75 @@
             "content": {
               "application/json": {
                 "schema": { "$ref": "#/components/schemas/MarketPricesResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request. Documented examples: `InvalidInput`, `PricingError`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Unsupported chain or token.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/swap": {
+      "get": {
+        "summary": "Get a Market route and ready-to-broadcast tx in one call",
+        "operationId": "marketSwap",
+        "description": "Combines GET /prices and POST /transactions into a single request: returns the optimal `priceRoute` plus ready-to-broadcast `txParams`. Convenient for streamlined execution. Trade-offs vs the two-step flow: lower rate limits, RFQ liquidity is excluded, allowances and balances are not checked, and `txParams` carries no `gas` field — estimate gas locally before broadcasting.",
+        "parameters": [
+          { "name": "srcToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE", "description": "Source token address. A token symbol listed in /tokens can be used instead. Example uses ETH." },
+          { "name": "srcDecimals", "in": "query", "required": false, "schema": { "type": "integer" }, "example": 18, "description": "Source token decimals. Can be omitted if a token symbol is used in srcToken." },
+          { "name": "destToken", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "description": "Destination token address. A token symbol listed in /tokens can be used instead. Example uses USDC." },
+          { "name": "destDecimals", "in": "query", "required": false, "schema": { "type": "integer" }, "example": 6, "description": "Destination token decimals. Can be omitted if a token symbol is used in destToken." },
+          { "name": "amount", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/TokenAmount" }, "example": "1000000000000000000", "description": "srcToken amount (SELL) or destToken amount (BUY), in WEI/raw units." },
+          { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
+          { "name": "network", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/ChainId" }, "example": 1, "description": "EVM chain ID. Default: 1 (Mainnet). Market uses `network`; Delta uses `chainId`." },
+          { "name": "slippage", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0, "maximum": 10000 }, "example": 100, "description": "Allowed slippage in basis points (0–10000). `100` = 1%." },
+          { "name": "userAddress", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Caller wallet address. Used as the transaction `from`." },
+          { "name": "receiver", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "description": "Output recipient for Swap & Transfer. Omit when swapping from/to the same account." },
+          { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon" }, "example": "my-app-name", "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
+          { "name": "partnerAddress", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "description": "Partner fee / surplus recipient address." },
+          { "name": "partnerFeeBps", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Partner fee in basis points." },
+          { "name": "otherExchangePrices", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "If true, the response includes competitor price quotes in an `others` object." },
+          { "name": "includeDEXS", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of DEXs to include." },
+          { "name": "excludeDEXS", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of DEXs to exclude." },
+          { "name": "includeContractMethods", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of contract methods to include." },
+          { "name": "excludeContractMethods", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated list of contract methods to exclude." },
+          { "name": "maxImpact", "in": "query", "required": false, "schema": { "type": "number" }, "description": "Bypass API price-impact check (default = 15%). Value in %." },
+          { "name": "route", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Dash-separated list of tokens for the price route. Max 4 tokens." },
+          { "name": "srcTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on srcToken transfers." },
+          { "name": "destTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on destToken transfers." },
+          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["6.2"], "default": "6.2" }, "description": "Protocol version. Augustus v6.2." },
+          { "name": "ignoreBadUsdPrice", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the USD-price availability check." },
+          { "name": "isSurplusToUser", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Route positive slippage / surplus to the user instead of the partner." },
+          { "name": "isDirectFeeTransfer", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Transfer the partner fee directly rather than accruing it in the Fee Vault." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Optimal route plus ready-to-broadcast tx params. Calldata targets Augustus v6.2 when `version=6.2`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MarketSwapResponse" }
               }
             }
           },
@@ -214,6 +283,14 @@
       "MarketTransactionResponse": {
         "type": "object",
         "description": "Augustus calldata + tx envelope ready to broadcast."
+      },
+      "MarketSwapResponse": {
+        "type": "object",
+        "description": "GET /swap envelope — pricing (`priceRoute`) plus a ready-to-broadcast tx (`txParams`) in one call.",
+        "properties": {
+          "priceRoute": { "$ref": "#/components/schemas/MarketPriceRoute" },
+          "txParams": { "$ref": "#/components/schemas/MarketTransactionResponse" }
+        }
       }
     }
   }
