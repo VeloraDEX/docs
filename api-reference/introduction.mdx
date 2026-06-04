@@ -11,14 +11,14 @@ The Velora REST API is best execution as plain HTTPS — gasless intents, DEX ag
 Everything lives under `https://api.velora.xyz`.
 
 <CardGroup cols={3}>
-  <Card title="Swap API" icon="bolt" href="/api-reference/delta-v2/overview">
+  <Card title="Delta API" icon="bolt" href="/api-reference/delta-v2/overview">
     **Delta** intents — gasless, MEV-protected swaps and signed orders, same-chain or crosschain. One signature.
   </Card>
   <Card title="Market API" icon="chart-line" href="/api-reference/market/overview">
     Best price across every DEX and AMM, returned as ready-to-send calldata.
   </Card>
   <Card title="OTC API" icon="handshake" href="/api-reference/rfq/overview">
-    Fungible-token over-the-counter orders, with optional partial fills.
+    **AugustusRFQ** orders between known counterparties — a maker signs and posts gasless, the named taker fills on-chain. Partial fills supported.
   </Card>
 </CardGroup>
 

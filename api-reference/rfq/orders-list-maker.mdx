@@ -1,0 +1,24 @@
+---
+title: "GET /ft/p2p/:chainId/maker/:account"
+description: "List the OTC orders created by a maker on a chain. Paginated, filterable by type."
+openapi: "/api-reference/specs/rfq.json GET /ft/p2p/{chainId}/maker/{account}"
+---
+
+List orders where `account` is the maker. Use `type=P2P` to scope to counterparty-restricted OTC orders. The response is paginated — page through with `limit` and `offset`, and read `total` / `hasMore` to know when you've reached the end.
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OTC overview" icon="handshake" href="/api-reference/rfq/overview">
+    Lifecycle, endpoints, and order states end to end.
+  </Card>
+  <Card title="List taker orders" icon="list-check" href="/api-reference/rfq/orders-list-taker">
+    The mirror endpoint — orders a given taker can fill.
+  </Card>
+  <Card title="GET /ft/order/:orderHash" icon="magnifying-glass" href="/api-reference/rfq/orders-get-by-hash">
+    Fetch a single order by hash.
+  </Card>
+  <Card title="SDK → OTC" icon="code" href="/sdk/products/otc">
+    `sdk.otcOrders.getOTCOrders({ maker })`.
+  </Card>
+</CardGroup>

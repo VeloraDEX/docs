@@ -1,40 +1,272 @@
 {
   "openapi": "3.0.3",
   "info": {
-    "title": "Velora AugustusRFQ API (stub)",
-    "version": "0.0.1",
-    "description": "Stub bundle. Real spec content lands in a later workstream. Used now only to wire MDX `openapi:` frontmatter."
+    "title": "Velora OTC API (AugustusRFQ)",
+    "version": "1.0.0",
+    "description": "Velora OTC API — post and read signed AugustusRFQ orders for fungible-token over-the-counter settlement. Filling and cancelling are on-chain calls to the AugustusRFQ contract, not REST operations."
   },
   "servers": [
     { "url": "https://api.velora.xyz", "description": "Production" }
   ],
   "externalDocs": {
-    "description": "AugustusRFQ — overview and integration guide.",
+    "description": "OTC API — overview and integration guide.",
     "url": "https://new-docs.velora.xyz/api-reference/rfq/overview"
   },
   "paths": {
-    "/rfq/orders": {
+    "/ft/p2p/{chainId}/": {
       "post": {
-        "summary": "Submit a signed AugustusRFQ order",
-        "operationId": "rfqOrdersSubmit",
+        "summary": "Post a signed OTC order",
+        "operationId": "rfqPostOrder",
+        "description": "Submit a maker-signed AugustusRFQ order. The server validates the EIP-712 signature and order shape, then stores it and returns the order record with its `orderHash`. Posting is gasless — the maker only signs.",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID the order settles on. Must match the `chainId` in the signed EIP-712 domain." }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "order":     { "type": "object" },
-                  "signature": { "type": "string" }
-                },
-                "required": ["order", "signature"]
-              }
+              "schema": { "$ref": "#/components/schemas/RfqOrderSubmit" }
             }
           }
         },
         "responses": {
-          "200": { "description": "Order accepted" },
-          "400": { "description": "Invalid signature or order shape" }
+          "200": {
+            "description": "Order accepted and stored.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RfqOrderRecord" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid signature or order shape. Documented examples: `InvalidSignature`, `InvalidInput`.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ft/order/{orderHash}": {
+      "get": {
+        "summary": "Get an OTC order by hash",
+        "operationId": "rfqGetOrder",
+        "description": "Fetch a single order by its `orderHash`, including its current `state` and remaining `fillableBalance`.",
+        "parameters": [
+          { "name": "orderHash", "in": "path", "required": true, "schema": { "type": "string" }, "example": "0x9d8f...c1a2", "description": "The order's EIP-712 hash, returned when the order was posted." }
+        ],
+        "responses": {
+          "200": {
+            "description": "The order record.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RfqOrderRecord" }
+              }
+            }
+          },
+          "404": {
+            "description": "No order with that hash.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ft/p2p/{chainId}/maker/{account}": {
+      "get": {
+        "summary": "List orders created by a maker",
+        "operationId": "rfqListMakerOrders",
+        "description": "List orders where `account` is the maker. Paginated. Filter to OTC orders with `type=P2P`.",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID." },
+          { "name": "account", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "description": "The maker's wallet address." },
+          { "name": "type", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/OrderType" }, "example": "P2P", "description": "Filter by order type. Use `P2P` for OTC orders." },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 100 }, "description": "Maximum number of orders to return." },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Number of orders to skip, for pagination." },
+          { "name": "orderBy", "in": "query", "required": false, "schema": { "type": "string", "enum": ["createdAt", "updatedAt", "expiry"], "default": "createdAt" }, "description": "Field to sort by." },
+          { "name": "hideSmallBalances", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Omit orders whose remaining fillable balance is negligible." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of orders.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RfqOrdersListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ft/p2p/{chainId}/taker/{account}": {
+      "get": {
+        "summary": "List orders addressed to a taker",
+        "operationId": "rfqListTakerOrders",
+        "description": "List orders where `account` is the named taker — the orders that address can fill. Paginated. Filter to OTC orders with `type=P2P`.",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID." },
+          { "name": "account", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "description": "The taker's wallet address." },
+          { "name": "type", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/OrderType" }, "example": "P2P", "description": "Filter by order type. Use `P2P` for OTC orders." },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 100 }, "description": "Maximum number of orders to return." },
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 }, "description": "Number of orders to skip, for pagination." },
+          { "name": "orderBy", "in": "query", "required": false, "schema": { "type": "string", "enum": ["createdAt", "updatedAt", "expiry"], "default": "createdAt" }, "description": "Field to sort by." },
+          { "name": "hideSmallBalances", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Omit orders whose remaining fillable balance is negligible." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of orders.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/RfqOrdersListResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ft/fillablebalance/{chainId}/{account}": {
+      "get": {
+        "summary": "Get a maker's fillable balance",
+        "operationId": "rfqFillableBalance",
+        "description": "Return the maker's fillable balance per token — the lesser of the account's balance, its AugustusRFQ allowance, and the amount not already reserved by live orders. Use it to size a new order so it won't be suspended for insufficient balance.",
+        "parameters": [
+          { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID." },
+          { "name": "account", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "description": "The maker's wallet address." }
+        ],
+        "responses": {
+          "200": {
+            "description": "Map of token address to fillable balance in raw units.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FillableBalanceResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Address": {
+        "type": "string",
+        "description": "EVM address (20 bytes, hex-encoded with `0x` prefix).",
+        "pattern": "^0x[a-fA-F0-9]{40}$",
+        "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
+      },
+      "ChainId": {
+        "type": "integer",
+        "description": "EVM chain ID. AugustusRFQ is deployed on 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), and 100 (Gnosis). See /resources/chains-and-contracts for per-chain addresses.",
+        "example": 1
+      },
+      "TokenAmount": {
+        "type": "string",
+        "description": "Token amount in raw units / wei (no decimal point). Serialized as a string to preserve precision beyond JavaScript Number range.",
+        "example": "1000000000000000000"
+      },
+      "OrderType": {
+        "type": "string",
+        "enum": ["P2P", "LIMIT"],
+        "description": "`P2P` is a counterparty-restricted OTC order (a named `taker`). `LIMIT` is an open AugustusRFQ order. The OTC API surface is `P2P`."
+      },
+      "OrderState": {
+        "type": "string",
+        "enum": ["DRAFT", "PENDING", "FULFILLED", "CANCELLED", "SUSPENDED", "EXPIRED"],
+        "description": "Lifecycle state. `SUSPENDED` means the maker's balance or allowance dropped below the order. `FULFILLED` means fully filled."
+      },
+      "ErrorCode": {
+        "type": "string",
+        "description": "Documented Velora error code (e.g. `InvalidSignature`, `InvalidInput`, `UnsupportedChain`). The set is open — handle codes you recognize and fall back to a generic path otherwise. See /api-reference/troubleshooting.",
+        "example": "InvalidSignature"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "description": "Standard Velora error envelope.",
+        "required": ["errorType"],
+        "properties": {
+          "errorType": { "$ref": "#/components/schemas/ErrorCode" },
+          "details": { "type": "string", "description": "Human-readable description of the failure." }
+        },
+        "example": {
+          "errorType": "InvalidSignature",
+          "details": "Order signature does not recover to maker"
+        }
+      },
+      "RfqOrderSubmit": {
+        "type": "object",
+        "description": "A maker-signed order, posted as-is. The signed fields plus the maker's signature.",
+        "required": ["nonceAndMeta", "expiry", "makerAsset", "takerAsset", "makerAmount", "takerAmount", "maker", "taker", "signature"],
+        "properties": {
+          "nonceAndMeta": { "type": "string", "description": "uint256 packing the maker in the upper 160 bits and a per-maker nonce in the lower 96 bits.", "example": "0" },
+          "expiry": { "type": "integer", "description": "Unix timestamp (seconds) after which the order can no longer be filled.", "example": 1735689600 },
+          "makerAsset": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Token the maker is selling. Must be an ERC-20 (wrap native ETH first)." },
+          "takerAsset": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Token the maker wants in return." },
+          "makerAmount": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Amount of `makerAsset` offered, in raw units." },
+          "takerAmount": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Amount of `takerAsset` requested, in raw units." },
+          "maker": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "The maker's wallet address — the order's signer." },
+          "taker": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "The named counterparty. Set to a specific address for an OTC (P2P) order; the zero address makes it open." },
+          "signature": { "type": "string", "description": "EIP-712 signature over the order. Domain: `name: \"AUGUSTUS RFQ\"`, `version: \"1\"`, `chainId`, `verifyingContract: <AugustusRFQ>`.", "example": "0x…" },
+          "permitMakerAsset": { "type": "string", "nullable": true, "description": "Optional encoded permit for `makerAsset`, to skip a separate approve transaction." }
+        }
+      },
+      "RfqOrderRecord": {
+        "type": "object",
+        "description": "A stored order as returned by the API, including server-tracked balances and state.",
+        "properties": {
+          "orderHash": { "type": "string", "description": "The order's EIP-712 hash — its unique identifier." },
+          "chainId": { "$ref": "#/components/schemas/ChainId" },
+          "nonceAndMeta": { "type": "string" },
+          "expiry": { "type": "integer" },
+          "maker": { "$ref": "#/components/schemas/Address" },
+          "taker": { "$ref": "#/components/schemas/Address" },
+          "makerAsset": { "$ref": "#/components/schemas/Address" },
+          "takerAsset": { "$ref": "#/components/schemas/Address" },
+          "makerAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "takerAmount": { "$ref": "#/components/schemas/TokenAmount" },
+          "signature": { "type": "string" },
+          "permitMakerAsset": { "type": "string", "nullable": true },
+          "state": { "$ref": "#/components/schemas/OrderState" },
+          "type": { "$ref": "#/components/schemas/OrderType" },
+          "takerFromMeta": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Intended receiver decoded from `nonceAndMeta`." },
+          "makerBalance": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Min of the maker's balance, allowance, and balance backing this order." },
+          "fillableBalance": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Remaining unfilled `makerAmount`." },
+          "reservedBalance": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Amount currently reserved by this order." },
+          "swappableBalance": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Amount available to fill right now." },
+          "transactionHash": { "type": "string", "nullable": true, "description": "Fill or cancellation transaction hash, once settled on-chain." },
+          "createdAt": { "type": "integer", "description": "Unix timestamp the order was created." },
+          "updatedAt": { "type": "integer", "description": "Unix timestamp the order was last updated." }
+        }
+      },
+      "RfqOrdersListResponse": {
+        "type": "object",
+        "description": "Paginated list of orders.",
+        "properties": {
+          "orders": { "type": "array", "items": { "$ref": "#/components/schemas/RfqOrderRecord" } },
+          "limit": { "type": "integer" },
+          "offset": { "type": "integer" },
+          "total": { "type": "integer" },
+          "hasMore": { "type": "boolean" }
+        }
+      },
+      "FillableBalanceResponse": {
+        "type": "object",
+        "description": "Map of lowercase token address to fillable balance in raw units.",
+        "additionalProperties": { "$ref": "#/components/schemas/TokenAmount" },
+        "example": {
+          "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "10000000000"
         }
       }
     }

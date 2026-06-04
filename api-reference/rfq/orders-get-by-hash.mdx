@@ -1,0 +1,28 @@
+---
+title: "GET /ft/order/:orderHash"
+description: "Fetch a single AugustusRFQ order by its hash, with current state and remaining fillable balance."
+openapi: "/api-reference/specs/rfq.json GET /ft/order/{orderHash}"
+---
+
+Fetch one order by the `orderHash` returned when it was posted. The response is the full order record, including its current `state` and the `fillableBalance` still open for partial fills.
+
+<Tip>
+  Always re-check `expiry` against the current block and confirm `state` is `PENDING` before a taker submits a fill — the on-chain fill reverts if the order is expired, already `FULFILLED`, or `CANCELLED`.
+</Tip>
+
+## Related pages
+
+<CardGroup cols={2}>
+  <Card title="OTC overview" icon="handshake" href="/api-reference/rfq/overview">
+    Lifecycle, endpoints, and order states end to end.
+  </Card>
+  <Card title="List maker orders" icon="list" href="/api-reference/rfq/orders-list-maker">
+    All orders created by a maker, paginated.
+  </Card>
+  <Card title="List taker orders" icon="list-check" href="/api-reference/rfq/orders-list-taker">
+    All orders a given taker can fill.
+  </Card>
+  <Card title="SDK → OTC" icon="code" href="/sdk/products/otc">
+    `sdk.otcOrders.getOTCOrders` reads orders by maker or taker.
+  </Card>
+</CardGroup>
