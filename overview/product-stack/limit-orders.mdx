@@ -4,7 +4,7 @@ description: "A crypto limit order lets a maker sign a target price and wait for
 keywords: ["crypto limit orders", "DEX limit order", "maker taker", "signed order", "Delta order", "limit order API"]
 ---
 
-A **limit order** lets a maker define the price they want, sign the terms, and wait for execution later. In Velora, limit orders are **Delta orders**: the user signs an intent with target-price constraints, and Delta settles it only when those constraints can be satisfied.
+A **limit order** lets a maker define the price they want, sign the terms, and wait for execution later. In Velora, limit orders are Delta orders: the user signs an intent with target-price constraints, and Delta settles it only when those constraints can be satisfied.
 
 Use limit orders when the user cares more about a target price than immediate settlement.
 
@@ -14,15 +14,15 @@ Limit orders separate **trade intent** from **trade timing**. Delta represents t
 
 - The maker says what they are willing to sell or buy.
 - The maker sets constraints such as price, token pair, amount, expiry, and eligible taker behavior.
-- A taker fills the order later if the terms are attractive and still valid.
-- Delta settles the order on-chain when the fill occurs.
+- When the limit price becomes reachable, the order enters the Delta pricing auction. Solvers from the Portikus network act as takers and compete on fill quotes, so the user gets the best committed return, not just the limit price.
+- Delta settles the order on-chain when the winning solver fills it.
 
 This gives users price control without forcing them to watch the market and submit a swap at the exact moment liquidity appears.
 
 ## Key terms
 
 - **Maker:** the user or application that creates and signs the order.
-- **Taker:** the party that accepts and fills the order.
+- **Taker:** the party that accepts and fills the order. In Velora, takers are Portikus solvers that win the pricing auction.
 - **Limit price:** the minimum or maximum effective price the maker accepts.
 - **Delta order:** the signed intent Velora uses to represent and settle the limit order.
 - **Expiry:** the time after which the order should no longer fill.
@@ -30,43 +30,19 @@ This gives users price control without forcing them to watch the market and subm
 - **Fill:** the action that settles the order and transfers tokens.
 - **Cancellation:** invalidating an unfilled order before it can settle.
 
-## Limit order vs swap vs OTC
+## Limit Orders vs Swaps vs OTC
 
-- **Swap:** immediate execution against available liquidity. Use it when the user wants to trade now.
-- **Limit order:** conditional execution at a target price. Use it when the user is willing to wait.
-- **OTC:** negotiated execution with a known counterparty. Use it when the trade terms are agreed off-book.
+Use a swap when the user wants to trade now against available liquidity.
+
+Use a limit order when price matters more than timing. The user signs the target-price constraint and waits for Delta to settle it.
+
+Use OTC when the trade terms are already agreed off-book with a known counterparty.
 
 Limit orders and OTC can look similar because both use signed terms. The difference is intent: a limit order expresses a price condition; OTC expresses a bilateral agreement.
 
-## Velora surface mapping
+## Build it
 
-<CardGroup cols={3}>
-  <Card title="Widget" icon="window-maximize" href="/widget/overview">
-    Expose limit orders in a ready-made trading interface.
-  </Card>
-  <Card title="Build Delta order" icon="bolt" href="/api-reference/delta/orders-build">
-    Build the signable Delta order that represents the target-price constraint.
-  </Card>
-  <Card title="Delta" icon="bolt" href="/delta/overview">
-    Limit orders are Delta orders with target-price constraints and delayed settlement.
-  </Card>
-</CardGroup>
-
-
-
-## Related pages
-
-<CardGroup cols={2}>
-  <Card title="Widget overview" icon="window-maximize" href="/widget/overview">
-    Add swaps, limit orders, OTC, and TWAP to your app with a React component.
-  </Card>
-  <Card title="Submit Delta order" icon="paper-plane" href="/api-reference/delta/orders-submit">
-    Submit the signed Delta Limit Order and track its status.
-  </Card>
-  <Card title="OTC" icon="handshake" href="/overview/product-stack/otc">
-    Learn how bilateral negotiated trades differ from limit orders.
-  </Card>
-  <Card title="Delta order lifecycle" icon="signal" href="/delta/how-it-works">
-    Learn how signed Delta orders are auctioned, settled, and tracked.
-  </Card>
-</CardGroup>
+- Use the [Widget](/widget/overview) if you want limit orders in a ready-made trading interface.
+- Building the HTTP flow directly? Build the order the user will sign with [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build), then submit it through [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) and track its status from there.
+- [How Delta works](/delta/how-it-works) covers how signed orders are auctioned, settled, and tracked.
+- If the trade is negotiated with a known counterparty, you probably want [OTC](/overview/product-stack/otc) instead.

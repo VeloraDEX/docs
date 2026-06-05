@@ -4,18 +4,13 @@ description: "Crypto OTC trades are direct, off-book swaps between counterpartie
 keywords: ["crypto OTC", "over the counter trading", "p2p order", "RFQ", "off-book settlement", "maker taker"]
 ---
 
-**OTC** — over-the-counter trading — is a direct trade negotiated between counterparties instead of discovered through a public swap route or orderbook. The parties agree terms off-book, then settle those terms through a signed order flow.
+An **over-the-counter (OTC)** trade is negotiated directly between counterparties instead of discovered through a public swap route or orderbook. The parties agree terms off-book, then settle those terms through a signed order flow.
 
 Use OTC when the counterparty matters as much as the price: treasury rebalancing, partner deals, market-maker inventory moves, or block-style trades that should not be exposed as a public order first.
 
 ## What problem OTC solves
 
-Public execution is not always the right fit. OTC helps when a trade needs:
-
-- **Known counterparties:** the maker and taker agree who should participate.
-- **Custom terms:** price, size, token pair, expiry, and settlement expectations are negotiated directly.
-- **Reduced public signaling:** the negotiation happens off-book before settlement.
-- **Verifiable settlement:** the final fill still resolves on-chain, so the outcome is auditable.
+Public execution is not always the right fit. Sometimes the maker and taker need to agree who participates, negotiate price, size, token pair, expiry, and settlement expectations directly, and keep that negotiation off-book until the trade settles. The final fill still resolves on-chain, so the outcome stays auditable.
 
 OTC does not mean invisible settlement. It means private negotiation with explicit on-chain execution.
 
@@ -28,43 +23,15 @@ OTC does not mean invisible settlement. It means private negotiation with explic
 - **Restricted fill:** an order design where only the intended taker or flow should execute.
 - **Settlement:** the on-chain fill that transfers tokens according to the signed terms.
 
-## OTC vs limit order vs swap
+## OTC vs Limit Orders vs Swaps
 
-- **Swap:** the user wants immediate execution against available liquidity.
-- **Limit order:** the user wants a target price and may wait for a taker.
-- **OTC:** two parties agree terms directly and use a signed order to settle.
+In a swap, the user wants immediate execution against available liquidity. In a limit order, the user wants a target price and may wait for a taker. In OTC, two parties agree terms directly and use a signed order to settle.
 
 A limit order asks, “Will someone fill this price?” OTC asks, “Will this counterparty settle the terms we already agreed?”
 
-## Velora surface mapping
+## Build it
 
-<CardGroup cols={3}>
-  <Card title="Widget" icon="window-maximize" href="/widget/overview">
-    Use the Widget when you want an OTC form and fill flow inside your app.
-  </Card>
-  <Card title="AugustusRFQ" icon="file-signature" href="/api-reference/rfq/overview">
-    Use the order surface for signed maker/taker settlement flows.
-  </Card>
-  <Card title="Limit orders" icon="clock" href="/overview/product-stack/limit-orders">
-    Compare OTC with public or conditional target-price orders.
-  </Card>
-</CardGroup>
-
-
-
-## Related pages
-
-<CardGroup cols={2}>
-  <Card title="Widget overview" icon="window-maximize" href="/widget/overview">
-    Add OTC flows to a ready-made trading interface.
-  </Card>
-  <Card title="OTC API" icon="file-signature" href="/api-reference/rfq/overview">
-    Reference the lower-level order surface for maker/taker flows.
-  </Card>
-  <Card title="Limit orders" icon="clock" href="/overview/product-stack/limit-orders">
-    Compare OTC with target-price orders.
-  </Card>
-  <Card title="Chains & contracts" icon="link" href="/resources/chains-and-contracts">
-    Find canonical chain and deployment information.
-  </Card>
-</CardGroup>
+- [AugustusRFQ](/api-reference/rfq/overview) is the settlement surface: signed maker/taker orders filled on-chain.
+- The [Widget](/widget/overview) ships an OTC form and fill flow you can embed directly.
+- Deployment addresses live in [Chains & contracts](/resources/chains-and-contracts).
+- If the counterparty is not known upfront, compare with [Limit orders](/overview/product-stack/limit-orders).
