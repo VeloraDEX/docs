@@ -1,6 +1,6 @@
 ---
 title: "Pro API accounts"
-description: "Free partner IDs vs. Pro API accounts — how to identify your integration, lift rate limits, and unlock dashboards, early features, and SLA-backed support."
+description: "Free partner IDs vs. Pro API accounts: how to identify your integration, lift rate limits, and unlock dashboards, early features, and SLA-backed support."
 keywords:
   - pro
   - api
@@ -15,11 +15,11 @@ keywords:
   - dashboard
 ---
 
-Any caller can get a partner ID for free just by passing `&partner=<string>` on `/quote` or `/prices` — no signup, no key. **Pro API accounts** layer on top: higher RPS, larger daily quotas, an analytics dashboard, early feature access, and SLA-backed support for production workloads.
+Any caller can get a partner ID for free just by passing `&partner=<string>` on `/quote` or `/prices`, without signing up for anything. **Pro API accounts** layer on top: higher RPS, larger daily quotas, an analytics dashboard, early feature access, and SLA-backed support for production workloads.
 
 ## Free tier
 
-Pass `&partner=<your-app-name>` on any Velora REST endpoint — that string *is* your partner ID. For example:
+Pass `&partner=<your-app-name>` on any Velora REST endpoint: that string *is* your partner ID. For example:
 
 ```bash
 curl -s "https://api.velora.xyz/quote" \
@@ -36,7 +36,7 @@ curl -s "https://api.velora.xyz/quote" \
   -G | jq
 ```
 
-Default [rate limits](/integrate/rate-limits) apply: **1 RPS** and **3,000 requests/day** — plenty of headroom to prototype, ship side projects, and run real integrations. When your traffic starts to bump against those limits, a [Pro plan](#pro-plans) lifts them; for anything bespoke, [reach out](https://www.velora.xyz/contact) and we'll size it with you.
+Default [rate limits](/integrate/rate-limits) apply: 1 RPS and 3,000 requests/day, which leaves plenty of headroom to prototype and run real integrations. When your traffic starts to bump against those limits, a [Pro plan](#pro-plans) lifts them; for anything bespoke, [reach out](https://www.velora.xyz/contact) and we'll size it with you.
 
 <Note>
 A free partner ID identifies your traffic but does **not** unlock partner-fee economics. To collect partner fees or share of surplus on swaps, see [Monetization](/overview/monetization).

@@ -54,7 +54,8 @@
               "overview/why-velora",
               "overview/quickstart",
               "overview/monetization",
-              "overview/pro-api-accounts"
+              "overview/pro-api-accounts",
+              "faq"
             ]
           },
           {
@@ -307,12 +308,6 @@
                   "resources/security/audits/augustus-rfq"
                 ]
               }
-            ]
-          },
-          {
-            "group": "FAQ",
-            "pages": [
-              "faq"
             ]
           }
         ]

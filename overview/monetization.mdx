@@ -1,6 +1,6 @@
 ---
 title: "Monetization"
-description: "How partners earn revenue from Velora swaps — partner fees, surplus sharing, and how the revenue split differs between Delta and Market."
+description: "How partners earn revenue from Velora swaps: partner fees, surplus sharing, and how the revenue split differs between Delta and Market."
 keywords:
   - monetization
   - partner fees
@@ -24,11 +24,11 @@ Velora gives partners two revenue levers on every swap they route: a **partner f
 ## How partners earn
 
 - **Partner fee.** A fixed basis-point cut subtracted from the swap output. Predictable per-trade revenue, but it worsens the user-facing quote because the fee comes off the top.
-- **Surplus share.** When the route or solver overdelivers vs. the quoted output, that *positive slippage* is the surplus. Partners can claim 50% of it, leaving the user-facing quote untouched. Revenue is variable — it depends on routing edge.
+- **Surplus share.** When the route or solver overdelivers vs. the quoted output, that *positive slippage* is the surplus. Partners can claim 50% of it, leaving the user-facing quote untouched. Revenue is variable; it depends on routing edge.
 
 A swap can carry one lever or the other, not both. If a request sets both, the partner fee takes precedence and the surplus flag is ignored.
 
-Requests without a partner identifier fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, attach your own `partner` identifier — see [Pro API accounts](/overview/pro-api-accounts).
+Requests without a partner identifier fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, attach your own `partner` identifier. See [Pro API accounts](/overview/pro-api-accounts).
 
 ## Revenue splits at a glance
 
@@ -59,18 +59,18 @@ Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the
 | `isDirectFeeTransfer`<sup>Market</sup> | boolean | `false` | Bypass the Fee Claimer contract and transfer fees to `partnerAddress` per swap |
 
 <Note>
-`partnerFeeBps` and `takeSurplus` are mutually exclusive — set one or the other. The legacy `positiveSlippageToUser` flag is deprecated; use `isSurplusToUser` instead.
+`partnerFeeBps` and `takeSurplus` are mutually exclusive: set one or the other. The legacy `positiveSlippageToUser` flag is deprecated; use `isSurplusToUser` instead.
 </Note>
 
 Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /quote`) so the fee is reflected in the displayed quote.
 
 ## Fee delivery
 
-On **Market**, partner fees accrue inside the **Fee Claimer** contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true` — the per-swap gas cost is higher, but there's nothing to claim.
+On Market, partner fees accrue inside the Fee Claimer contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true`. There's nothing to claim, but each swap carries an extra fee-transfer, and the user pays that gas on every trade, including very low-value ones where it can eat a meaningful share of the output.
 
-On **Delta**, fees accrue inside the main Delta contract and partners claim them directly from there — there is no separate Fee Claimer contract.
+On Delta, fees accrue inside the main Delta contract and partners claim them directly from there; there is no separate Fee Claimer contract. This works in Delta's favor: the fee is accounted for as part of the fill itself, with no extra fee-transfer per swap, so taking a partner fee adds essentially no gas overhead to the trade.
 
-Surplus routed to the user (`isSurplusToUser: true`) is settled in the same transaction as the swap — no claim step either way.
+Surplus routed to the user (`isSurplusToUser: true`) is settled in the same transaction as the swap, so there's no claim step either way.
 
 ## How to claim
 
@@ -103,5 +103,5 @@ Coming soon.
 </CardGroup>
 
 <Tip>
-Endpoints work without a `partner` identifier, but fees and surplus only activate once one is attached — picking your own `partner` value costs nothing. When you outgrow the free tier, [Pro API accounts](/overview/pro-api-accounts) layer on higher limits, a dashboard, and SLA, or [reach out](https://www.velora.xyz/contact) for custom terms.
+Endpoints work without a `partner` identifier, but fees and surplus only activate once one is attached; picking your own `partner` value costs nothing. When you outgrow the free tier, [Pro API accounts](/overview/pro-api-accounts) layer on higher limits, a dashboard, and SLA, or [reach out](https://www.velora.xyz/contact) for custom terms.
 </Tip>

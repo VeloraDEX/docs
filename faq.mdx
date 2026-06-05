@@ -1,10 +1,10 @@
 ---
 title: "FAQ"
-description: "Quick answers across trading, slippage, token support, route availability, limit orders, fees, and troubleshooting — with pointers to the canonical pages."
+description: "Quick answers across trading, slippage, token support, route availability, limit orders, fees, and troubleshooting, with pointers to the canonical pages."
 keywords: ["faq","trading","slippage","tokens","routes","limit orders","fees","troubleshooting"]
 ---
 
-Short answers to the questions support and integrators hit most often. Each section links out to the page that owns the topic — start here, then go deep where you need to.
+Short answers to the questions support and integrators hit most often. Each section links out to the page that owns the topic. Start here, then go deep where you need to.
 
 <Tip>
   Looking for end-to-end API errors? See [Troubleshooting](/api-reference/troubleshooting) for failure-mode tables per endpoint. Building a wallet or agent? See [Agent decision tables](/for-agents/decision-tables).
@@ -14,19 +14,19 @@ Short answers to the questions support and integrators hit most often. Each sect
 
 ### Do I need an API key?
 
-No. Every Velora REST endpoint is public — pass `&partner=<your-app-name>` to identify your traffic and you're in. The free tier gives **1 RPS** and **3,000 requests/day**, which is plenty to prototype and ship a real integration. When you outgrow it, [Pro API accounts](/overview/pro-api-accounts) lift the limits and add a dashboard, early features, and SLA.
+No. Every Velora REST endpoint is public: pass `&partner=<your-app-name>` to identify your traffic and you're in. The free tier gives 1 RPS and 3,000 requests/day, which is plenty to prototype and ship a real integration. When you outgrow it, [Pro API accounts](/overview/pro-api-accounts) lift the limits and add a dashboard, early features, and SLA.
 
 ### Should I use Delta (gasless) or Market?
 
-If the user can wait a few seconds and doesn't want to pay gas, prefer **Delta** — it's MEV-protected and solvers compete to fill at or above the quoted price. If you need synchronous on-chain settlement (composing with another contract in the same tx) or the trade is small enough that AMM routing wins, use **Market**. If you don't want to commit upfront, call `GET /quote?mode=ALL` and branch on whichever block (`delta` or `market`) the response carries. Full decision matrix: [Trading modes](/integrate/trading-modes).
+If the user can wait a few seconds and doesn't want to pay gas, prefer Delta: it's MEV-protected and solvers compete to fill at or above the quoted price. If you need synchronous on-chain settlement (composing with another contract in the same tx) or the trade is small enough that AMM routing wins, use Market. If you don't want to commit upfront, call `GET /quote?mode=ALL` and branch on whichever block (`delta` or `market`) the response carries. Full decision matrix: [Trading modes](/integrate/trading-modes).
 
 ## Slippage & price impact
 
 ### How do I set slippage?
 
-For **Market**, pass `slippage` (basis points) on the quote — or set `destAmount` directly as a hard floor. Omitting both returns `400`.
+For Market, pass `slippage` (basis points) on the quote, or set `destAmount` directly as a hard floor. Omitting both returns `400`.
 
-For **Delta**, slippage is applied at the build step. Pass `slippage` to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /delta/v2/orders`](/api-reference/delta/orders-submit). The signed `order.destAmount` is the limit-order floor — solvers must deliver at least that amount or the fill doesn't settle.
+For Delta, slippage is applied at the build step. Pass `slippage` to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /delta/v2/orders`](/api-reference/delta/orders-submit). The signed `order.destAmount` is the limit-order floor: solvers must deliver at least that amount or the fill doesn't settle.
 
 ### What slippage tolerance should I use?
 
@@ -36,21 +36,21 @@ Velora doesn't enforce a default. Typical bps by pair tier:
 - **High-cap pairs** (ETH/USDC, WBTC/USDC): 2–5 bps.
 - **Long-tail / low-liquidity**: 10–30 bps, depending on depth.
 
-Market volatility can push these higher. The Widget exposes a user-configurable slippage and a Degen Mode for high-impact trades. For agents, the rule is: use the app's configured default, or ask if there isn't one — see [Agent decision tables](/for-agents/decision-tables).
+Market volatility can push these higher. The Widget exposes a user-configurable slippage and a Degen Mode for high-impact trades. For agents, the rule is: use the app's configured default, or ask if there isn't one. See [Agent decision tables](/for-agents/decision-tables).
 
 ### How is price impact different from slippage?
 
-**Price impact** is the trade's expected effect on the market price, driven by liquidity depth — bigger trades on thinner pools move the price more, and it's already reflected in the quoted output. **Slippage** is the tolerance you set on top: the maximum further movement you'll accept between quote and settlement before the trade reverts (Market) or the order doesn't settle (Delta). See [Swaps → Key terms](/overview/product-stack/swaps#key-terms) for the canonical definitions.
+**Price impact** is the trade's expected effect on the market price, driven by liquidity depth. Bigger trades on thinner pools move the price more, and the impact is already reflected in the quoted output. **Slippage** is the tolerance you set on top: the maximum further movement you'll accept between quote and settlement before the trade reverts (Market) or the order doesn't settle (Delta). See [Swaps → Key terms](/overview/product-stack/swaps#key-terms) for the canonical definitions.
 
 ## Token support
 
 ### How do I trade a token that isn't in the default list?
 
-For the API, just pass the token's contract address as `srcToken` or `destToken` — there's no allowlist gating on `/quote` or `/prices` beyond what liquidity venues quote. For the [Widget](/widget/configure#token-lists), add custom token-list URLs via `config.tokenLists` (spread `defaults.tokenLists` to keep the curated set, or replace entirely). If the route comes back unpriced, see [Route availability](#route-availability) below.
+For the API, just pass the token's contract address as `srcToken` or `destToken`, with the matching `srcDecimals` or `destDecimals`. There's no allowlist gating on `/quote` or `/prices` beyond what liquidity venues quote. For the [Widget](/widget/configure#token-lists), add custom token-list URLs via `config.tokenLists` (spread `defaults.tokenLists` to keep the curated set, or replace entirely). If the route comes back unpriced, see [Route availability](#route-availability) below.
 
 ### What about tax tokens / fee-on-transfer tokens?
 
-**Delta doesn't support tax / fee-on-transfer tokens** today — route them through Market instead. On [`GET /prices`](/api-reference/market/prices), declare the fees so the quote accounts for them:
+Delta doesn't support tax or fee-on-transfer tokens today; route them through Market instead. On [`GET /prices`](/api-reference/market/prices), declare the fees so the quote accounts for them:
 
 - `srcTokenTransferFee` / `destTokenTransferFee` — tax in basis points on every transfer of the token.
 - `srcTokenDexTransferFee` / `destTokenDexTransferFee` — tax in basis points charged only on DEX swaps.
@@ -63,7 +63,7 @@ A `400` with `{"errorType":"PricingError"}` from `/quote` or `/prices` means nei
 
 ### Can I filter on specific DEXs?
 
-**Market only.** Pass `includeDEXS` or `excludeDEXS` to [`GET /prices`](/api-reference/market/prices) as a comma-separated list of DEX names — the router will restrict the route to (or exclude) those venues. Delta has no equivalent: solvers pick their own execution path.
+Market only. Pass `includeDEXS` or `excludeDEXS` to [`GET /prices`](/api-reference/market/prices) as a comma-separated list of DEX names and the router will restrict the route to (or exclude) those venues. Delta has no equivalent: solvers pick their own execution path.
 
 ## Limit orders & Delta intents
 
@@ -73,17 +73,17 @@ A signed Delta order fills only when a solver can hit your limit price and net t
 
 ### How do I cancel a pending order?
 
-Cancellation mechanism depends on the order type. **Non-ETH Delta orders** cancel off-chain via signed typed data — no gas. **ETH-source Delta orders** cancel on-chain via `withdrawAndCancel` (one tx that withdraws the ETH and invalidates the order). **OTC orders** cancel on-chain.
+How you cancel depends on the order type. Non-ETH Delta orders cancel off-chain via signed typed data, so cancellation costs no gas. ETH-source Delta orders cancel on-chain via `withdrawAndCancel`, a single tx that withdraws the ETH and invalidates the order. OTC orders also cancel on-chain.
 
 ## Fees & monetization
 
 ### How do partner fees work?
 
-Pass a `partner` identifier with each request and you can attach one of two revenue levers: a fixed `partnerFeeBps` (basis-point cut, predictable) **or** `takeSurplus` (50% of any positive slippage from solver competition, variable). The two are mutually exclusive — fee wins if both are set. On **Delta**, partners receive 100% of the fee; on **Market**, Velora takes 15% to fund routing. Full split tables and API parameters: [Monetization](/overview/monetization).
+Pass a `partner` identifier with each request and you can attach one of two revenue levers: a fixed `partnerFeeBps` (basis-point cut, predictable) or `takeSurplus` (50% of any positive slippage from solver competition, variable). The two are mutually exclusive; the fee wins if both are set. On Delta, partners receive 100% of the fee; on Market, Velora takes 15% to fund routing. Full split tables and API parameters: [Monetization](/overview/monetization).
 
 ### What's the difference between a free partner ID and a Pro API account?
 
-A **free partner ID** is just a string you pass as `&partner=<your-app-name>` — no signup, no key. It identifies your traffic, gets you **1 RPS / 3,000 req/day**, and *if* you also attach `partnerAddress` + `partnerFeeBps` or `takeSurplus`, it unlocks the partner-fee economics from [Monetization](/overview/monetization). A **Pro API account** is a paid plan layered on top: higher sustained and burst RPS, larger daily quotas, an analytics dashboard, early-feature access, and SLA-backed support. Full plan comparison: [Pro API accounts](/overview/pro-api-accounts).
+A **free partner ID** is just a string you pass as `&partner=<your-app-name>`; there's nothing to sign up for and no key to manage. It identifies your traffic, gets you 1 RPS / 3,000 req/day, and *if* you also attach `partnerAddress` + `partnerFeeBps` or `takeSurplus`, it unlocks the partner-fee economics from [Monetization](/overview/monetization). A **Pro API account** is a paid plan layered on top: higher sustained and burst RPS, larger daily quotas, an analytics dashboard, early-feature access, and SLA-backed support. Full plan comparison: [Pro API accounts](/overview/pro-api-accounts).
 
 ## Troubleshooting
 
