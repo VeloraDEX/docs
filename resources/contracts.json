@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Canonical per-chain deployment addresses for Velora's contract stack. Keyed by EVM chainId. Roles not deployed on a given chain are omitted.",
-    "source": "https://new-docs.velora.xyz/resources/chains-and-contracts",
+    "source": "https://velora.xyz/docs/resources/chains-and-contracts",
     "lastUpdated": "2026-05-27",
     "runtimeSource": "GET /chains on the Market API is the runtime source of truth for the supported-chain list.",
     "unverifiedRoles": {

@@ -10,7 +10,7 @@
   ],
   "externalDocs": {
     "description": "Market — how it works (prices → calldata → broadcast).",
-    "url": "https://new-docs.velora.xyz/market/how-it-works"
+    "url": "https://velora.xyz/docs/market/how-it-works"
   },
   "paths": {
     "/prices": {
