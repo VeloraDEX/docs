@@ -10,7 +10,7 @@ keywords: ["widget","react","theme","embed","events"]
 A React component that mounts the Velora Widget, wrapped in the required `QueryClientProvider`. Its light/dark theme follows the host app, `partnerConfig.partner` attributes swaps to the host, and lifecycle events feed the host's analytics.
 
 <Note>
-The widget is a drop-in React component — there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://docs.velora.xyz/widget/customize).
+The widget is a drop-in React component — there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://velora.xyz/docs/widget/customize).
 </Note>
 
 ## Prompt
@@ -36,11 +36,11 @@ Requirements:
   `Swap:request` (start), `Swap:confirmed` (success), `Swap:failed` (error).
 
 Reference these docs and follow them exactly:
-- https://docs.velora.xyz/widget/install
-- https://docs.velora.xyz/widget/configure
-- https://docs.velora.xyz/widget/customize
-- https://docs.velora.xyz/widget/events-and-callbacks
-- https://docs.velora.xyz/widget/monetize
+- https://velora.xyz/docs/widget/install
+- https://velora.xyz/docs/widget/configure
+- https://velora.xyz/docs/widget/customize
+- https://velora.xyz/docs/widget/events-and-callbacks
+- https://velora.xyz/docs/widget/monetize
 
 Load the `partner` identifier from env so different builds (staging, production,
 white-label) can use different values.
