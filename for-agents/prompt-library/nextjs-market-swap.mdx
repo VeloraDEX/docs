@@ -23,10 +23,10 @@ You are working in a Next.js 14 App Router project with Wagmi v2 and Viem alread
 Build a `/swap` page that lets the user swap any ERC-20 → any ERC-20 on Velora's Market API.
 
 Requirements:
-- Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `GET /prices` and `POST /transactions/:network`.
+- Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `GET /prices` and `POST /transactions/:chainId`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed-case — lowercase is rejected).
-- Quote first, then call `/transactions/:network` with the `priceRoute` returned by the quote, passed verbatim.
+- Quote first, then call `/transactions/:chainId` with the `priceRoute` returned by the quote, passed verbatim.
 - Use Viem's `useWalletClient` to send the transaction. Read `chainId` from Wagmi.
 - Handle the three real failure modes: stale `priceRoute` (re-quote on submit), `INSUFFICIENT_OUTPUT` revert (increase slippage and retry), and ERC-20 allowance missing (prompt approval to the v6.2 router from the quote response's `contractAddress` field).
 - Show the user `srcUSD`, `destUSD`, `gasCostUSD`, and `partnerFee` from the response before they confirm.

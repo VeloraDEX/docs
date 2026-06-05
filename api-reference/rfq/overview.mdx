@@ -1,38 +1,38 @@
 ---
 title: "Overview"
-description: "Fungible-token over-the-counter settlement as plain HTTPS — a maker signs an AugustusRFQ order naming a specific taker, posts it, and that counterparty fills it on-chain. Formerly Augustus RFQ."
+description: "The OTC API settles direct trades between known counterparties: a maker signs an AugustusRFQ order off-chain, and the taker it names fills it on-chain. Formerly Augustus RFQ."
 keywords: ["otc","rfq","augustus","augustusRFQ","p2p","maker","taker","api"]
 ---
 
-The OTC API settles a direct trade between two known counterparties. A **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain, posts it over plain HTTPS, and the named **taker** fills it on-chain. The defining field is `taker`: name an address and only that address can fill (a private, P2P trade); leave it as the zero address and anyone can. No SDK to install, no key to start — pass any `partner` string to tag your app.
+An OTC trade on Velora is a deal between two parties who already know each other. The **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain and posts it over plain HTTPS; the **taker** fills it on-chain. The `taker` field decides who that can be: name an address for a private, P2P trade, or leave the zero address to let anyone fill. To start, tag your app with any `partner` string.
 
-- **Counterparty-restricted.** Name the `taker` and the order is fillable by exactly one address — bilateral OTC, not a public order.
-- **Custom off-book terms.** Maker sets price, size, token pair, and `expiry` directly; nothing is exposed as a public order before it settles.
-- **Gasless to offer.** The maker only signs (EIP-712) and posts — no transaction. The taker pays gas on the fill.
-- **Partial fills.** A taker can fill less than the full `makerAmount`; the order stays live for the remainder until `expiry`.
-- **Verifiable settlement.** The fill resolves on-chain through AugustusRFQ, so the outcome is auditable and non-custodial.
+- Name the `taker` and the order is fillable by exactly one address: bilateral OTC rather than a public order.
+- The maker sets price, size, token pair, and `expiry` directly; nothing is exposed as a public order before it settles.
+- Offering is gasless. The maker only signs (EIP-712) and posts, and the taker pays gas on the fill.
+- A taker can fill less than the full `makerAmount`; the order stays live for the remainder until `expiry`.
+- The fill resolves on-chain through AugustusRFQ, so the outcome is auditable and non-custodial.
 
 <Note>
-  Want an **open, target-price order** any solver can fill — gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /v2/quote`](/api-reference/delta/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
+  Want an **open, target-price order** any solver can fill, gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /v2/quote`](/api-reference/delta/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
 </Note>
 
 ## Lifecycle
 
 <Steps>
   <Step title="Approve">
-    The maker approves the **AugustusRFQ** contract to pull the `makerAsset` they're selling. AugustusRFQ is its own contract — not the Augustus v6.2 router. Native ETH must be wrapped first.
+    The maker approves the **AugustusRFQ** contract to pull the `makerAsset` they're selling. AugustusRFQ is its own contract, separate from the Augustus v6.2 router. Native ETH must be wrapped first.
   </Step>
   <Step title="Build & sign">
     The maker builds the order (`nonceAndMeta`, `expiry`, `makerAsset`, `takerAsset`, `makerAmount`, `takerAmount`, `maker`, `taker`) and signs the EIP-712 typed data. The domain is `name: "AUGUSTUS RFQ"`, `version: "1"`, `chainId`, and `verifyingContract` set to the AugustusRFQ address.
   </Step>
   <Step title="Post">
-    `POST /ft/p2p/{chainId}/` with the signed order and `signature`. The server returns the stored order with its `orderHash` and `state`. Size against `GET /ft/fillablebalance/{chainId}/{address}` first — it returns the lesser of the maker's balance, allowance, and unreserved amount.
+    `POST /ft/p2p/{chainId}/` with the signed order and `signature`. The server returns the stored order with its `orderHash` and `state`. Size against `GET /ft/fillablebalance/{chainId}/{address}` first; it returns the lesser of the maker's balance, allowance, and unreserved amount.
   </Step>
   <Step title="Deliver">
-    Hand the signed order to the taker over any off-chain channel — your backend, the API listing endpoints, or directly.
+    Hand the signed order to the taker over any off-chain channel: your backend, the API listing endpoints, or directly.
   </Step>
   <Step title="Fill">
-    The taker approves AugustusRFQ for the `takerAsset`, then calls `AugustusRFQ.fillOrder` on-chain. The contract verifies the signature and the named taker, then settles atomically. This is an on-chain transaction, not a REST call — the fill reverts if the order is expired, already filled, or the caller isn't the named taker.
+    The taker approves AugustusRFQ for the `takerAsset`, then calls `AugustusRFQ.fillOrder` on-chain. The contract verifies the signature and the named taker, then settles atomically. This is an on-chain transaction, not a REST call. The fill reverts if the order is expired, already filled, or the caller isn't the named taker.
   </Step>
 </Steps>
 
@@ -46,26 +46,26 @@ The OTC API settles a direct trade between two known counterparties. A **maker**
 | `GET` | [`/ft/p2p/{chainId}/taker/{address}`](/api-reference/rfq/orders-list-taker) | List orders addressed to a taker |
 | `GET` | [`/ft/fillablebalance/{chainId}/{address}`](/api-reference/rfq/fillable-balance) | Maker's fillable balance for order sizing, optionally scoped to a token |
 
-Everything lives under `https://api.velora.xyz`. **Filling** and **cancelling** are on-chain calls to AugustusRFQ, not REST endpoints (see [Filling an order](#filling-an-order) and [Cancelling an order](#cancelling-an-order)). AugustusRFQ is deployed on Ethereum, Arbitrum, Avalanche, Base, BSC, Gnosis, Optimism, and Polygon; see [Chains & contracts](/resources/chains-and-contracts) for per-chain addresses and availability.
+Everything lives under `https://api.velora.xyz`. Filling and cancelling are on-chain calls to AugustusRFQ, not REST endpoints (see [Filling an order](#filling-an-order) and [Cancelling an order](#cancelling-an-order)). AugustusRFQ is deployed on Ethereum, Arbitrum, Avalanche, Base, BSC, Gnosis, Optimism, and Polygon; see [Chains & contracts](/resources/chains-and-contracts) for per-chain addresses and availability.
 
 ## Filling an order
 
-Once the maker has posted an order, the named taker can fill it **programmatically** or through a **Velora interface** — both settle through the same `AugustusRFQ.fillOrder` call on-chain.
+Once the maker has posted an order, the named taker can fill it programmatically or through a Velora interface; both settle through the same `AugustusRFQ.fillOrder` call on-chain.
 
-- **Programmatically.** Approve AugustusRFQ for the `takerAsset`, then call `fillOrder` directly, or use [`sdk.otcOrders.fillOTCOrder({ order, signature })`](/sdk/products/otc), which encodes and submits the transaction for you. Best when the taker is a bot, backend, or market-maker system.
-- **Velora app.** Every order has a shareable fill link keyed on its `orderHash` — hand it to the counterparty and they approve and fill from the web app:
+- For bots, backends, and market-maker systems: approve AugustusRFQ for the `takerAsset`, then call `fillOrder` directly, or use [`sdk.otcOrders.fillOTCOrder({ order, signature })`](/sdk/products/otc), which encodes and submits the transaction for you.
+- From the Velora app: every order has a shareable fill link keyed on its `orderHash`. Hand it to the counterparty and they approve and fill from the web app:
 
   ```text
   https://app.velora.xyz/#/FT/OTC/{orderHash}
   ```
 
-- **Embeddable widget.** The same OTC fill flow runs inside the [Velora Widget](/widget/overview), so partners can offer it in-app without sending users to `app.velora.xyz`.
+- Inside the [Velora Widget](/widget/overview): the same OTC fill flow runs embedded, so partners can offer it in-app without sending users to `app.velora.xyz`.
 
-Whichever path the taker uses, the contract verifies the signature and the named taker and settles atomically; the fill reverts if the order is expired, already filled, or the caller isn't the named taker.
+Whichever path the taker uses, the same on-chain checks apply: expired, already-filled, or wrong-taker fills revert.
 
 ## Cancelling an order
 
-There is no cancel endpoint. A maker cancels by sending a transaction to the AugustusRFQ contract — the same contract that verifies fills — so cancellation costs gas. This is the one place the OTC flow differs sharply from Delta, where cancellation is a gasless signed message to the relayer.
+There is no cancel endpoint. A maker cancels by sending a transaction to the AugustusRFQ contract (the same contract that verifies fills), so cancellation costs gas. This is the one place the OTC flow differs sharply from Delta, where cancellation is a gasless signed message to the relayer.
 
 AugustusRFQ exposes two methods, both taking the order's `orderHash` (the EIP-712 hash returned when the order was posted):
 
@@ -86,7 +86,7 @@ An order reports one of six states: `DRAFT`, `PENDING`, `FULFILLED`, `CANCELLED`
 
 ## SDK shortcut
 
-Every step is wrapped by [`sdk.otcOrders.*`](/sdk/products/otc) — maker approvals, build → sign → post (`submitOTCOrder`), taker approval and `fillOTCOrder`, plus `getOTCOrders` and `cancelOTCOrder`. For a copy-paste maker/taker walkthrough see [SDK → OTC](/sdk/products/otc).
+Every step is wrapped by [`sdk.otcOrders.*`](/sdk/products/otc): maker approvals, build → sign → post (`submitOTCOrder`), taker approval and `fillOTCOrder`, plus `getOTCOrders` and `cancelOTCOrder`. For a copy-paste maker/taker walkthrough see [SDK → OTC](/sdk/products/otc).
 
 ## Related pages
 

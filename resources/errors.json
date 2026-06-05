@@ -47,52 +47,52 @@
       "docs": "/api-reference/troubleshooting#get-prices"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": 400,
       "match": "Invalid priceRoute or Stale priceRoute",
       "cause": "priceRoute modified between quote and tx-build, or older than ~30s.",
       "fix": "Pass the priceRoute block from GET /prices verbatim; re-quote if more than ~30s elapsed.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": null,
       "match": "INSUFFICIENT_OUTPUT (on-chain revert)",
       "cause": "Slippage tolerance too tight for current market depth.",
       "fix": "Increase slippage (in bps) on the rebuild, or surface a higher tolerance to the user before retrying.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": null,
       "match": "TransferHelper: TRANSFER_FROM_FAILED (on-chain revert)",
       "cause": "ERC-20 allowance to the v6.2 router insufficient, or allowance pointed at the legacy v5 router.",
       "fix": "Approve the Augustus v6.2 router address — see /resources/chains-and-contracts; if migrating off v5, see /resources/migrations/augustus-v5-to-v6-2.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": null,
       "match": "RPC gas estimate fails",
       "cause": "RPC gas estimation can't simulate the exact block conditions.",
       "fix": "Use the gas field returned in the response as a baseline + 15-25% headroom.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": null,
       "match": "Calldata builds for the wrong chain",
       "cause": "network path parameter mismatched against priceRoute.network.",
       "fix": "Always derive :network from priceRoute.network, not from a client-side variable.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
-      "endpoint": "POST /transactions/:network",
+      "endpoint": "POST /transactions/:chainId",
       "status": 422,
       "match": "Partner not allowed",
       "cause": "Your partner tier doesn't permit the requested fee/surplus configuration.",
       "fix": "Drop the disallowed param, or contact partnerships to upgrade the tier.",
-      "docs": "/api-reference/troubleshooting#post-transactions-network"
+      "docs": "/api-reference/troubleshooting#post-transactions-chainid"
     },
     {
       "endpoint": "GET /quote",

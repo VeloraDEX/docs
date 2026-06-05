@@ -4,7 +4,7 @@ description: "Post a maker-signed AugustusRFQ order. The server validates the EI
 openapi: "/api-reference/specs/rfq.json POST /ft/p2p/{chainId}/"
 ---
 
-Submit a maker-signed order to the OTC book. The maker builds the order, signs the EIP-712 typed data, and posts the order fields plus the `signature` here — no gas, no transaction. The server verifies the signature against the [AugustusRFQ](/resources/chains-and-contracts) `verifyingContract`, stores the order, and returns it with an `orderHash` and an initial `state`.
+Submit a maker-signed order to the OTC book. The maker builds the order, signs the EIP-712 typed data, and posts the order fields plus the `signature` here, all without sending a transaction or paying gas. The server verifies the signature against the [AugustusRFQ](/resources/chains-and-contracts) `verifyingContract`, stores the order, and returns it with an `orderHash` and an initial `state`.
 
 <Note>
   The `taker` field is what makes an order OTC. Set it to the intended counterparty's address and only that address can fill the order (`type` `P2P`). The EIP-712 domain is `name: "AUGUSTUS RFQ"`, `version: "1"`, the order's `chainId`, and `verifyingContract` set to the AugustusRFQ address for that chain.

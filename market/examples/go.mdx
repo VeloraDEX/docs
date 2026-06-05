@@ -44,6 +44,7 @@ func main() {
 		"network":      {"1"},
 		"userAddress":  {"0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"},
 		"partner":      {"my-app-name"},
+		"version":      {"6.2"},
 	}
 
 	res, err := http.Get("https://api.velora.xyz/prices?" + params.Encode())
@@ -81,7 +82,7 @@ You should see the quoted `destAmount` (USDC, 6 decimals) and `gasCostUSD` print
 
 ## Next: build the transaction
 
-Feed the `priceRoute` into `POST /transactions/:network` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
+Feed the `priceRoute` into `POST /transactions/:chainId` to get ready-to-broadcast calldata. See [Market API → How it works](/market/how-it-works).
 
 ## Related pages
 

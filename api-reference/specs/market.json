@@ -40,7 +40,7 @@
           { "name": "destTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on destToken transfers." },
           { "name": "srcTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in BPS charged only on DEX swaps for srcToken." },
           { "name": "destTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in BPS charged only on DEX swaps for destToken." },
-          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["6.2"], "default": "6.2" }, "description": "Protocol version. Augustus v6.2." },
+          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["5", "6.2"], "default": "5" }, "example": "6.2", "description": "Protocol version. Always pass `6.2` (Augustus v6.2, what these docs cover); when omitted the API falls back to the legacy v5 router." },
           { "name": "excludeContractMethodsWithoutFeeModel", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Exclude contract methods that don't support the fee model." },
           { "name": "ignoreBadUsdPrice", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the USD-price availability check." }
         ],
@@ -94,7 +94,7 @@
           { "name": "side", "in": "query", "required": false, "schema": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" } },
           { "name": "network", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/ChainId" }, "example": 1, "description": "EVM chain ID. Default: 1 (Mainnet). Market uses `network`; Delta uses `chainId`." },
           { "name": "slippage", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 0, "maximum": 10000 }, "example": 100, "description": "Allowed slippage in basis points (0–10000). `100` = 1%." },
-          { "name": "userAddress", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Caller wallet address. Used as the transaction `from`." },
+          { "name": "userAddress", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "example": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045", "description": "Caller wallet address. Used as the transaction `from`. When using an intermediary contract, userAddress should correspond to msg.sender and receiver to the recipient." },
           { "name": "receiver", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "description": "Output recipient for Swap & Transfer. Omit when swapping from/to the same account." },
           { "name": "partner", "in": "query", "required": false, "schema": { "type": "string", "default": "anon" }, "example": "my-app-name", "description": "Partner string. Defaults to `anon` which charges 1bps fee for all swaps." },
           { "name": "partnerAddress", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Address" }, "description": "Partner fee / surplus recipient address." },
@@ -108,8 +108,12 @@
           { "name": "route", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Dash-separated list of tokens for the price route. Max 4 tokens." },
           { "name": "srcTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on srcToken transfers." },
           { "name": "destTokenTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Tax in basis points charged on destToken transfers." },
-          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["6.2"], "default": "6.2" }, "description": "Protocol version. Augustus v6.2." },
+          { "name": "srcTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "DEX-specific tax in basis points charged on srcToken transfers." },
+          { "name": "destTokenDexTransferFee", "in": "query", "required": false, "schema": { "type": "string" }, "description": "DEX-specific tax in basis points charged on destToken transfers." },
+          { "name": "version", "in": "query", "required": false, "schema": { "type": "string", "enum": ["5", "6.2"], "default": "5" }, "example": "6.2", "description": "Protocol version. Always pass `6.2` (Augustus v6.2, what these docs cover); when omitted the API falls back to the legacy v5 router." },
           { "name": "ignoreBadUsdPrice", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the USD-price availability check." },
+          { "name": "takeSurplus", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Collect positive slippage as surplus. Works with partnerAddress." },
+          { "name": "isCapSurplus", "in": "query", "required": false, "schema": { "type": "boolean", "default": true }, "description": "Cap collected surplus at 1%." },
           { "name": "isSurplusToUser", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Route positive slippage / surplus to the user instead of the partner." },
           { "name": "isDirectFeeTransfer", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Transfer the partner fee directly rather than accruing it in the Fee Vault." }
         ],
@@ -149,12 +153,18 @@
         }
       }
     },
-    "/transactions/{network}": {
+    "/transactions/{chainId}": {
       "post": {
         "summary": "Build calldata for a Market Swap",
         "operationId": "marketTransactions",
+        "description": "Build ready-to-broadcast transaction parameters from the `priceRoute` returned by GET /prices, passed verbatim. Unless `ignoreChecks=true`, the API verifies balances and allowances and simulates the transaction before returning calldata, so the response includes a `gas` estimate.",
         "parameters": [
-          { "name": "network", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID. Market uses `network`; Delta uses `chainId`." }
+          { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID. Matches `priceRoute.network`." },
+          { "name": "gasPrice", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Gas price to use for the transaction, in WEI." },
+          { "name": "ignoreChecks", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip on-chain balance, allowance, and transaction-failure checks. The response omits the `gas` field when enabled." },
+          { "name": "ignoreGasEstimate", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the gas estimate. The response omits the `gas` field when enabled." },
+          { "name": "onlyParams", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Return only the contract call parameters instead of a full transaction object." },
+          { "name": "eip1559", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Return an EIP-1559 transaction with `maxFeePerGas` and `maxPriorityFeePerGas` in place of `gasPrice`." }
         ],
         "requestBody": {
           "required": true,
@@ -266,23 +276,47 @@
       },
       "MarketTransactionRequest": {
         "type": "object",
-        "required": ["priceRoute", "userAddress"],
+        "required": ["srcToken", "destToken", "priceRoute", "userAddress"],
         "properties": {
           "priceRoute": {
             "allOf": [{ "$ref": "#/components/schemas/MarketPriceRoute" }],
             "description": "The `priceRoute` block returned by GET /prices, passed verbatim — do not recompute or re-encode."
           },
-          "srcToken": { "$ref": "#/components/schemas/Address" },
-          "destToken": { "$ref": "#/components/schemas/Address" },
-          "srcAmount": { "$ref": "#/components/schemas/TokenAmount" },
-          "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
-          "userAddress": { "$ref": "#/components/schemas/Address" },
-          "slippage": { "type": "integer", "description": "Slippage tolerance in basis points (e.g. `100` = 1%)." }
+          "srcToken": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Source token address. A token symbol listed in /tokens can be used instead." },
+          "srcDecimals": { "type": "integer", "description": "Source token decimals. Can be omitted if a token symbol is used in srcToken." },
+          "destToken": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Destination token address. A token symbol listed in /tokens can be used instead." },
+          "destDecimals": { "type": "integer", "description": "Destination token decimals. Can be omitted if a token symbol is used in destToken." },
+          "srcAmount": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Source amount in WEI/raw units. Required when `side=SELL`. On `side=BUY` it can be omitted if `slippage` is provided." },
+          "destAmount": { "allOf": [{ "$ref": "#/components/schemas/TokenAmount" }], "description": "Destination amount in WEI/raw units. Required when `side=BUY`. On `side=SELL` it can be omitted if `slippage` is provided." },
+          "slippage": { "type": "integer", "minimum": 0, "maximum": 10000, "description": "Allowed slippage in basis points (0–10000). `250` = 2.5%. Required when the non-fixed amount (destAmount on SELL, srcAmount on BUY) is omitted." },
+          "userAddress": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Address of the transaction caller (msg.sender). When using an intermediary contract, userAddress should correspond to msg.sender and receiver to the recipient." },
+          "txOrigin": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "When msg.sender differs from the transaction sender, pass the sender here along with userAddress." },
+          "receiver": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Recipient of the swap output, for Swap & Transfer. Omit when userAddress receives." },
+          "partner": { "type": "string", "example": "my-app-name", "description": "Partner string. Used for analytics and fee attribution on your project's swaps." },
+          "partnerAddress": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "Address entitled to claim partner fees or surplus." },
+          "partnerFeeBps": { "type": "string", "description": "Partner fee in basis points, used with partnerAddress. `200` = 2%." },
+          "permit": { "type": "string", "description": "Signed permit payload (hex). Lets the swap skip the separate approve transaction." },
+          "deadline": { "type": "integer", "description": "Unix timestamp (seconds) after which the transaction is no longer valid." },
+          "isCapSurplus": { "type": "boolean", "default": true, "description": "Cap collected surplus at 1%." },
+          "takeSurplus": { "type": "boolean", "default": false, "description": "Collect positive slippage as surplus. Works with partnerAddress." },
+          "isSurplusToUser": { "type": "boolean", "default": false, "description": "Route positive slippage / surplus to the user instead of the partner." },
+          "isDirectFeeTransfer": { "type": "boolean", "default": false, "description": "Transfer the partner fee directly rather than accruing it in the Fee Vault." }
         }
       },
       "MarketTransactionResponse": {
         "type": "object",
-        "description": "Augustus calldata + tx envelope ready to broadcast."
+        "description": "Augustus calldata + tx envelope ready to broadcast.",
+        "properties": {
+          "from": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "End-user wallet address (the `userAddress` from the request)." },
+          "to": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "The Augustus v6.2 router. Send the transaction here; it is also the ERC-20 spender to approve." },
+          "value": { "type": "string", "example": "0", "description": "Native token amount in WEI to send with the transaction. `\"0\"` for ERC-20 sources." },
+          "data": { "type": "string", "description": "Encoded swap calldata." },
+          "gasPrice": { "type": "string", "example": "16000000000", "description": "Suggested gas price in WEI. Replaced by maxFeePerGas / maxPriorityFeePerGas when `eip1559=true`." },
+          "maxFeePerGas": { "type": "string", "description": "EIP-1559 max fee per gas in WEI. Present when `eip1559=true`." },
+          "maxPriorityFeePerGas": { "type": "string", "description": "EIP-1559 max priority fee per gas in WEI. Present when `eip1559=true`." },
+          "gas": { "type": "string", "description": "Gas limit estimate from the API's transaction checks. Returned by POST /transactions unless `ignoreChecks` or `ignoreGasEstimate` is set; omitted by GET /swap, where you estimate locally before broadcasting." },
+          "chainId": { "$ref": "#/components/schemas/ChainId" }
+        }
       },
       "MarketSwapResponse": {
         "type": "object",

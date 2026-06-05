@@ -27,7 +27,7 @@ OTC has two sides. The **maker** builds and signs the order (gasless, off-chain)
     The maker approves AugustusRFQ to pull the asset they're selling: `sdk.otcOrders.approveMakerTokenForOTCOrder(makerAmount, makerAsset)`.
   </Step>
   <Step title="Maker signs and posts the order">
-    The maker builds an order naming the intended `taker`, signs the EIP-712 typed data, and posts it: `sdk.otcOrders.submitOTCOrder({ ...terms, taker })`. No gas, no transaction.
+    The maker builds an order naming the intended `taker`, signs the EIP-712 typed data, and posts it: `sdk.otcOrders.submitOTCOrder({ ...terms, taker })`. Posting stays off-chain, so the maker pays nothing.
   </Step>
   <Step title="Taker approves the taker asset">
     The taker approves AugustusRFQ for the asset they're paying with: `sdk.otcOrders.approveTakerTokenForOTCOrder(takerAmount, takerAsset)`.

@@ -1,13 +1,13 @@
 ---
 title: "/swap"
-description: "Price and calldata in one call — GET /prices and POST /transactions fused into a single Market request."
+description: "Price and calldata in one call: GET /prices and POST /transactions fused into a single Market request."
 openapi: "/api-reference/specs/market.json GET /swap"
 ---
 
 `GET /swap` fuses the two Market steps into one request: it runs aggregator [pricing](/api-reference/market/prices) and [calldata generation](/api-reference/market/transactions) server-side and hands back both the `priceRoute` and ready-to-broadcast `txParams`. One round-trip takes you from "what's the rate?" to a transaction you can sign and send.
 
 <Note>
-  Prefer the two-step flow ([`GET /prices`](/api-reference/market/prices) → [`POST /transactions/:network`](/api-reference/market/transactions)) when you need to inspect or cache the route before committing, manage allowances yourself, or attach `permit` / `permit2` data. `/swap` trades that control for a single call.
+  Prefer the two-step flow ([`GET /prices`](/api-reference/market/prices) → [`POST /transactions/:chainId`](/api-reference/market/transactions)) when you need to inspect or cache the route before committing, manage allowances yourself, or attach `permit` / `permit2` data. `/swap` trades that control for a single call.
 </Note>
 
 ## When to use it
@@ -55,14 +55,14 @@ A `200` returns two objects:
 
 ## Broadcasting the transaction
 
-`txParams` is ready to send, but `/swap` runs **no allowance or balance checks** and returns **no `gas` field**. Before broadcasting:
+`txParams` is ready to send, but `/swap` skips allowance and balance checks and returns no `gas` field. Before broadcasting:
 
 <Steps>
   <Step title="Approve (ERC-20 source only)">
-    Approve the Augustus v6.2 router (`txParams.to`) to spend `srcToken` — a standard `approve(to, amount)`. Native sources (ETH, etc.) skip this; the amount rides along in `txParams.value`. To drop the extra transaction, switch to the two-step flow and pass Permit / Permit2 data in the build call.
+    Approve the Augustus v6.2 router (`txParams.to`) to spend `srcToken` with a standard `approve(to, amount)`. Native sources (ETH, etc.) skip this; the amount rides along in `txParams.value`. To drop the extra transaction, switch to the two-step flow and pass Permit / Permit2 data in the build call.
   </Step>
   <Step title="Estimate gas">
-    Run `eth_estimateGas` on `txParams` (or simulate the call). The response omits `gas` by design — never broadcast with a hardcoded limit.
+    Run `eth_estimateGas` on `txParams` (or simulate the call). The response omits `gas` by design; never broadcast with a hardcoded limit.
   </Step>
   <Step title="Sign & send">
     Sign `txParams` with the user's wallet and broadcast. Settlement is atomic: the swap completes or reverts, and it reverts if the delivered amount falls below the slippage-adjusted minimum.
@@ -72,19 +72,19 @@ A `200` returns two objects:
 ## Limitations
 
 <Warning>
-  `/swap` runs at **lower rate limits** than the individual endpoints ([Pro API accounts](/overview/pro-api-accounts) lift them) and **excludes RFQ liquidity** (AugustusRFQ). For best price across every venue — or to inspect the route before building — use [`GET /prices`](/api-reference/market/prices).
+  `/swap` runs at lower rate limits than the individual endpoints ([Pro API accounts](/overview/pro-api-accounts) lift them) and excludes RFQ liquidity (AugustusRFQ). For best price across every venue, or to inspect the route before building, use [`GET /prices`](/api-reference/market/prices).
 </Warning>
 
-- **No allowance/balance validation** — your client must ensure the user has approved and funded the swap.
-- **No `gas` field** — always estimate locally before broadcasting.
-- **Swap & Transfer and fees** don't apply to the `swapOnUniswap*` / `swapOnZeroXv*` contract methods. When you set a `receiver` or a partner fee, constrain routing with `includeContractMethods=simpleSwap,multiSwap,megaSwap`.
-- **Tax tokens** — DEXs and methods that can't handle transfer-fee tokens are filtered out; declare the fee via `srcTokenTransferFee` / `destTokenTransferFee`.
+- The endpoint validates neither allowance nor balance; your client must ensure the user has approved and funded the swap.
+- The response carries no `gas` field. Always estimate locally before broadcasting.
+- Swap & Transfer and fees don't apply to the `swapOnUniswap*` / `swapOnZeroXv*` contract methods. When you set a `receiver` or a partner fee, constrain routing with `includeContractMethods=simpleSwap,multiSwap,megaSwap`.
+- For tax tokens, DEXs and methods that can't handle transfer-fee tokens are filtered out; declare the fee via `srcTokenTransferFee` / `destTokenTransferFee`.
 
 ## Key parameters
 
-- **`userAddress`** (required) — the caller, used as the tx `from` and for fee/surplus accounting.
+- **`userAddress`** (required) — the caller, used as the tx `from` and for fee/surplus accounting. When using an intermediary contract, `userAddress` should correspond to `msg.sender` and `receiver` to the recipient.
 - **`slippage`** — basis points: `100` = 1%, `250` = 2.5%, max `10000`.
-- **`version`** — defaults to `6.2` (Augustus v6.2).
+- **`version`** — always pass `6.2` (Augustus v6.2); when omitted the API falls back to the legacy v5 router.
 - **`partner` / `partnerFeeBps` / `partnerAddress`** — monetize the swap; `isSurplusToUser` and `isDirectFeeTransfer` control surplus and fee routing. See [Monetization](/overview/monetization).
 
 ## Related pages
@@ -93,10 +93,10 @@ A `200` returns two objects:
   <Card title="GET /prices" icon="magnifying-glass-dollar" href="/api-reference/market/prices">
     Pricing only — inspect or cache the route before building.
   </Card>
-  <Card title="POST /transactions/:network" icon="file-signature" href="/api-reference/market/transactions">
+  <Card title="POST /transactions/:chainId" icon="file-signature" href="/api-reference/market/transactions">
     Build calldata from a priceRoute you already hold.
   </Card>
-  <Card title="Market — how it works" icon="route" href="/market/how-it-works">
+  <Card title="How Market works" icon="route" href="/market/how-it-works">
     Price → build → approve → settle, end to end.
   </Card>
   <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">

@@ -54,7 +54,7 @@ Most ERC-20 tokens support either EIP-2612 **Permit** (signed off-chain, single-
 
 How it surfaces in Velora flows:
 
-- **Market.** Pass the signed `permit` or `permit2` payload into [`POST /transactions/:network`](/api-reference/market/transactions). Augustus v6.2 consumes it on the swap call — no separate approve transaction is needed.
+- **Market.** Pass the signed `permit` or `permit2` payload into [`POST /transactions/:chainId`](/api-reference/market/transactions). Augustus v6.2 consumes it on the swap call — no separate approve transaction is needed.
 - **Delta orders/build.** Pass the signed `permit` or `permit2` payload into [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build). If the token requires Permit/Permit2 and the payload is missing, the build call rejects with `400 Permit / Permit2 required` — see the [Delta orders/build failure modes](/api-reference/troubleshooting).
 
 Agent rules for Permit/Permit2:

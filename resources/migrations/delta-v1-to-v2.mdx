@@ -4,7 +4,7 @@ description: "Endpoint-by-endpoint migration for direct HTTP integrators. Server
 keywords: ["migration", "delta", "delta v1", "delta v2", "api"]
 ---
 
-This page is for integrators calling the Velora Delta HTTP API directly. If you're on the [Velora SDK](/sdk/products/delta), the SDK-level migration walks the same path with TypeScript snippets — see [SDK → Migrate from V1 to V2](/sdk/products/delta#migrate-from-v1-to-v2).
+This page is for integrators calling the Velora Delta HTTP API directly. If you're on the [Velora SDK](/sdk/products/delta), the SDK-level migration walks the same path with TypeScript snippets; see [SDK → Migrate from V1 to V2](/sdk/products/delta#migrate-from-v1-to-v2).
 
 ## What breaks if you do nothing
 
@@ -14,12 +14,12 @@ Nothing. Delta V1 (`/delta/*`) remains fully supported and shares on-chain contr
 
 V2 keeps the same on-chain settlement model but cleans up the protocol surface:
 
-- **Server-built orders.** `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign. You stop composing `domain`, `types`, and `value` on the client.
-- **Route-based pricing.** `GET /delta/v2/prices` returns a recommended `route` plus `alternatives` — let users pick a different bridge, and stop juggling the `bridge` / `bridgeInfo` / `availableBridges` triple V1 returns.
-- **Paginated order history.** `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }`. V1 returns a flat array with no total.
-- **Unified status model.** Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) collapse V1's `status` + `bridgeStatus` columns into one.
-- **Server-resolved partner fee.** Pass `partner` / `partnerAddress` / `partnerFeeBps` directly on every call — the server validates and encodes them. No more separate `GET /prices/partnerfee/{chainId}` round-trip.
-- **No more `hmac`.** V2 doesn't sign the price payload, so there's no opaque blob to thread from `/prices` into `/orders/build`.
+- Orders are built server-side. `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign, and you stop composing `domain`, `types`, and `value` on the client.
+- Pricing is route-based. `GET /delta/v2/prices` returns a recommended `route` plus `alternatives`, so users can pick a different bridge and you stop juggling the `bridge` / `bridgeInfo` / `availableBridges` triple V1 returns.
+- Order history is paginated. `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }` where V1 returns a flat array with no total.
+- Status is one field. Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) collapse V1's `status` + `bridgeStatus` columns into one.
+- Partner fees resolve on the server. Pass `partner` / `partnerAddress` / `partnerFeeBps` directly on every call; the separate `GET /prices/partnerfee/{chainId}` round-trip goes away.
+- The `hmac` is gone. V2 doesn't sign the price payload, so there's no opaque blob to thread from `/prices` into `/orders/build`.
 
 ## Endpoint mapping
 
@@ -87,11 +87,11 @@ V2 response:
 }
 ```
 
-Three things to handle:
+Handle these in your client:
 
-- **`price.hmac` is gone.** Don't thread it into `/orders/build`.
-- **`deltaAddress` moved to `spender`.** Approve `spender` as the ERC-20 spender (the on-chain Delta contract address — unchanged).
-- **Bridge detection changed.** V1 used `bridge.destinationChainId !== 0`. V2 sets `route.bridge` to `null` for same-chain and populates it for crosschain. Read `route.origin.input.token.chainId` vs `route.destination.output.token.chainId` if you need a direct check.
+- `price.hmac` is gone; don't thread it into `/orders/build`.
+- `deltaAddress` moved to `spender`. Approve `spender` as the ERC-20 spender (the on-chain Delta contract address itself is unchanged).
+- Bridge detection changed. V1 used `bridge.destinationChainId !== 0`; V2 sets `route.bridge` to `null` for same-chain and populates it for crosschain. Read `route.origin.input.token.chainId` vs `route.destination.output.token.chainId` if you need a direct check.
 
 ### 2. Build
 
@@ -118,11 +118,11 @@ V1 takes the price object + hmac. V2 takes the route plus order params on top.
 + }
 ```
 
-> The chain ID is no longer part of the build request — V2 derives it from the `route`.
+> The chain ID is no longer part of the build request; V2 derives it from the `route`.
 
-V1 returned `{ data, orderHash, domain, types }` — `data` was the on-chain Order struct.
+V1 returned `{ data, orderHash, domain, types }`, where `data` was the on-chain Order struct.
 
-V2 returns `{ toSign: { domain, types, value }, orderHash }` — `value` is the on-chain Order struct, wrapped one level deeper.
+V2 returns `{ toSign: { domain, types, value }, orderHash }`: `value` is the on-chain Order struct, wrapped one level deeper.
 
 ```diff
   // V1 response
@@ -150,7 +150,7 @@ The EIP-712 domain (`name: "Portikus"`, `version: "2.0.0"`, `chainId`, `verifyin
 
 ### 4. Submit
 
-V1 took `{ order, signature, partner, ... }`. V2 is the same shape — only the source of `order` changes.
+V1 took `{ order, signature, partner, ... }`. V2 is the same shape; only the source of `order` changes.
 
 ```diff
 - POST /delta/orders
@@ -165,7 +165,7 @@ V1 took `{ order, signature, partner, ... }`. V2 is the same shape — only the 
   }
 ```
 
-V2 doesn't accept `referrerAddress` differently — same field, same semantics.
+V2 doesn't accept `referrerAddress` differently: same field, same semantics.
 
 ### 5. Poll for status
 
@@ -192,7 +192,7 @@ Status mapping you'll need on the client when migrating queries:
 | `CANCELLED` | `CANCELLED` |
 | `REFUNDED` (or `bridgeStatus: REFUNDED`) | `REFUNDED` |
 
-The V2 response also restructures order details: `input` and `output` each carry `{ chainId, token, amount }` (SELL: input has `amount`, output has `expectedAmount` + `executedAmount`; BUY: vice versa). V1 returned `order.srcToken` / `order.destToken` plus a separate `transactions[]` array — V2 keeps both, but the headline numbers move to `input` / `output`.
+The V2 response also restructures order details: `input` and `output` each carry `{ chainId, token, amount }` (SELL: input has `amount`, output has `expectedAmount` + `executedAmount`; BUY: vice versa). V1 returned `order.srcToken` / `order.destToken` plus a separate `transactions[]` array. V2 keeps both, but the headline numbers move to `input` / `output`.
 
 ### 6. List orders
 
@@ -214,11 +214,11 @@ V1 returns a plain array; V2 wraps it:
 + }
 ```
 
-You now know how many pages remain — useful for "load more" UIs without falling back to "fetch until you get fewer than `limit`".
+You now know how many pages remain, which is useful for "load more" UIs without falling back to "fetch until you get fewer than `limit`".
 
 ### 7. Cancel
 
-No semantic change — same path under `/v2`, same request body.
+No semantic change: same path under `/v2`, same request body.
 
 ```diff
 - POST /delta/orders/cancel
@@ -245,15 +245,15 @@ V2: just pass `partner` on every call (`/delta/v2/prices`, `/delta/v2/orders/bui
 + POST /delta/v2/orders/build { ..., partner: "my-app-name" }
 ```
 
-`GET /prices/partnerfee/{chainId}` still exists — keep using it if you need the resolved config for your UI (e.g., to show "0.25% fee" alongside the quote).
+`GET /prices/partnerfee/{chainId}` still exists; keep using it if you need the resolved config for your UI (e.g., to show "0.25% fee" alongside the quote).
 
 ## Breaking changes you might miss
 
-- **`price.hmac` is gone in V2.** Existing code that re-attaches `hmac` to the build payload will fail validation.
-- **`bridge.destinationChainId !== 0` check breaks.** V2 sets `route.bridge = null` for same-chain; the V1 sentinel is no longer present in V2 responses.
-- **`bridge-info` shape changed.** Nested object → flat `routes[]` array. The replacement endpoint is `bridge-routes` (different name).
-- **Status enum changed.** Your status-handling code needs the mapping table above. Don't rely on `EXECUTED` alone — V2 reports `COMPLETED` for executed-and-finalized orders and `BRIDGING` while the destination leg is still pending.
-- **Order list response changed.** V1 returned `Order[]`; V2 returns `{ data: Order[], total, page, limit, hasMore }`. Code that does `orders.length` or `orders.map(...)` on the response needs to unwrap `.data` first.
+- `price.hmac` is gone in V2. Existing code that re-attaches `hmac` to the build payload will fail validation.
+- The `bridge.destinationChainId !== 0` check breaks. V2 sets `route.bridge = null` for same-chain; the V1 sentinel is no longer present in V2 responses.
+- `bridge-info` changed shape, from a nested object to a flat `routes[]` array, and the replacement endpoint is named `bridge-routes`.
+- The status enum changed, so your status-handling code needs the mapping table above. Don't rely on `EXECUTED` alone: V2 reports `COMPLETED` for executed-and-finalized orders and `BRIDGING` while the destination leg is still pending.
+- The order list response changed from `Order[]` to `{ data: Order[], total, page, limit, hasMore }`. Code that does `orders.length` or `orders.map(...)` on the response needs to unwrap `.data` first.
 
 ## End-state check
 

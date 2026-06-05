@@ -1,16 +1,16 @@
 ---
 title: "Overview"
-description: "Server-built EIP-712 orders, route-based pricing with alternatives, paginated history, and a unified status model. Recommended path for new Delta integrations."
+description: "Delta V2 cuts client-side work out of Delta integrations: the server builds EIP-712 orders ready to sign, prices come back as a route with alternatives, order history is paginated, and one status field follows an order end to end."
 keywords: ["delta", "delta v2", "api-reference"]
 ---
 
-Delta V2 is the recommended path for Delta integrations. The on-chain contracts and settlement model are unchanged from [Delta V1](/resources/migrations/delta-v1-to-v2); the protocol surface changes for the better:
+Build new Delta integrations on V2. The server carries most of the protocol work, so your client stays thin:
 
-- **Server-built orders.** `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign — clients don't compose `domain`, `types`, and `value` locally.
-- **Route-based pricing.** `GET /delta/v2/prices` returns a recommended `route` plus `alternatives` so users can pick a different bridge or path.
-- **Paginated history.** `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }`.
-- **Unified status model.** Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) replace the V1 split between `status` + `bridgeStatus`.
-- **Server-resolved partner fee.** Pass `partner` / `partnerAddress` / `partnerFeeBps` raw — the server validates and encodes them. No client-side `getPartnerFee` round-trip.
+- Orders come back from `POST /delta/v2/orders/build` as EIP-712 typed data ready to sign. You never compose `domain`, `types`, and `value` yourself.
+- `GET /delta/v2/prices` recommends a `route` and lists `alternatives`, so users can pick a different bridge or path.
+- Order history is paginated: `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }`.
+- A single `status` field covers the whole lifecycle (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`), replacing the V1 split between `status` and `bridgeStatus`.
+- Partner fees are resolved server-side. Pass `partner` / `partnerAddress` / `partnerFeeBps` raw; the server validates and encodes them, and the `getPartnerFee` round-trip disappears.
 
 ## Lifecycle
 
@@ -55,7 +55,7 @@ Delta V2 is the recommended path for Delta integrations. The on-chain contracts 
 
 ## SDK shortcut
 
-Every endpoint is wrapped by [`sdk.delta.*`](/sdk/products/delta) — the SDK handles signing, partner-fee defaults, and the build → sign → post orchestration. For a 5-minute walkthrough see [SDK → Delta](/sdk/products/delta).
+Every endpoint is wrapped by [`sdk.delta.*`](/sdk/products/delta), which handles signing, partner-fee defaults, and the build → sign → post orchestration. For a 5-minute walkthrough see [SDK → Delta](/sdk/products/delta).
 
 ## Related pages
 

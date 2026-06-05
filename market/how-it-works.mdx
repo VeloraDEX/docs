@@ -44,7 +44,7 @@ sequenceDiagram
 
 ### 1. Price
 
-You call `GET /prices` with `srcToken`, `destToken`, `amount`, `side` (`SELL` or `BUY`), and `network`. The aggregator scans liquidity across every DEX it supports on that chain, evaluates multi-hop and multi-DEX paths, and returns a `priceRoute` containing the best path, the expected `destAmount`, the gas estimate, and a USD breakdown (`srcUSD`, `destUSD`, `gasCostUSD`).
+You call `GET /prices` with `srcToken`, `destToken`, `amount`, `side` (`SELL` or `BUY`), and `network`. The aggregator scans liquidity across every major DEX it supports on that chain, evaluates multi-hop and multi-DEX paths, and returns a `priceRoute` containing the best path, the expected `destAmount`, the gas estimate, and a USD breakdown (`srcUSD`, `destUSD`, `gasCostUSD`).
 
 The `priceRoute` is **stateless and unsigned** — it's just a routing plan. It expires quickly (prices move) but holds no commitment.
 

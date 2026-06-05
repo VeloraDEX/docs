@@ -3,7 +3,7 @@
 | 400 `Invalid srcToken` or `Invalid destToken`           | Native ETH sent as `0x0` or lowercase `0xeee...e`                              | Use the mixed-case placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` |
 | 422 `Unsupported chain`                                | `network` not in the supported-chain list for the current API host             | Hit `GET /chains` to confirm the live list; see [Chains & contracts](/resources/chains-and-contracts) |
 | `priceRoute.maxImpactReached: true`                    | Price impact exceeds the configured ceiling for this route                     | Reduce trade size, split into hops, or pass an explicit higher `maxImpact` if your product accepts the risk |
-| Stale `priceRoute` rejected by `POST /transactions/:network` | More than ~30s elapsed between quote and tx-build, route became invalid    | Re-quote and pass the fresh `priceRoute` verbatim; never cache across user gestures |
+| Stale `priceRoute` rejected by `POST /transactions/:chainId` | More than ~30s elapsed between quote and tx-build, route became invalid    | Re-quote and pass the fresh `priceRoute` verbatim; never cache across user gestures |
 | 429 from the gateway                                   | Free-tier rate limit hit, or your Pro plan quota exceeded                      | See [Pro API accounts](/overview/pro-api-accounts) to lift rate limits, or back off and retry |
 
 <Note>Updated from support tickets at each release. Last updated: 2026-05-15.</Note>
