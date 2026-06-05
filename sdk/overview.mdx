@@ -94,7 +94,7 @@ All three entry points are thin orchestrators over the same per-method `construc
 
 ```mermaid
 graph TD
-  A["constructSimpleSDK<br/>(namespaced: sdk.swap / sdk.delta / sdk.quote)"] --> C
+  A["constructSimpleSDK<br/>(namespaced: sdk.swap / sdk.delta / sdk.quote / sdk.otcOrders)"] --> C
   B["constructFullSDK<br/>(namespaced, full control)"] --> C
   D["constructPartialSDK<br/>(cherry-picked, tree-shaken)"] --> C
   C["construct* feature factories<br/>(GetRate, BuildTx, BuildDeltaOrder, GetQuote, ...)"]

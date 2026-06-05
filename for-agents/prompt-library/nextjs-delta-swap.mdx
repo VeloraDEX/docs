@@ -29,11 +29,11 @@ Requirements:
 - Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain — fetch from /resources/chains-and-contracts, use the `delta.spender` from the quote response, or read it from the typed-data `domain.verifyingContract`.
 
 Reference these docs and follow them exactly:
-- https://docs.velora.xyz/delta/overview
-- https://docs.velora.xyz/delta/how-it-works
-- https://docs.velora.xyz/api-reference/delta/quote
-- https://docs.velora.xyz/api-reference/delta/orders-build
-- https://docs.velora.xyz/api-reference/delta/orders-submit
+- https://velora.xyz/docs/delta/overview
+- https://velora.xyz/docs/delta/how-it-works
+- https://velora.xyz/docs/api-reference/delta/quote
+- https://velora.xyz/docs/api-reference/delta/orders-build
+- https://velora.xyz/docs/api-reference/delta/orders-submit
 
 Do NOT mutate the `delta.route` between quote and build. Do NOT grant approval to Augustus — Delta has its own spender contract.
 ```

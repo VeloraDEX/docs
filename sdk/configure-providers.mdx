@@ -152,7 +152,7 @@ If your app already uses [wagmi](https://wagmi.sh), reuse the viem wallet client
 
 ```ts
 import axios from "axios";
-import { useAccount, useWalletClient } from "wagmi";
+import { useConnection, useWalletClient } from "wagmi";
 import {
   constructPartialSDK,
   constructAxiosFetcher,
@@ -162,13 +162,14 @@ import {
   constructApproveToken,
 } from "@velora-dex/sdk";
 
+const fetcher = constructAxiosFetcher(axios);
+
 function useVeloraSDK() {
-  const { address } = useAccount();
+  const { address } = useConnection();
   const { data: walletClient } = useWalletClient();
 
   if (!walletClient || !address) return null;
 
-  const fetcher = constructAxiosFetcher(axios);
   const contractCaller = constructViemContractCaller(walletClient, address);
 
   return constructPartialSDK(

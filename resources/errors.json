@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Machine-readable mirror of the Velora API troubleshooting tables. Each row maps a documented symptom on a specific endpoint to its root cause, fix, and the human-readable docs anchor.",
-    "source": "https://docs.velora.xyz/api-reference/troubleshooting",
+    "source": "https://velora.xyz/docs/api-reference/troubleshooting",
     "lastUpdated": "2026-05-27",
     "note": "Documented examples — not an exhaustive enumeration of every possible error string. Updated from support tickets at each release."
   },

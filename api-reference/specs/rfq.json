@@ -10,7 +10,7 @@
   ],
   "externalDocs": {
     "description": "OTC API — overview and integration guide.",
-    "url": "https://new-docs.velora.xyz/api-reference/rfq/overview"
+    "url": "https://velora.xyz/docs/api-reference/rfq/overview"
   },
   "paths": {
     "/ft/p2p/{chainId}/": {

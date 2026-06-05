@@ -44,9 +44,9 @@ import { constructSimpleSDK } from '@velora-dex/sdk';
 const sdk = constructSimpleSDK({ chainId: 1, fetch });
 
 const quote = await sdk.quote.getQuote({
-  srcToken:    '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
-  destToken:   '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
-  amount:      '1000000000000000000', // 1 ETH
+  srcToken: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE', // ETH
+  destToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // USDC
+  amount: '1000000000000000000', // 1 ETH
   srcDecimals: 18,
   destDecimals: 6,
   side: 'SELL',
@@ -63,15 +63,20 @@ if ('delta' in quote) {
 ```
 
 ```tsx Widget (React)
-import { VeloraWidget } from '@velora-dex/widget';
+import { Widget } from '@velora-dex/widget';
 
 export default function SwapPage() {
   return (
-    <VeloraWidget
-      chainId={1}
-      partner="my-app-name"
-      defaultSrcToken="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-      defaultDestToken="0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    <Widget
+      partnerConfig={{ partner: "my-app-name" }}
+      input={{
+        selectedForm: "swap",
+        tokenFromAddress: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
+        tokenToAddress: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",   // ETH
+        srcChainId: 1, // Mainnet
+        destChainId: 1, // Mainnet
+        sendAmount: "1000", // 1000 USDC in units
+      }}
     />
   );
 }

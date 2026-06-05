@@ -6,6 +6,7 @@ Canonical instructions for AI coding agents working in this repo. `AGENTS.md` po
 
 - The Velora documentation site, built on [Mintlify](https://mintlify.com). Pages are MDX files with YAML frontmatter; navigation lives in `docs.json`.
 - The site is **pre-production**. Renames and moves need no redirects or backward-compat shims yet.
+- **Deployment.** The canonical production root is `https://velora.xyz/docs` — use it for any absolute self-links (e.g. the agent prompt libraries). Today the docs are **only deployed to staging** at `https://new-docs.velora.xyz/docs`; the `velora.xyz/docs` root is not live yet, so links there will 404 until the production cutover.
 
 ## Commands
 
@@ -73,7 +74,7 @@ The expensive mistakes. These facts must survive every edit.
 - **Contract addresses live in exactly one place**: `/resources/chains-and-contracts`. Other pages link there. Exception: failure-mode rows may inline an address when the address is the diagnostic itself (e.g. "Delta contract must be the spender" → cite `0x...933C96D`); document the exception on the page when first used.
 - **API host policy**: code examples and `openapi:` `servers` blocks use `https://api.velora.xyz`. The legacy hosts `api.paraswap.io` and `apiv5.paraswap.io` appear only in the apiv5 migration page, and only as the *source* of the migration.
 - **Partner key in code examples**: every quote/swap example includes `partner=my-app-name` (cURL) / `partner: 'my-app-name'` (SDK). The literal `my-app-name` is the placeholder integrators replace.
-- **`developers.velora.xyz` is deprecated.** Don't link to it from new content or write it into source-of-truth fields (`_meta.sources`, `externalDocs.url`). When pulling data from it, copy the data into the repo as the new source of truth.
+- **`developers.velora.xyz` is deprecated.** It is being migrated to Mintlify; canonical developer docs will live under `velora.xyz/docs` (currently staged at `new-docs.velora.xyz/docs`). Don't link to it from new content or write it into source-of-truth fields (`_meta.sources`, `externalDocs.url`). When pulling data from it, copy the data into the repo as the new source of truth.
 - Don't document internal admin features, off-chain Portikus operator dashboards, or private partner endpoints.
 
 ## Style

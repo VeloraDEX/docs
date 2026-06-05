@@ -149,7 +149,7 @@ If your app already manages the wallet (wagmi, RainbowKit, or any other host-sid
 "use client";
 
 import dynamic from "next/dynamic";
-import { useAccount, useWalletClient } from "wagmi";
+import { useConnection, useWalletClient } from "wagmi";
 
 const Widget = dynamic(
   () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
@@ -157,7 +157,7 @@ const Widget = dynamic(
 );
 
 export default function ClientWidget() {
-  const { connector } = useAccount();
+  const { connector } = useConnection();
   const { data: walletClient } = useWalletClient();
 
   // Hand the EIP-1193 provider to the widget once a wallet is connected.
