@@ -1,6 +1,6 @@
 ---
 title: "Events & callbacks"
-description: "Listen to widget lifecycle events — wallet connections, approvals, swaps, orders, and form changes."
+description: "Listen to widget lifecycle events: wallet connections, approvals, swaps, orders, and form changes."
 keywords: ["widget", "events", "callbacks", "analytics", "lifecycle"]
 ---
 
@@ -169,7 +169,7 @@ Fires during ETH → WETH wrapping. Used as a pre-step for Delta Swaps that star
 
 ## `onSwap`
 
-The most common callback — fires for both market and Delta Swap lifecycles.
+The most common callback. Fires for both Delta and Market Swap lifecycles.
 
 **Sub-events:**
 
@@ -241,7 +241,7 @@ TWAP (Time-Weighted Average Price) order lifecycle. TWAP splits a large trade in
 
 Delta limit-order lifecycle.
 
-**Sub-events:** `LimitOrder:click`, `LimitOrder:request`, `LimitOrder:sent`, `LimitOrder:confirmed` (rare — orders typically fill later), `LimitOrder:failed`.
+**Sub-events:** `LimitOrder:click`, `LimitOrder:request`, `LimitOrder:sent`, `LimitOrder:confirmed` (rare; orders typically fill later), `LimitOrder:failed`.
 
 **Params:** Delta `price`, `order`, `error` (if failed), plus form-state fields including `limitPrice` and `orderDeadline`.
 
@@ -451,21 +451,21 @@ Fires when price info refreshes or the price-query state changes.
 
 ---
 
-## Lifecycle — a successful market swap
+## Lifecycle of a successful market swap
 
 For a wallet-connected market swap that requires token approval, events fire in this order:
 
-1. **`onConnectWallet`** — `ConnectWallet:click` (user clicks), then `ConnectWallet:connect` once a wallet attaches.
-2. **`onFormInputChange`** — `FormInput:change` for every field edit.
-3. **`onPriceChange`** — `PriceQueryUpdate` (loading / refetching) and `PriceUpdate` (successful fetch) as quotes refresh.
-4. **`onAllowToken`** — `AllowToken:request` → `AllowToken:sent` → `AllowToken:confirmed`. Skipped if allowance already covers the trade or the flow uses a permit signature only.
-5. **`onWrapETH`** — for Delta Swaps with ETH as `tokenFrom`, the user is asked to wrap first: `WrapETH:click` → `WrapETH:request` → `WrapETH:sent` → `WrapETH:confirmed`.
-6. **`onSwap`** — `Swap:click` → `Swap:request` → `Swap:sent` → `Swap:confirmed`. Replace with `Swap:failed` or `Swap:cancelled` on the unhappy path.
-7. **`onCancelTx`** — only if the user explicitly cancels a pending market swap tx: `CancelTx:request` → `CancelTx:sent` → `CancelTx:confirmed`.
+1. `onConnectWallet` — `ConnectWallet:click` (user clicks), then `ConnectWallet:connect` once a wallet attaches.
+2. `onFormInputChange` — `FormInput:change` for every field edit.
+3. `onPriceChange` — `PriceQueryUpdate` (loading / refetching) and `PriceUpdate` (successful fetch) as quotes refresh.
+4. `onAllowToken` — `AllowToken:request` → `AllowToken:sent` → `AllowToken:confirmed`. Skipped if allowance already covers the trade or the flow uses a permit signature only.
+5. `onWrapETH` — for Delta Swaps with ETH as `tokenFrom`, the user is asked to wrap first: `WrapETH:click` → `WrapETH:request` → `WrapETH:sent` → `WrapETH:confirmed`.
+6. `onSwap` — `Swap:click` → `Swap:request` → `Swap:sent` → `Swap:confirmed`. Replace with `Swap:failed` or `Swap:cancelled` on the unhappy path.
+7. `onCancelTx` — only if the user explicitly cancels a pending market swap tx: `CancelTx:request` → `CancelTx:sent` → `CancelTx:confirmed`.
 
-**Delta Swaps** replace step 4/5/6 with a single Delta order submission (`Swap:sent` with `swapMode: "delta"` and an `order` param). The order is filled off-band — `Swap:confirmed` may arrive minutes later, or be missed entirely if the user closes the widget.
+Delta Swaps replace step 4/5/6 with a single Delta order submission (`Swap:sent` with `swapMode: "delta"` and an `order` param). The order is filled off-band, so `Swap:confirmed` may arrive minutes later, or be missed entirely if the user closes the widget.
 
-**Limit, OTC, and TWAP flows** replace step 6 with their respective callbacks (`onLimitOrder`, `onOTCOrder`, `onTwapOrder`).
+Limit, OTC, and TWAP flows replace step 6 with their respective callbacks (`onLimitOrder`, `onOTCOrder`, `onTwapOrder`).
 
 ## Related pages
 

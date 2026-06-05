@@ -16,12 +16,12 @@ The widget supports two wallet ownership models, controlled by the `widgetMode` 
 In `standalone` mode the widget renders its own Connect Wallet button and handles the full connector flow using built-in wagmi connectors. No extra configuration needed.
 
 ```tsx
-<Widget config={{ widgetMode: "standalone" }} /> // default — can be omitted
+<Widget config={{ widgetMode: "standalone" }} /> // default; can be omitted
 ```
 
 ### Optional: add Privy as a connector
 
-If you want Privy in the connector list (alongside the built-in connectors), pass `privyAppId`. Privy is **not required** — the widget works without it.
+If you want Privy in the connector list (alongside the built-in connectors), pass `privyAppId`. Privy is **not** required; the widget works without it.
 
 ```tsx
 <Widget
@@ -32,7 +32,7 @@ If you want Privy in the connector list (alongside the built-in connectors), pas
 />
 ```
 
-## dApp mode — bring your own provider
+## dApp mode: bring your own provider
 
 Set `widgetMode: "dapp"` and pass an EIP-1193 provider. Your host app is responsible for connecting the wallet.
 
@@ -61,15 +61,12 @@ type EIP1193ProviderLax = {
 };
 ```
 
-Most wallet connectors — wagmi connectors, RainbowKit, raw `window.ethereum` — satisfy this shape.
+Most wallet connectors (wagmi connectors, RainbowKit, raw `window.ethereum`) satisfy this shape.
 
 ### The Connect Wallet button in dApp mode
 
 <Warning>
-In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. The behavior of the button depends on whether you pass an `onConnectWalletClick` handler:
-
-- **Without** `onConnectWalletClick` — the button is **disabled**.
-- **With** `onConnectWalletClick` — the button is **enabled**, but the widget will **not** open its own drawer. You must run your host app's wallet connection flow inside the handler.
+In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. Without an `onConnectWalletClick` handler, the button is disabled. With one, the button is enabled but still won't open the widget's own drawer: you must run your host app's wallet connection flow inside the handler.
 </Warning>
 
 ```tsx
@@ -78,7 +75,7 @@ In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. 
   provider={provider}
   events={{
     onConnectWalletClick: () => {
-      // host-app responsibility — e.g. open RainbowKit modal
+      // host-app responsibility, e.g. open RainbowKit modal
       openConnectModal();
     },
   }}
@@ -111,7 +108,7 @@ Does your host app already manage the user wallet?
 
 ## Connection events
 
-Both modes emit `onConnectWallet` events you can use for analytics — see [Events & callbacks](/widget/events-and-callbacks#onconnectwallet) for payload details.
+Both modes emit `onConnectWallet` events you can use for analytics. See [Events & callbacks](/widget/events-and-callbacks#onconnectwallet) for payload details.
 
 ```tsx
 <Widget

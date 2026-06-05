@@ -39,7 +39,7 @@ const Widget = dynamic(
 
 ## Tailwind v4
 
-The widget ships compiled Tailwind v4 styles scoped under the `.velora-widget` class. You don't need Tailwind in your host app — the bundled styles are self-contained.
+The widget ships compiled Tailwind v4 styles scoped under the `.velora-widget` class. You don't need Tailwind in your host app; the bundled styles are self-contained.
 
 If your host app **does** use Tailwind, the widget's scoping prevents its variables from leaking into your global stylesheet, and vice versa. See [Customize](/widget/customize#css-scoping).
 
@@ -129,13 +129,13 @@ export function DeferredWidget() {
 
 ### Bundle size
 
-The widget is large — it ships wallet connectors, EVM tooling, and the full trading UI. Lazy-loading and route-based code splitting keep the initial bundle small.
+The widget is large: it ships wallet connectors, EVM tooling, and the full trading UI. Lazy-loading and route-based code splitting keep the initial bundle small.
 
 ## Known caveats
 
-- **Server-side rendering** is not supported (see SSR caveat above).
-- **Strict-mode double-mount** in dev triggers a brief double-fetch of price quotes — harmless and confined to development.
-- **Sandboxed iframes** without `allow-popups` and `allow-storage-access-by-user-activation` will break wallet-connection popups.
+- Server-side rendering is not supported (see SSR caveat above).
+- Strict-mode double-mount in dev triggers a brief double-fetch of price quotes, harmless and confined to development.
+- Sandboxed iframes without `allow-popups` and `allow-storage-access-by-user-activation` will break wallet-connection popups.
 
 ## Related pages
 

@@ -4,7 +4,7 @@ description: "Restrict chains, pick trade modes, choose a theme, and hide UI ele
 keywords: ["widget","configure","chains","trade-modes"]
 ---
 
-The widget accepts a `config` prop of type `WidgetConfig`. Every field is optional — omit a field to fall back to its default.
+The widget accepts a `config` prop of type `WidgetConfig`. Every field is optional; omit a field to fall back to its default.
 
 ```tsx
 import { Widget } from "@velora-dex/widget";
@@ -71,10 +71,10 @@ function MyWidget() {
 ```
 
 <Note>
-**Chain-selection behavior:**
-- An empty array or one containing only invalid chain IDs falls back to **all default chains**.
+How chain selection behaves:
+- An empty array or one containing only invalid chain IDs falls back to all default chains.
 - Invalid IDs in an otherwise valid list are dropped (with `console.warn`).
-- Not all source chains can bridge to all destination chains — unsupported pairs are filtered out at runtime.
+- Not all source chains can bridge to all destination chains; unsupported pairs are filtered out at runtime.
 - Same-chain swaps (source == destination) are always allowed for any chain in `srcChains`.
 </Note>
 
@@ -84,7 +84,7 @@ function MyWidget() {
 <Widget config={{ enableCrossChain: false }} />
 ```
 
-Disables the crosschain swap path entirely — users can only swap within a single chain.
+Disables the crosschain swap path entirely: users can only swap within a single chain.
 
 ### `enableDelta`
 
@@ -109,8 +109,8 @@ const tradeModes = ["swap", "limit"];
 Restricts which trading forms are visible. Accepts any subset of `"swap" | "limit" | "otc" | "twap"`.
 
 <Note>
-**Trade-mode behavior:**
-- An empty array or one with only invalid modes falls back to **all default modes**.
+Similar fallback rules apply here:
+- An empty array or one with only invalid modes falls back to all default modes.
 - If the currently selected mode becomes disabled, the widget switches to the first enabled mode.
 - `limit` and `twap` are Delta-only. If `enableDelta: false` (or the user disables Delta in Settings) and your `tradeModes` list contains only Delta-only modes, the widget falls back to `swap`.
 </Note>
@@ -194,7 +194,7 @@ Logs extra diagnostic info to the console. Don't ship enabled to production.
 
 ## Pre-filling the form
 
-Use the [`input` prop](/widget/widget-api-reference#forminputprops) (not `config`) to pre-select tokens, amounts, and form type — for example, to support deep links into a specific trade.
+Use the [`input` prop](/widget/widget-api-reference#forminputprops) (not `config`) to pre-select tokens, amounts, and form type, for example to support deep links into a specific trade.
 
 ```tsx
 <Widget

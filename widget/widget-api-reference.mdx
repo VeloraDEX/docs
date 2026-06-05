@@ -117,7 +117,7 @@ This is client-side code. Don't embed secrets you wouldn't put in a public bundl
 
 ## `EIP1193ProviderLax`
 
-A looser version of viem's `EIP1193Provider` — many wallets don't satisfy viem's strict signature, so the widget accepts the looser shape:
+Many wallets don't satisfy viem's strict `EIP1193Provider` signature, so the widget accepts a looser shape:
 
 ```ts
 type EIP1193ProviderLax = {
@@ -131,7 +131,7 @@ Used with `widgetMode: "dapp"`. See [Wallet management](/widget/wallet-managemen
 
 ## `FormInputProps`
 
-Pre-populate the form on mount — useful for deep links and programmatic control.
+Pre-populate the form on mount, useful for deep links and programmatic control.
 
 ```ts
 interface FormInputProps {

@@ -1,12 +1,12 @@
 ---
 title: "Trading modes"
-description: "Choose between mode=DELTA, mode=MARKET, and mode=ALL on Velora's /quote endpoint — when to pick each, and how fallback responses work."
+description: "Choose between mode=DELTA, mode=MARKET, and mode=ALL on Velora's /quote endpoint: when to pick each, and how fallback responses work."
 keywords: ["mode","trading modes","delta","market","fallback","quote"]
 ---
 
 The `mode` query parameter on [`GET /quote`](/api-reference/market/quote) tells Velora which execution path to consider: `DELTA`, `MARKET`, or `ALL`.
 
-**`mode=ALL`** is the default for clients that don't want to commit upfront. Velora evaluates both paths server-side, picks the winner, and returns **one response shape** — either a `delta` block or a `market` block, never both. Clients must branch on which block is present, not on the mode they requested.
+`mode=ALL` is the default for clients that don't want to commit upfront. Velora evaluates both paths server-side, picks the winner, and returns **one** response shape: either a `delta` block or a `market` block, never both. Clients must branch on which block is present, not on the mode they requested.
 
 ## Delta vs Market
 
@@ -14,25 +14,25 @@ The `mode` query parameter on [`GET /quote`](/api-reference/market/quote) tells 
 |---|---|---|
 | User signs | An EIP-712 order (off-chain message) | A transaction (on-chain tx) |
 | User pays gas | No | Yes |
-| MEV exposure | Private auction — solver competition | Public mempool — sandwichable |
+| MEV exposure | Private solver auction | Public mempool, sandwichable |
 | Crosschain | One signature, multi-chain settlement | Separate tx per chain |
 | Price improvements | Solvers compete in an auction to improve the quoted price | Best-effort routing across DEXs |
-| Failure mode | Revert-protection — failed settlements cost no gas; order expires or is rejected with no funds lost | Tx reverts — gas spent on a failed call |
+| Failure mode | Revert-protection: failed settlements cost no gas; order expires or is rejected with no funds lost | Tx reverts; gas spent on a failed call |
 
-**Pick `mode=DELTA`** when:
+Pick `mode=DELTA` when:
 
 - The user can wait a few seconds for solver competition (gasless settlement, MEV-protected fills).
 - The trade is large enough that solver competition beats AMM routing.
-- The wallet has no native gas balance and would otherwise need an approval + ETH — typical for mobile, social, and wallet-onboarding flows.
-- The swap is crosschain — one signed Delta order resolves across chains via bridge-aware solvers.
+- The wallet has no native gas balance and would otherwise need an approval + ETH, typical of mobile, social, and wallet-onboarding flows.
+- The swap is crosschain: one signed Delta order resolves across chains via bridge-aware solvers.
 
-**Pick `mode=MARKET`** when:
+Pick `mode=MARKET` when:
 
-- The user needs synchronous, on-chain settlement — for example, composing with another contract in the same transaction.
+- The user needs synchronous, on-chain settlement (for example, composing with another contract in the same transaction).
 - The trade is small and AMM liquidity is the better route.
 - Latency matters more than slippage savings.
-- `mode=DELTA` returns no quote — Delta is BUY-side and native-source restricted, so Market is the fallback for those pairs.
+- `mode=DELTA` returns no quote. Delta is BUY-side and native-source restricted, so Market is the fallback for those pairs.
 
 <Warning>
-  **Fallback envelope.** If the chosen mode has no route, the API may return the *other* mode's block in the same response — a `mode=DELTA` request can come back with a `market` block, and vice versa. If neither has a route, you get a `400` with body `{"errorType":"PricingError","details":"Error getting price data"}`. Always branch on which block is present and handle the `400` explicitly.
+  **Fallback envelope.** Fallback runs in one direction only, and only under `mode=ALL`: when Delta can't price the trade, the response carries a `market` block plus a `fallbackReason` (`errorType`, `details`) explaining why Delta was skipped. A `mode=DELTA` request never falls back; with no Delta route it fails with a `400` carrying that same `errorType` and `details`. A `mode=MARKET` request never returns a `delta` block, and when Market pricing fails (including crosschain pairs, which Market doesn't serve) you get a `400` with body `{"errorType":"PricingError","details":"Error getting price data"}`. Branch on which block is present and handle the `400` explicitly.
 </Warning>

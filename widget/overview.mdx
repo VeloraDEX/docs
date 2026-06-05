@@ -1,10 +1,10 @@
 ---
 title: "Widget overview"
-description: "Embed the Velora swap widget in your React app with @velora-dex/widget — multi-chain swaps, limit orders, OTC, and TWAP in a single drop-in component."
+description: "Embed the Velora swap widget in your React app with @velora-dex/widget. Multi-chain swaps, limit orders, OTC, and TWAP in a single drop-in component."
 keywords: ["widget", "overview", "embed", "react"]
 ---
 
-The Velora Widget is a React component that gives your users a complete trading interface — swaps, limit orders, OTC, and TWAP — across every chain Velora supports. Drop `<Widget />` into your app, pass a `QueryClientProvider`, and you have a working DEX inside your product.
+The Velora Widget is a React component that gives your users a complete trading interface (swaps, limit orders, OTC, and TWAP) across every chain Velora supports. Drop `<Widget />` into your app, pass a `QueryClientProvider`, and you have a working DEX inside your product.
 
 ## Try it live
 
@@ -14,7 +14,7 @@ The Velora Widget is a React component that gives your users a complete trading 
   href="https://widget.velora.xyz/"
   horizontal
 >
-  Configure chains, tokens, theme, and partner fees in a live preview — opens in
+  Configure chains, tokens, theme, and partner fees in a live preview. Opens in
   a new tab.
 </Card>
 
@@ -22,8 +22,8 @@ The Velora Widget is a React component that gives your users a complete trading 
 
 <CardGroup cols={2}>
   <Card title="Multi-chain swaps" icon="arrows-left-right">
-    Ethereum, Polygon, BNB, Avalanche, Arbitrum, Optimism, Base, Gnosis,
-    Unichain — same-chain and crosschain.
+    Same-chain and crosschain across Ethereum, Polygon, BNB, Avalanche,
+    Arbitrum, Optimism, Base, Gnosis, and Unichain.
   </Card>
   <Card title="Limit, OTC, and TWAP orders" icon="clock">
     Powered by [Delta](/delta/overview). Gasless and MEV-protected.
@@ -71,10 +71,10 @@ export default function App() {
 
 The widget is a single React component shipped as `@velora-dex/widget`:
 
-- **Quotes** come from the same [Market API](/api-reference/market/overview) and [Delta API](/api-reference/delta/overview) you'd hit from the SDK — no separate widget backend.
-- **Wallet** is either the widget's built-in wagmi connectors (default, `widgetMode: "standalone"`) or an EIP-1193 provider you pass (`widgetMode: "dapp"`).
-- **Styles** are auto-injected on import and scoped under `.velora-widget` so they don't leak into your app.
-- **State** is owned by the widget, but every important transition fires through the `events` prop so you can sync analytics or your own UI.
+- Quotes come from the same [Delta API](/api-reference/delta/overview) and [Market API](/api-reference/market/overview) you'd hit from the SDK; there's no separate widget backend.
+- Wallet is either the widget's built-in wagmi connectors (default, `widgetMode: "standalone"`) or an EIP-1193 provider you pass (`widgetMode: "dapp"`).
+- Styles are auto-injected on import and scoped under `.velora-widget` so they don't leak into your app.
+- State is owned by the widget, but every important transition fires through the `events` prop so you can sync analytics or your own UI.
 
 ## Pick your starting point
 

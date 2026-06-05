@@ -1,10 +1,10 @@
 ---
 title: "Introduction"
-description: "The Velora REST API — gasless Swap (Delta) intents, Market aggregation, and OTC orders across 10+ EVM chains. Plain HTTPS, language-agnostic, no key to start."
+description: "The Velora REST API: gasless Swap (Delta) intents, Market aggregation, and OTC orders across 10+ EVM chains over plain HTTPS, with no key required to start."
 keywords: ["api", "reference", "openapi", "velora"]
 ---
 
-The Velora REST API is best execution as plain HTTPS — gasless intents, DEX aggregation, and on-chain OTC across 10+ EVM chains. Any language, any stack, any wallet. No SDK to install, and no key to get started.
+The Velora REST API is best execution as plain HTTPS: gasless intents, DEX aggregation, and on-chain OTC across 10+ EVM chains. It works from any language and stack, with no SDK to install and no key to get started.
 
 ## Three APIs, one base URL
 
@@ -12,19 +12,21 @@ Everything lives under `https://api.velora.xyz`.
 
 <CardGroup cols={3}>
   <Card title="Delta API" icon="bolt" href="/api-reference/delta/overview">
-    **Delta** intents — gasless, MEV-protected swaps and signed orders, same-chain or crosschain. One signature.
+    Gasless, MEV-protected swaps and signed orders, same-chain or crosschain.
+    One signature.
   </Card>
   <Card title="Market API" icon="chart-line" href="/api-reference/market/overview">
     Best price across every DEX and AMM, returned as ready-to-send calldata.
   </Card>
   <Card title="OTC API" icon="handshake" href="/api-reference/rfq/overview">
-    **AugustusRFQ** orders between known counterparties — a maker signs and posts gasless, the named taker fills on-chain. Partial fills supported.
+    AugustusRFQ orders between known counterparties. A maker signs and posts
+    gasless; the named taker fills on-chain. Partial fills supported.
   </Card>
 </CardGroup>
 
 ## Your first call
 
-No key required — pass any `partner` string to tag your app. Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
+No key required; pass any `partner` string to tag your app. Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
 
 ```bash
 curl -s "https://api.velora.xyz/quote" \
@@ -41,11 +43,11 @@ curl -s "https://api.velora.xyz/quote" \
   -G | jq
 ```
 
-The response carries either a `delta` block (gasless — sign and submit later) or a `market` block (calldata — submit now). Branch on whichever is present. See [Trading modes](/integrate/trading-modes), or the [Quickstart](/overview/quickstart) for SDK and Widget versions.
+The response carries either a `delta` block (gasless: sign and submit later) or a `market` block (calldata: submit now). Branch on whichever is present. See [Trading modes](/integrate/trading-modes), or the [Quickstart](/overview/quickstart) for SDK and Widget versions.
 
 ## Auth & rate limits
 
-`partner` is your free, no-signup ID — pass `&partner=<your-app-name>` on any endpoint. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
+`partner` is your free, no-signup ID. Pass `&partner=<your-app-name>` on any endpoint. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
 
 <Tip>
   Need contract addresses at runtime? [`contracts.json`](/resources/contracts.json) has canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable: [Chains & contracts](/resources/chains-and-contracts).
@@ -55,9 +57,9 @@ The response carries either a `delta` block (gasless — sign and submit later) 
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/overview/quickstart">
-    First quote in 60 seconds — cURL, SDK, or Widget.
+    First quote in 60 seconds with cURL, the SDK, or the Widget.
   </Card>
   <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">
-    Common failure modes by endpoint — symptom, cause, fix.
+    Common failure modes by endpoint: symptom, cause, fix.
   </Card>
 </CardGroup>
