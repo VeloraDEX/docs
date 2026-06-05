@@ -115,7 +115,7 @@ const built = await sdk.delta.buildTWAPDeltaOrder({
 const signature = await sdk.delta.signDeltaOrder(built);
 
 const auction = await sdk.delta.postTWAPDeltaOrder({
-  order: built.toSign.value as any,
+  order: built.toSign.value,
   signature,
   partner: "my-app-name",
 });

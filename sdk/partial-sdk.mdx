@@ -118,7 +118,7 @@ const built = await deltaSDK.buildDeltaOrder({
 
 const signature = await deltaSDK.signDeltaOrder(built);
 const auction = await deltaSDK.postDeltaOrder({
-  order: built.toSign.value as any,
+  order: built.toSign.value,
   signature,
   partner: "my-app-name",
 });

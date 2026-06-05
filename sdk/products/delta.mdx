@@ -91,7 +91,7 @@ const built = await sdk.delta.buildDeltaOrder({
 const signature = await sdk.delta.signDeltaOrder(built);
 
 const auction = await sdk.delta.postDeltaOrder({
-  order: built.toSign.value as any,
+  order: built.toSign.value,
   signature,
   partner: "my-app-name",
 });
@@ -229,7 +229,7 @@ V1 returned a flat `DeltaPrice { srcAmount, destAmount, partner, partnerFee, des
 + const built = await sdk.delta.buildDeltaOrder({ /* ... */ });
 + const signature = await sdk.delta.signDeltaOrder(built);
 + const auction = await sdk.delta.postDeltaOrder({
-+   order: built.toSign.value as any,
++   order: built.toSign.value,
     signature,
     partner: "my-app-name",
   });
