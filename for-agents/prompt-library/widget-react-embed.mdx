@@ -1,27 +1,39 @@
 ---
-title: "Velora Widget — React embed with theming"
-description: "Prompt an AI agent to embed the Velora Widget into a React app with custom theming."
-last-verified: 2026-05-15
-keywords: ["widget","react","theming","embed"]
+title: "Velora Widget — React embed with theme sync"
+description: "Prompt an AI agent to embed the Velora Widget into a React app, sync its light/dark theme with the host, and wire up partner attribution and events."
+last-verified: 2026-06-05
+keywords: ["widget","react","theme","embed","events"]
 ---
 
 ## Outcome
 
-A React component that mounts the Velora Widget with the host app's design tokens (colors, typography, border radius). No iframe — direct in-app embed. `partner` identifier wired so swaps attribute fee-share to the host.
+A React component that mounts the Velora Widget, wrapped in the required `QueryClientProvider`. Its light/dark theme follows the host app, `partnerConfig.partner` attributes swaps to the host, and lifecycle events feed the host's analytics.
+
+<Note>
+The widget is a drop-in React component — there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://docs.velora.xyz/widget/customize).
+</Note>
 
 ## Prompt
 
 <CodeGroup>
 
 ```text Claude Code
-You are integrating the Velora Widget into an existing React 18 app.
+You are integrating the Velora Widget into an existing React 18+ app.
 
 Requirements:
-- Install `@velora-dex/widget`.
-- Mount the widget at `/swap` route via React Router or Next.js routing.
-- Pass `chainId`, `partner` (a `partner` identifier from env, e.g. `my-app-name`), and optional `defaultSrcToken` / `defaultDestToken`.
-- Theme the widget: pass the host app's primary/secondary colors, fontFamily, and borderRadius through the widget's theming props (see `widget/customize`).
-- Subscribe to widget events (swap start, swap success, swap error) and pipe them into the host app's analytics module.
+- Install `@velora-dex/widget` and `@tanstack/react-query` (peer dependency).
+- Mount the widget at the `/swap` route via React Router or Next.js routing.
+- Wrap the widget in a `QueryClientProvider` with a module-level `QueryClient`.
+- Pass `config.partnerConfig.partner` (a `partner` identifier from env, e.g. `my-app-name`).
+- Theme: the widget only supports `theme: "light" | "dark"` (omit to follow the
+  OS `prefers-color-scheme`). Drive the `theme` config field from the host app's
+  current light/dark mode so the two stay in sync. Do NOT attempt to pass brand
+  colors, fonts, or border-radius — there is no API for that.
+- Memoize any non-primitive `config` value (objects/arrays) with `useMemo` or a
+  module-level constant, or the widget re-mounts on every render.
+- Subscribe to widget events via the `events` prop and pipe them into the host's
+  analytics module. Use `onSwap` and branch on `event.name`:
+  `Swap:request` (start), `Swap:confirmed` (success), `Swap:failed` (error).
 
 Reference these docs and follow them exactly:
 - https://docs.velora.xyz/widget/install
@@ -30,7 +42,8 @@ Reference these docs and follow them exactly:
 - https://docs.velora.xyz/widget/events-and-callbacks
 - https://docs.velora.xyz/widget/monetize
 
-Do NOT embed via iframe if the host app is also React — use the direct embed. Load the `partner` identifier from env so different builds (staging, production, white-label) can use different values.
+Load the `partner` identifier from env so different builds (staging, production,
+white-label) can use different values.
 ```
 
 ```text Cursor
@@ -45,6 +58,7 @@ Do NOT embed via iframe if the host app is also React — use the direct embed. 
 
 ## End-state check
 
-- The widget visually matches the host app's design tokens.
-- A successful test swap fires the host's analytics events with the expected payload.
+- The widget renders inside a `QueryClientProvider`; mounting it without one throws.
+- Toggling the host app between light and dark flips the widget's `theme` to match.
+- A successful test swap fires the host's analytics events (`Swap:confirmed`) with the expected payload.
 - The `partner` identifier is present at runtime but not hardcoded in the source tree.
