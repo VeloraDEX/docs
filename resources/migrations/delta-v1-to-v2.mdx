@@ -261,7 +261,7 @@ V2: just pass `partner` on every call (`/delta/v2/prices`, `/delta/v2/orders/bui
 2. `POST /delta/v2/orders/build` returns `{ toSign, orderHash }`.
 3. The signature your wallet produces over `toSign` is accepted by `POST /delta/v2/orders` (status `200`, response carries the new order shape with `id` and `status: "PENDING"`).
 4. `GET /delta/v2/orders/{id}` polls through `ACTIVE` → `COMPLETED` (or `BRIDGING` → `COMPLETED` for crosschain).
-5. `grep -r "partnerfee\|/delta/prices\b\|/delta/orders\b" your-codebase/` — every hit is intentional (e.g., `/prices/partnerfee` for UI lookup; `/delta/orders` only if you intentionally stayed on V1 for an order family that V2 doesn't cover for you yet).
+5. `grep -r "partnerfee\|/delta/prices\b\|/delta/orders\b" your-codebase/`: every hit is intentional (e.g., `/prices/partnerfee` for UI lookup; `/delta/orders` only if you intentionally stayed on V1 for an order family that V2 doesn't cover for you yet).
 
 ## Related pages
 

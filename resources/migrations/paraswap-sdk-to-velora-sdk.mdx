@@ -11,7 +11,7 @@ keywords: ["sdk","migration","paraswap","velora"]
 ## Steps
 
 1. Remove `@paraswap/sdk` from `package.json`. Install `@velora-dex/sdk`.
-2. Replace imports — most named exports kept the same shape. The factory rename is `constructSimpleSDK` (the function name itself is unchanged; only the package source changed).
+2. Replace imports. Most named exports kept the same shape. The factory rename is `constructSimpleSDK` (the function name itself is unchanged; only the package source changed).
 3. Re-run your TypeScript build. Most projects compile clean on the first pass.
 
 ## Code diff (illustrative)

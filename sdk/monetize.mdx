@@ -36,7 +36,7 @@ const auction = await sdk.delta.submitDeltaOrder({
 ```
 
 <Note>
-Delta sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them in one call and encodes the fee into the on-chain order — no local round-trip needed.
+Delta sends `partner` / `partnerAddress` / `partnerFeeBps` straight to the server, which resolves and validates them in one call and encodes the fee into the on-chain order, so no local round-trip is needed.
 </Note>
 
 If you need to obtain the registered defaults programmatically (e.g., to show "0.25% fee" in your UI), call `getPartnerFee` directly:

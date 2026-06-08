@@ -49,7 +49,7 @@ const numSlices = 4;
 const totalSrcAmount = "10000000000"; // 10,000 USDC total
 const perSlice = (BigInt(totalSrcAmount) / BigInt(numSlices)).toString();
 
-// quote ONE slice — the route amount must equal floor(totalSrcAmount / numSlices)
+// quote ONE slice; the route amount must equal floor(totalSrcAmount / numSlices)
 const price = await sdk.delta.getDeltaPrice({
   srcToken: USDC,
   destToken: ETH,

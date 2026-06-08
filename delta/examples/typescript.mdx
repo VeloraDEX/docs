@@ -1,10 +1,10 @@
 ---
 title: "TypeScript"
-description: "End-to-end TypeScript example — call the Velora Delta API to quote a gasless 1 ETH → USDC intent via plain fetch."
+description: "End-to-end TypeScript example: call the Velora Delta API to quote a gasless 1 ETH → USDC intent via plain fetch."
 keywords: ["api","delta","typescript","node","fetch","example","intent"]
 ---
 
-A minimal Node script that calls `GET /v2/quote?mode=DELTA` and prints the recommended route's expected output and the `spender` from the returned `delta` block. No SDK — just `fetch`.
+A minimal Node script that calls `GET /v2/quote?mode=DELTA` and prints the recommended route's expected output and the `spender` from the returned `delta` block. No SDK, just `fetch`.
 
 ## File tree
 
@@ -81,7 +81,7 @@ You should see the recommended route's expected output (USDC, 6 decimals) and th
 
 ## Recommended route vs alternatives
 
-The `delta` block carries a single recommended `route`. For crosschain swaps it also returns `alternatives` — other bridge routes you can offer the user. Pass whichever `route` you choose, unmodified, into the build step.
+The `delta` block carries a single recommended `route`. For crosschain swaps it also returns `alternatives`: other bridge routes you can offer the user. Pass whichever `route` you choose, unmodified, into the build step.
 
 ```ts
 const { delta } = await (await fetch(`https://api.velora.xyz/v2/quote?${params}`)).json();

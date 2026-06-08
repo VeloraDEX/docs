@@ -7,7 +7,7 @@ openapi: "/api-reference/specs/rfq.json GET /ft/order/{orderHash}"
 Fetch one order by the `orderHash` returned when it was posted. The response is the full order record, including its current `state` and the `fillableBalance` still open for partial fills.
 
 <Tip>
-  Always re-check `expiry` against the current block and confirm `state` is `PENDING` before a taker submits a fill — the on-chain fill reverts if the order is expired, already `FULFILLED`, or `CANCELLED`.
+  Always re-check `expiry` against the current block and confirm `state` is `PENDING` before a taker submits a fill. The on-chain fill reverts if the order is expired, already `FULFILLED`, or `CANCELLED`.
 </Tip>
 
 ## Related pages

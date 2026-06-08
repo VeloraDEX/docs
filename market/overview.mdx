@@ -1,10 +1,10 @@
 ---
 title: "Why Market API"
-description: "Velora's aggregation API — best-price routing across DEXs with atomic on-chain settlement in a single transaction."
+description: "Velora's aggregation API: best-price routing across DEXs with atomic on-chain settlement in a single transaction."
 keywords: ["market api","aggregation","swap","routing"]
 ---
 
-The Market API is Velora's classic swap aggregator. You request a quote, build a transaction, and your user signs and submits it on-chain — in one atomic call. It's the right choice when you need composability inside a larger transaction, when the swap is small, or when you want full control over execution.
+The Market API is Velora's classic swap aggregator. You request a quote, build a transaction, and your user signs and submits it on-chain, in one atomic call. It's the right choice when you need composability inside a larger transaction, when the swap is small, or when you want full control over execution.
 
 ## What you get
 
@@ -13,7 +13,7 @@ The Market API is Velora's classic swap aggregator. You request a quote, build a
     Aggregates liquidity across major DEXs to find the optimal path.
   </Card>
   <Card title="Atomic execution" icon="bolt">
-    Swap settles in a single transaction — composable with any contract call.
+    Swap settles in a single transaction, composable with any contract call.
   </Card>
   <Card title="Multi-chain" icon="layer-group">
     Ethereum, Polygon, BNB, Arbitrum, Optimism, Base, Avalanche, Gnosis, Unichain.
@@ -24,7 +24,7 @@ For a side-by-side breakdown of when to pick `mode=DELTA`, `mode=MARKET`, or `mo
 
 ## See it work
 
-The basic flow is two calls — get a price, build a transaction — then your user signs and submits it:
+The basic flow is two calls (get a price, build a transaction), then your user signs and submits it:
 
 ```bash
 # 1. Get a price quote
@@ -43,7 +43,7 @@ curl -X POST "https://api.velora.xyz/transactions/:chainId" -d @price.json
     cURL the full flow end-to-end.
   </Card>
   <Card title="How it works" icon="diagram-project" href="/market/how-it-works">
-    Price, build, approve, settle — the full Market lifecycle.
+    Price, build, approve, settle: the full Market lifecycle.
   </Card>
   <Card title="API Reference" icon="book" href="/api-reference/market/overview">
     Endpoints, parameters, and response schemas.

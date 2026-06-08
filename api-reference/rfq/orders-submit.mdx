@@ -10,7 +10,7 @@ Submit a maker-signed order to the OTC book. The maker builds the order, signs t
   The `taker` field is what makes an order OTC. Set it to the intended counterparty's address and only that address can fill the order (`type` `P2P`). The EIP-712 domain is `name: "AUGUSTUS RFQ"`, `version: "1"`, the order's `chainId`, and `verifyingContract` set to the AugustusRFQ address for that chain.
 </Note>
 
-Size the order against [`GET /ft/fillablebalance/:chainId/:account`](/api-reference/rfq/fillable-balance) first — if `makerAmount` exceeds the maker's balance or AugustusRFQ allowance, the order is accepted but lands in `SUSPENDED`. To skip a separate approve transaction, encode `permitMakerAsset`.
+Size the order against [`GET /ft/fillablebalance/:chainId/:account`](/api-reference/rfq/fillable-balance) first: if `makerAmount` exceeds the maker's balance or AugustusRFQ allowance, the order is accepted but lands in `SUSPENDED`. To skip a separate approve transaction, encode `permitMakerAsset`.
 
 ## Related pages
 
@@ -25,6 +25,6 @@ Size the order against [`GET /ft/fillablebalance/:chainId/:account`](/api-refere
     `sdk.otcOrders.submitOTCOrder` wraps build → sign → post.
   </Card>
   <Card title="Troubleshooting" icon="bug" href="/api-reference/troubleshooting">
-    Signature and order-shape failures — symptom, cause, fix.
+    Signature and order-shape failures: symptom, cause, fix.
   </Card>
 </CardGroup>

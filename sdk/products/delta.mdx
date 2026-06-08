@@ -177,7 +177,7 @@ Limit orders and TWAP are Delta orders too. They reuse this exact build → sign
 ## Migrate from V1 to V2
 
 <Note>
-Only relevant if you're **upgrading an existing integration** from an older SDK version. New integrations can ignore this section — everything above already uses the current API.
+Only relevant if you're **upgrading an existing integration** from an older SDK version. New integrations can ignore this section; everything above already uses the current API.
 </Note>
 
 Delta V2 keeps the **same `sdk.delta.*` namespace and method names** as V1. What changes is that orders are now **server-built** (you no longer compose EIP-712 typed data locally), pricing is **route-based**, and order history is **paginated**. The on-chain contracts, approval flow, and signature format are unchanged.
@@ -198,7 +198,7 @@ Delta V2 keeps the **same `sdk.delta.*` namespace and method names** as V1. What
   });
 ```
 
-V1 returned a flat `DeltaPrice { srcAmount, destAmount, partner, partnerFee, destToken, ... }`. V2 returns `DeltaPrice { route, alternatives, side, partner: { name, feePercent }, spender }` — swap details now live under `price.route`, and `alternatives` lets users pick a different bridge.
+V1 returned a flat `DeltaPrice { srcAmount, destAmount, partner, partnerFee, destToken, ... }`. V2 returns `DeltaPrice { route, alternatives, side, partner: { name, feePercent }, spender }`. Swap details now live under `price.route`, and `alternatives` lets users pick a different bridge.
 
 ### One-call submit
 

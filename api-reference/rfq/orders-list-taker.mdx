@@ -1,10 +1,10 @@
 ---
 title: "GET /ft/p2p/:chainId/taker/:account"
-description: "List the OTC orders addressed to a taker — the orders that account can fill. Paginated."
+description: "List the OTC orders addressed to a taker: the orders that account can fill. Paginated."
 openapi: "/api-reference/specs/rfq.json GET /ft/p2p/{chainId}/taker/{account}"
 ---
 
-List orders where `account` is the named taker — the orders that address is allowed to fill. Use `type=P2P` to scope to counterparty-restricted OTC orders. Paginated with `limit` and `offset`; `total` / `hasMore` mark the end.
+List orders where `account` is the named taker: the orders that address is allowed to fill. Use `type=P2P` to scope to counterparty-restricted OTC orders. Paginated with `limit` and `offset`; `total` / `hasMore` mark the end.
 
 This is the endpoint a taker polls to discover orders a maker has addressed to them.
 
@@ -15,7 +15,7 @@ This is the endpoint a taker polls to discover orders a maker has addressed to t
     Lifecycle, endpoints, and order states end to end.
   </Card>
   <Card title="List maker orders" icon="list" href="/api-reference/rfq/orders-list-maker">
-    The mirror endpoint — orders created by a maker.
+    The mirror endpoint: orders created by a maker.
   </Card>
   <Card title="GET /ft/order/:orderHash" icon="magnifying-glass" href="/api-reference/rfq/orders-get-by-hash">
     Fetch a single order by hash before filling.

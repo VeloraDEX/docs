@@ -37,7 +37,7 @@ const sdk = constructSimpleSDK(
   { viemClient: walletClient, account },
 );
 
-// run a swap / Delta flow against the fork — real API responses, fake balances
+// run a swap / Delta flow against the fork: real API responses, fake balances
 ```
 
 Fund or impersonate any account with Tenderly's `tenderly_setBalance` / `tenderly_setErc20Balance` RPC methods (or the dashboard), so you don't need a real whale address. Because the RPC is hosted, the same fork works from CI without spinning up a node.
@@ -74,7 +74,7 @@ const sdk = constructSimpleSDK(
   { viemClient: walletClient, account },
 );
 
-// run a swap / Delta flow against the fork — real API responses, fake balances
+// run a swap / Delta flow against the fork: real API responses, fake balances
 ```
 
 ### Hardhat
@@ -136,7 +136,7 @@ This pattern is also handy in CI: every test is deterministic and runs offline.
 - **Check `partner`.** A missing or unknown partner key surfaces as `400` on quote/order endpoints. Confirm it's set on every SDK call and matches the partner registered with Velora.
 - **Confirm `chainId` matches the connected wallet.** Mismatched chains throw on signing, because the EIP-712 domain includes `chainId`.
 - **Log raw fetcher calls.** Wrap your fetcher to log `{url, method, status, durationMs}` while developing. The SDK's internal retries and partner-fee resolution can issue requests you don't expect.
-- **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, the auction likely returned no fill — cancel and re-quote.
+- **Watch Delta status transitions.** A Delta order goes `OPEN` → `ACCEPTED` → `EXECUTED` (or `CANCELLED` / `EXPIRED`). If it sticks at `OPEN` for more than a minute, the auction likely returned no fill. Cancel and re-quote.
 - **Verify the spender.** For Delta the user approves `getDeltaContract()`. For Market Swaps the user approves `getSpender()` (`TokenTransferProxy`). Approving the wrong contract is the most common cause of `INSUFFICIENT_ALLOWANCE`.
 
 ## Related pages

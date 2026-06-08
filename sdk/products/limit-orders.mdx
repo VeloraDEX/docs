@@ -69,7 +69,7 @@ const auction = await sdk.delta.submitDeltaOrder({
   owner: account,
   partner: "my-app-name",
   type: "LIMIT",
-  limitAmount: "3000000000000000000", // require at least 3 ETH — your limit price
+  limitAmount: "3000000000000000000", // require at least 3 ETH, your limit price
   deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24, // expire in 24h
   // partiallyFillable: true, // optional, default = fill-or-kill
 });
@@ -89,7 +89,7 @@ const built = await sdk.delta.buildDeltaOrder({
   side: price.side,
   owner: account,
   partner: "my-app-name",
-  limitAmount: "3000000000000000000", // minimum dest amount (3 ETH) — your limit price
+  limitAmount: "3000000000000000000", // minimum dest amount (3 ETH), your limit price
   deadline: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
 });
 
@@ -133,7 +133,7 @@ const { data, total } = await sdk.delta.getDeltaOrders({
   page: 1,
   limit: 100,
   type: "LIMIT",
-  // status: ["ACTIVE"], // optional — only open orders
+  // status: ["ACTIVE"], // optional, only open orders
 });
 ```
 

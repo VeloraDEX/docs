@@ -127,7 +127,7 @@ Any HTTP client works: implement `FetcherFunction` and pass it through. Useful f
 import { constructSimpleSDK, type FetcherFunction } from "@velora-dex/sdk";
 
 const customFetcher: FetcherFunction = async (options) => {
-  // requestParams may include AbortSignal — honor it for cancellation
+  // requestParams may include AbortSignal; honor it for cancellation
   const res = await myHttpClient(options.url, {
     method: options.method,
     headers: options.headers,

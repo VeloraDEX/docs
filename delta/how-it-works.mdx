@@ -1,6 +1,6 @@
 ---
 title: "How it works"
-description: "From signed intent to on-chain settlement — the full Delta flow end-to-end."
+description: "From signed intent to on-chain settlement: the full Delta flow end-to-end."
 keywords: ["delta","architecture","flow","portikus","solver"]
 ---
 
@@ -51,11 +51,11 @@ sequenceDiagram
 
 ### 1. Quote
 
-You call `GET /v2/quote?mode=DELTA`. The API returns a `delta` block with a recommended `route`, optional `alternatives` (crosschain), the resolved `partner` fee, and the `spender` address to approve. There's no separate integrity token to carry forward — you pass `delta.route` into the build step.
+You call `GET /v2/quote?mode=DELTA`. The API returns a `delta` block with a recommended `route`, optional `alternatives` (crosschain), the resolved `partner` fee, and the `spender` address to approve. There's no separate integrity token to carry forward; you pass `delta.route` into the build step.
 
 ### 2. Build
 
-You `POST /delta/v2/orders/build` with the unmodified `delta.route` from step 1 and `owner` set to the user's address. The API returns `{ toSign: { domain, types, value }, orderHash }` — the server composes the EIP-712 domain, types, and order struct for you.
+You `POST /delta/v2/orders/build` with the unmodified `delta.route` from step 1 and `owner` set to the user's address. The API returns `{ toSign: { domain, types, value }, orderHash }`. The server composes the EIP-712 domain, types, and order struct for you.
 
 <Warning>
   Pass `delta.route` **verbatim** from the quote response. Reordering or re-encoding it will cause the build call to reject.
@@ -63,11 +63,11 @@ You `POST /delta/v2/orders/build` with the unmodified `delta.route` from step 1 
 
 ### 3. Sign
 
-The user signs the returned `toSign` typed data with their wallet — the build response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries — viem, ethers v6, wagmi — produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
+The user signs the returned `toSign` typed data with their wallet. The build response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries (viem, ethers v6, wagmi) produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
 
 ### 4. Auction
 
-You `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits to fill the order with their own capital — they take on inventory and settlement risk in exchange for the spread.
+You `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits to fill the order with their own capital; they take on inventory and settlement risk in exchange for the spread.
 
 ### 5. Settle
 
