@@ -3,7 +3,7 @@ title: "Why Delta"
 description: "Delta is Velora's intent protocol — gasless, MEV-protected, Crosschain swaps that settle in one signature. Here's what makes it different from a regular swap."
 ---
 
-Delta is Velora's intent protocol. Instead of building, signing, and submitting an on-chain transaction yourself, you sign an off-chain **order** describing what you want — and a competitive network of solvers (Portikus) fills it on your behalf.
+Delta is Velora's intent protocol. Instead of building, signing, and submitting an on-chain transaction yourself, you sign an off-chain **order** describing what you want — and a competitive network of solvers (the [Portikus Network](/solver-network/portikus)) fills it on your behalf.
 
 ## What you get
 
@@ -11,8 +11,8 @@ Delta is Velora's intent protocol. Instead of building, signing, and submitting 
   <Card title="Gasless" icon="gas-pump">
     The user never pays gas. Solvers cover execution cost out of their margin.
   </Card>
-  <Card title="MEV-protected" icon="shield">
-    Orders are filled via private auction. No public mempool. No sandwich risk.
+  <Card title="MEV-protected" icon="shield" href="/solver-network/sealed-bid-auctions">
+    Orders are filled via sealed-bid auction. No public mempool. No sandwich risk.
   </Card>
   <Card title="Crosschain native" icon="link">
     One signed order can resolve across chains via bridge-aware solvers. No second tx.

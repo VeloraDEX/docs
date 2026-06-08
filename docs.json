@@ -66,6 +66,13 @@
               "overview/product-stack/twap",
               "overview/product-stack/otc"
             ]
+          },
+          {
+            "group": "Solver Network",
+            "pages": [
+              "solver-network/portikus",
+              "solver-network/sealed-bid-auctions"
+            ]
           }
         ]
       },
@@ -141,6 +148,13 @@
               "delta/overview",
               "delta/how-it-works",
               "delta/crosschain-delta"
+            ]
+          },
+          {
+            "group": "Solver Network",
+            "pages": [
+              "solver-network/portikus",
+              "solver-network/sealed-bid-auctions"
             ]
           },
           {

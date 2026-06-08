@@ -4,7 +4,7 @@ description: "From signed intent to on-chain settlement — the full Delta flow 
 keywords: ["delta","architecture","flow","portikus","solver"]
 ---
 
-Delta separates **what the user wants** (the intent) from **how it gets executed** (the solver fill). The user signs once, off-chain. A competitive solver network on **Portikus** races to fill the order at the best price, then settles on-chain via the Delta contract.
+Delta separates **what the user wants** (the intent) from **how it gets executed** (the solver fill). The user signs once, off-chain. Solvers on the [Portikus Network](/solver-network/portikus) race to fill the order at the best price, then settle on-chain via the Delta contract.
 
 ## The flow at a glance
 
@@ -15,7 +15,7 @@ sequenceDiagram
   participant DApp as Your app / SDK
   participant API as Velora API
   participant OS as Order Server
-  participant Solvers as Solver network<br/>(Portikus)
+  participant Solvers as Portikus Network<br/>(solvers)
   participant Delta as Delta contract<br/>0x...c96d
 
   User->>DApp: "Swap 1000 USDC for USDT"
@@ -67,7 +67,7 @@ The user signs the returned `toSign` typed data with their wallet — the build 
 
 ### 4. Auction
 
-You `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and broadcasts to the **Portikus solver network**. Solvers compete on price and execution quality. The winning solver commits to fill the order with their own capital — they take on inventory and settlement risk in exchange for the spread.
+You `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits to fill the order with their own capital — they take on inventory and settlement risk in exchange for the spread.
 
 ### 5. Settle
 
@@ -92,5 +92,7 @@ The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c
 
 ## Related pages
 
+- [Portikus Network](/solver-network/portikus) — the intent infrastructure behind stage 4 and 5.
+- [Sealed-bid auctions](/solver-network/sealed-bid-auctions) — how the auction picks a winner and resists manipulation.
 - [Quickstart](/overview/quickstart) — run the flow end-to-end with cURL.
 - [Delta contract](/resources/chains-and-contracts) — on-chain entry point and per-chain addresses.
