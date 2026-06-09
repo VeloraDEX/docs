@@ -4,7 +4,7 @@ description: "The OTC API settles direct trades between known counterparties: a 
 keywords: ["otc","rfq","augustus","augustusRFQ","p2p","maker","taker","api"]
 ---
 
-An OTC trade on Velora is a deal between two parties who already know each other. The **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain and posts it over plain HTTPS; the **taker** fills it on-chain. The `taker` field decides who that can be: name an address for a private, P2P trade, or leave the zero address to let anyone fill. To start, tag your app with any `partner` string.
+An OTC trade on Velora is a deal between two parties who already know each other. The **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain and posts it to the REST API; the **taker** fills it on-chain. The `taker` field decides who that can be: name an address for a private, P2P trade, or leave the zero address to let anyone fill. To start, tag your app with any `partner` string.
 
 - Name the `taker` and the order is fillable by exactly one address: bilateral OTC rather than a public order.
 - The maker sets price, size, token pair, and `expiry` directly; nothing is exposed as a public order before it settles.

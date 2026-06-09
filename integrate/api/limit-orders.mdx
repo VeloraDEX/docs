@@ -4,7 +4,7 @@ description: "Place a gasless, MEV-protected limit order over the REST API. A li
 keywords: ["limit order api", "delta", "target price", "gasless limit order", "orders build", "type LIMIT", "dETH"]
 ---
 
-A **limit order** on Velora is a [Delta order](/integrate/api/delta-swap) with a target-price constraint: the user signs once, the [Portikus Network](/solver-network/portikus) fills it at or better than the limit price when the market allows, and the user pays no gas. This page walks the whole integration over plain HTTP. It's the Delta swap flow with two additions: you set `limitAmount` at build, and submit with `type: "LIMIT"`. Every example targets `https://api.velora.xyz`.
+A **limit order** on Velora is a [Delta order](/integrate/api/delta-swap) with a target-price constraint: the user signs once, the [Portikus Network](/solver-network/portikus) fills it at or better than the limit price when the market allows, and the user pays no gas. This page walks the whole integration over the REST API. It's the Delta swap flow with two additions: you set `limitAmount` at build, and submit with `type: "LIMIT"`. Every example targets `https://api.velora.xyz`.
 
 For the conceptual model (maker, expiry, how a limit order differs from a swap or OTC), see [Product stack → Limit orders](/overview/product-stack/limit-orders). For a typed wrapper, see [SDK → Limit orders](/sdk/products/limit-orders).
 

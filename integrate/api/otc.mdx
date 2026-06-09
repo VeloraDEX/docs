@@ -4,7 +4,7 @@ description: "Integrate a bilateral OTC trade over the REST API. A maker signs a
 keywords: ["otc api", "rfq", "augustusRFQ", "p2p", "maker", "taker", "fillOrder", "bilateral trade"]
 ---
 
-An **OTC** trade settles a deal between two known counterparties: a **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain naming a specific **taker**, posts it over plain HTTPS, and only that taker can fill it on-chain. This page walks the whole integration end to end, both sides: the maker approves, signs, and posts; the taker approves and fills. Every REST call targets `https://api.velora.xyz`.
+An **OTC** trade settles a deal between two known counterparties: a **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain naming a specific **taker**, posts it to the API, and only that taker can fill it on-chain. This page walks the whole integration end to end, both sides: the maker approves, signs, and posts; the taker approves and fills. Every REST call targets `https://api.velora.xyz`.
 
 OTC is for **bilateral, counterparty-specific** trades. For an open, target-price order that any solver can fill, gasless and MEV-protected, use a [Delta limit order](/integrate/api/limit-orders) instead. For the conceptual model, see [Product stack → OTC](/overview/product-stack/otc); for in-depth field, state, and endpoint detail, see the [OTC API reference](/api-reference/rfq/overview); for a typed wrapper, see [SDK → OTC](/sdk/products/otc).
 

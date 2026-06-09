@@ -1,10 +1,10 @@
 ---
 title: "Delta swap"
-description: "Integrate a gasless, MEV-protected Delta swap over the REST API: quote, build, sign, submit, and poll an intent end-to-end with plain HTTP."
+description: "Integrate a gasless, MEV-protected Delta swap over the REST API: quote, build, sign, submit, and poll an intent end-to-end with simple HTTP requests."
 keywords: ["delta api", "gasless swap", "intent", "quote", "orders build", "orders submit", "dETH", "native eth"]
 ---
 
-A **Delta swap** lets your user sign one off-chain intent and have the [Portikus Network](/solver-network/portikus) settle it gaslessly, with MEV protection. This page walks the whole integration over plain HTTP, end to end: quote the trade, build the order, have the user sign it, submit it, and poll until it settles. Every example is a `curl` or `fetch` call against `https://api.velora.xyz`; no SDK required.
+A **Delta swap** lets your user sign one off-chain intent and have the [Portikus Network](/solver-network/portikus) settle it gaslessly, with MEV protection. This page walks the whole integration end to end: quote the trade, build the order, have the user sign it, submit it, and poll until it settles. Every example is a `curl` or `fetch` call against `https://api.velora.xyz`; no SDK required.
 
 For the conceptual model behind the auction and settlement, see [Delta → How it works](/delta/how-it-works). For a typed wrapper over these same calls, see [SDK → Delta](/sdk/products/delta).
 

@@ -4,7 +4,7 @@ description: "The Market API finds the best price across major DEXs and AMMs on 
 keywords: ["market api", "dex aggregator", "swap api", "openapi", "augustus", "velora"]
 ---
 
-The Market API is Velora's DEX aggregator over plain HTTPS. One request prices your swap, a second turns the quote into calldata for the [Augustus v6.2](/resources/chains-and-contracts) router, and you sign and broadcast it yourself. All you need to start is a `partner` string to tag your app.
+The Market API is Velora's DEX aggregator, served as a REST API. One request prices your swap, a second turns the quote into calldata for the [Augustus v6.2](/resources/chains-and-contracts) router, and you sign and broadcast it yourself. All you need to start is a `partner` string to tag your app.
 
 <Note>
   Want gasless, MEV-protected swaps instead of self-broadcast calldata? Call

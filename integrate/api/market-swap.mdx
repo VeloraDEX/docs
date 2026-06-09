@@ -1,10 +1,10 @@
 ---
 title: "Market swap"
-description: "Integrate an atomic on-chain Market swap over the REST API: get a price route, build the transaction, approve, and broadcast end-to-end with plain HTTP."
+description: "Integrate an atomic on-chain Market swap over the REST API: get a price route, build the transaction, approve, and broadcast end-to-end with direct HTTP calls."
 keywords: ["market api", "swap", "dex aggregator api", "price route", "build transaction", "augustus"]
 ---
 
-A **Market swap** routes through DEX liquidity and settles in a single on-chain transaction that **your user signs and broadcasts**. This page walks the whole integration over plain HTTP: get a price route, build the calldata, approve the router, and send the transaction. Every example targets `https://api.velora.xyz`; no SDK required.
+A **Market swap** routes through DEX liquidity and settles in a single on-chain transaction that **your user signs and broadcasts**. This page walks the whole integration request by request: get a price route, build the calldata, approve the router, and send the transaction. Every example targets `https://api.velora.xyz`; no SDK required.
 
 Market is the right path when the user has gas and wants synchronous, atomic settlement. For gasless, MEV-protected swaps the solver network settles on the user's behalf, use a [Delta swap](/integrate/api/delta-swap) instead. For the conceptual model, see [Market → How it works](/market/how-it-works); for a typed wrapper, see [SDK → Market](/sdk/products/swap).
 

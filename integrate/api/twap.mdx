@@ -4,7 +4,7 @@ description: "Schedule a TWAP over the REST API. A TWAP is one Delta order the u
 keywords: ["twap api", "delta", "scheduled order", "slices", "time-weighted average price", "gasless", "TWAPOrder"]
 ---
 
-A **TWAP** (time-weighted average price) splits a larger trade into slices executed over time. On Velora it's **one Delta order**, not a loop of swaps: the user signs a single scheduled order, and the [Portikus Network](/solver-network/portikus) settles each eligible slice gaslessly until the order completes or expires. This page walks the whole integration over plain HTTP against `https://api.velora.xyz`.
+A **TWAP** (time-weighted average price) splits a larger trade into slices executed over time. On Velora it's **one Delta order**, not a loop of swaps: the user signs a single scheduled order, and the [Portikus Network](/solver-network/portikus) settles each eligible slice gaslessly until the order completes or expires. This page walks the whole integration with direct calls to `https://api.velora.xyz`.
 
 It's the [Delta swap](/integrate/api/delta-swap) flow with one wrinkle that trips people up: **you quote a single slice**, not the whole order, and the server multiplies it across the schedule. For the conceptual model, see [Product stack → TWAP](/overview/product-stack/twap). For a typed wrapper, see [SDK → TWAP](/sdk/products/twap).
 
