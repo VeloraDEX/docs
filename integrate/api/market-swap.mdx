@@ -1,0 +1,94 @@
+---
+title: "Market swap"
+description: "Integrate an atomic on-chain Market swap over the REST API: get a price route, build the transaction, approve, and broadcast end-to-end with plain HTTP."
+keywords: ["market api", "swap", "dex aggregator api", "price route", "build transaction", "augustus"]
+---
+
+A **Market swap** routes through DEX liquidity and settles in a single on-chain transaction that **your user signs and broadcasts**. This page walks the whole integration over plain HTTP: get a price route, build the calldata, approve the router, and send the transaction. Every example targets `https://api.velora.xyz`; no SDK required.
+
+Market is the right path when the user has gas and wants synchronous, atomic settlement. For gasless, MEV-protected swaps the solver network settles on the user's behalf, use a [Delta swap](/integrate/api/delta-swap) instead. For the conceptual model, see [Market → How it works](/market/how-it-works); for a typed wrapper, see [SDK → Market](/sdk/products/swap).
+
+## The flow
+
+<Steps>
+  <Step title="Get a price route">
+    `GET /prices` returns a `priceRoute`: the best path, the expected `destAmount`, and a gas estimate. See [`GET /prices`](/api-reference/market/prices).
+  </Step>
+  <Step title="Build the transaction">
+    `POST /transactions/{chainId}` with the `priceRoute` passed **verbatim** and a slippage tolerance. You get ready-to-broadcast calldata. See [build transaction](/api-reference/market/transactions).
+  </Step>
+  <Step title="Approve the router (ERC-20 only)">
+    For an ERC-20 source, the user approves the Augustus v6.2 router as spender, or passes a permit in the build call to avoid the round-trip. Native source skips this. See [Approvals and permit](/resources/approvals).
+  </Step>
+  <Step title="Sign and broadcast">
+    The user signs the transaction and broadcasts it. Augustus walks the route and delivers `destToken`, or the whole transaction reverts.
+  </Step>
+</Steps>
+
+## 1. Price
+
+```bash
+curl -G 'https://api.velora.xyz/prices' \
+  --data-urlencode 'srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' \
+  --data-urlencode 'destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' \
+  --data-urlencode 'amount=1000000000000000000' \
+  --data-urlencode 'srcDecimals=18' \
+  --data-urlencode 'destDecimals=6' \
+  --data-urlencode 'side=SELL' \
+  --data-urlencode 'network=1' \
+  --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
+  --data-urlencode 'partner=my-app-name' \
+  --data-urlencode 'version=6.2'
+```
+
+The `priceRoute` is stateless and unsigned, just a routing plan, and it expires quickly as prices move. Market `/prices` takes `network`; the build call below takes `chainId` in its path.
+
+```json
+{ "priceRoute": { "destAmount": "...", "gasCostUSD": "...", "...": "..." } }
+```
+
+## 2. Build the transaction
+
+Pass the `priceRoute` **verbatim** and a slippage tolerance (basis points):
+
+```bash
+curl -X POST 'https://api.velora.xyz/transactions/1' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "priceRoute": { "...": "the priceRoute from /prices, unchanged" },
+    "srcToken": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "destToken": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "srcAmount": "1000000000000000000",
+    "slippage": 50,
+    "userAddress": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "partner": "my-app-name"
+  }'
+```
+
+```json
+{ "to": "0x...", "data": "0x...", "value": "1000000000000000000", "gas": "..." }
+```
+
+<Warning>
+  Pass the `priceRoute` exactly as `/prices` returned it. Mutating any field makes the build call reject.
+</Warning>
+
+## 3. Approve the router (ERC-20 only)
+
+If the source token is an ERC-20, the user approves the Augustus v6.2 router (the `to` address) before swapping: a standard `approve(spender, amount)`. Augustus v6.2 is the only spender to authorize. Native source tokens skip this; the build call returns the `value` to send with the swap directly. To avoid the extra round-trip, pass an EIP-2612 permit or Permit2 payload in the build call's `permit` field instead of approving on-chain. See [Approvals and permit](/resources/approvals) for the full picture and [build transaction](/api-reference/market/transactions) for the field. Router addresses are in [Chains & contracts](/resources/chains-and-contracts).
+
+## 4. Sign and broadcast
+
+Send the `{ to, data, value }` from the build response as a transaction from the user's wallet. Augustus pulls the source token, walks the route, checks the result against the user's minimum (price × `1 − slippage`), and delivers `destToken`. If any hop fails or slippage is exceeded, the transaction reverts; there's no partial-fill state.
+
+## Partner fee
+
+Pass `partner` on `/prices` and the build call to attribute volume and capture a fee; add `partnerAddress`, `partnerFeeBps`, and `partnerTakesSurplus` to configure it. See [Monetize](/sdk/monetize) for the field reference.
+
+## Related pages
+
+- [Market → How it works](/market/how-it-works): the routing and atomic-settlement model behind these calls.
+- [Delta swap](/integrate/api/delta-swap), the gasless, MEV-protected alternative.
+- [Trading modes](/integrate/trading-modes) covers when to pick Market over Delta.
+- [Market API reference](/api-reference/market/overview) for full parameters and response schemas.
+- [SDK → Market](/sdk/products/swap), a typed wrapper over this flow.

@@ -1,0 +1,129 @@
+---
+title: "Delta swap"
+description: "Integrate a gasless, MEV-protected Delta swap over the REST API: quote, build, sign, submit, and poll an intent end-to-end with plain HTTP."
+keywords: ["delta api", "gasless swap", "intent", "quote", "orders build", "orders submit", "dETH", "native eth"]
+---
+
+A **Delta swap** lets your user sign one off-chain intent and have the [Portikus Network](/solver-network/portikus) settle it gaslessly, with MEV protection. This page walks the whole integration over plain HTTP, end to end: quote the trade, build the order, have the user sign it, submit it, and poll until it settles. Every example is a `curl` or `fetch` call against `https://api.velora.xyz`; no SDK required.
+
+For the conceptual model behind the auction and settlement, see [Delta → How it works](/delta/how-it-works). For a typed wrapper over these same calls, see [SDK → Delta](/sdk/products/delta).
+
+## The flow
+
+<Steps>
+  <Step title="Quote the trade">
+    `GET /v2/quote?mode=DELTA` returns a `delta` block with the recommended `route`, the `spender` to approve, and the resolved partner fee. See [`GET /v2/quote`](/api-reference/delta/quote).
+  </Step>
+  <Step title="Approve the spender">
+    Authorize the `spender` (the Delta contract) to pull the source token, by on-chain approval or a permit. Native source skips this. See [Approvals and permit](/resources/approvals).
+  </Step>
+  <Step title="Build the order">
+    `POST /delta/v2/orders/build` with the `delta.route` passed **verbatim** and `owner` set to the user. You get back `{ toSign, orderHash }`. See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+  </Step>
+  <Step title="Sign and submit">
+    The user signs `toSign` (ERC-2098 compact signature). `POST /delta/v2/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
+  </Step>
+  <Step title="Poll until settled">
+    `GET /delta/v2/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`). See [`GET /delta/v2/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
+  </Step>
+</Steps>
+
+## 1. Quote
+
+```bash
+curl -G 'https://api.velora.xyz/v2/quote' \
+  --data-urlencode 'srcToken=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' \
+  --data-urlencode 'destToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' \
+  --data-urlencode 'amount=10000000000' \
+  --data-urlencode 'srcDecimals=6' \
+  --data-urlencode 'destDecimals=18' \
+  --data-urlencode 'side=SELL' \
+  --data-urlencode 'chainId=1' \
+  --data-urlencode 'mode=DELTA' \
+  --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
+  --data-urlencode 'partner=my-app-name'
+```
+
+The response carries a `delta` block:
+
+```json
+{
+  "delta": {
+    "route": { "origin": { "input": { "amount": "10000000000" }, "output": { "amount": "..." } } },
+    "spender": "0x...",
+    "destAmount": "..."
+  }
+}
+```
+
+`mode=DELTA` returns a `delta` block or fails with a `400`; it never falls back to Market. If you'd rather let Velora pick the cheaper path, send `mode=ALL` and branch on whether the response has a `delta` or a `market` block. See [Trading modes](/integrate/trading-modes).
+
+## 2. Approve the spender
+
+Authorize the Delta contract (the `spender` from the quote) to pull the source token at settlement, with either an on-chain approval or a signed permit. See [Approvals and permit](/resources/approvals) for both methods and when each applies. Selling native ETH skips this step; see [Native ETH (dETH)](/delta/native-eth).
+
+## 3. Build
+
+Pass the `delta.route` from the quote **verbatim** into the build call, with `owner` set to the user's address:
+
+```bash
+curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "route": { "...": "the delta.route from the quote, unchanged" },
+    "owner": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "deadline": 1893456000,
+    "partner": "my-app-name"
+  }'
+```
+
+```json
+{
+  "toSign": { "domain": { "...": "..." }, "types": { "...": "..." }, "value": { "...": "..." } },
+  "orderHash": "0x..."
+}
+```
+
+<Warning>
+  Pass `delta.route` exactly as the quote returned it. Reordering or re-encoding any field makes the build call reject.
+</Warning>
+
+## 4. Sign and submit
+
+The user signs the `toSign` typed data. Delta uses **ERC-2098 compact signatures** (64 bytes); viem, ethers v6, and wagmi produce them natively. Then submit the signed order:
+
+```bash
+curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "chainId": 1,
+    "order": { "...": "toSign.value, sent verbatim" },
+    "signature": "0x...",
+    "partner": "my-app-name"
+  }'
+```
+
+The relayer validates the signature, balance, and allowance, then enrolls the order in the [sealed-bid auction](/solver-network/sealed-bid-auctions). The response is the stored order with its `id`.
+
+## 5. Poll for settlement
+
+```bash
+curl 'https://api.velora.xyz/delta/v2/orders/{orderId}'
+```
+
+Poll until the order reaches a terminal status. A market Delta order settles in seconds once a solver wins the auction, so a short interval is fine.
+
+For a human-readable view (status, fills, the settlement transaction), open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. It's handy for debugging and for linking users to their order.
+
+## Partner fee
+
+Pass `partner` on the quote, build, and submit calls to attribute volume and capture a fee; add `partnerAddress`, `partnerFeeBps`, and `partnerTakesSurplus` to configure it. See [Monetize](/sdk/monetize) for the field reference.
+
+## Related pages
+
+- [Delta → How it works](/delta/how-it-works): the auction and settlement model behind these calls.
+- [Trading modes](/integrate/trading-modes) covers `DELTA` vs `MARKET` vs `ALL` and the fallback envelope.
+- [Native ETH (dETH)](/delta/native-eth): selling native ETH as a Delta source.
+- [Limit orders](/integrate/api/limit-orders) and [TWAP](/integrate/api/twap), the same flow with a price constraint or a schedule.
+- [Delta API reference](/api-reference/delta/overview) for full parameters and response schemas.
+- [SDK → Delta](/sdk/products/delta), a typed wrapper over this flow.

@@ -1,0 +1,39 @@
+---
+title: "Approvals and permit"
+description: "How token approvals work on Velora: the spender to authorize for Delta and Market swaps, approving on-chain vs signing a permit or Permit2, and why limit orders and TWAP need an on-chain approval."
+keywords: ["token approval", "permit", "permit2", "eip-2612", "spender", "delta", "augustus v6.2", "gasless approval"]
+---
+
+Before a swap can pull a user's source token, the user authorizes a **spender**. You can do that with an on-chain `approve`, or by signing a **permit** so there's no separate approval transaction. Which spender you authorize depends on the execution mode; the choice between approve and permit is the same either way.
+
+## Which spender to authorize
+
+The spender is always the contract that settles the trade, never a separate proxy:
+
+- **Delta** (Swaps, Limit Orders, TWAP): the **Delta contract**. Every Delta quote returns it as `delta.spender`, so you can read it straight from the quote response.
+- **Market**: the **Augustus v6.2** router. The user approves Augustus v6.2 directly.
+
+Each is deployed at the same address on every chain that supports it. See [Chains & contracts](/resources/chains-and-contracts) for the addresses and per-mode availability.
+
+## Approve or sign a permit
+
+Both methods work for Delta and for Market:
+
+- **On-chain approval**: a standard ERC-20 `approve(spender, amount)`. One transaction, once per token.
+- **Permit**: sign an EIP-2612 permit or a Permit2 message naming the spender, and pass it in the build call instead of approving on-chain. Delta takes it as the `permit` field on [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build); Market takes it as the `permit` field on [`POST /transactions/{chainId}`](/api-reference/market/transactions). Both the Delta contract and Augustus v6.2 accept either an EIP-2612 or a Permit2 payload.
+
+A permit skips the separate approval transaction, which is the reason to use it.
+
+## Native ETH
+
+Native ETH is never approved. For a Market swap, the native `value` is sent with the transaction. For Delta, the ETH is represented as `dETH`, which the Delta contract can move without an approval; see [Native ETH (dETH)](/delta/native-eth).
+
+## Limit Orders and TWAP use on-chain approval
+
+A permit is bound to a single-use token nonce and a deadline, so it only fits an order that settles right away, like a market Delta swap or a Market swap. A [limit order](/integrate/api/limit-orders) rests until its price is met, and a [TWAP](/integrate/api/twap) settles across slices over time. By the time either settles, the permit's nonce is spent or its deadline has passed. For both, approve the spender on-chain for the total amount instead of signing a permit.
+
+## Related pages
+
+- [Chains & contracts](/resources/chains-and-contracts) for spender addresses and per-mode availability.
+- [Delta swap](/integrate/api/delta-swap) and [Market swap](/integrate/api/market-swap), the flows these approvals belong to.
+- [Native ETH (dETH)](/delta/native-eth) for selling native ETH without an approval.

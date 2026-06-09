@@ -1,0 +1,102 @@
+---
+title: "OTC"
+description: "Integrate a bilateral OTC trade over the REST API. A maker signs an AugustusRFQ order naming a taker and posts it; the named taker fills it on-chain. Full maker-to-taker walkthrough."
+keywords: ["otc api", "rfq", "augustusRFQ", "p2p", "maker", "taker", "fillOrder", "bilateral trade"]
+---
+
+An **OTC** trade settles a deal between two known counterparties: a **maker** signs an [AugustusRFQ](/resources/chains-and-contracts) order off-chain naming a specific **taker**, posts it over plain HTTPS, and only that taker can fill it on-chain. This page walks the whole integration end to end, both sides: the maker approves, signs, and posts; the taker approves and fills. Every REST call targets `https://api.velora.xyz`.
+
+OTC is for **bilateral, counterparty-specific** trades. For an open, target-price order that any solver can fill, gasless and MEV-protected, use a [Delta limit order](/integrate/api/limit-orders) instead. For the conceptual model, see [Product stack → OTC](/overview/product-stack/otc); for in-depth field, state, and endpoint detail, see the [OTC API reference](/api-reference/rfq/overview); for a typed wrapper, see [SDK → OTC](/sdk/products/otc).
+
+## The flow
+
+<Steps>
+  <Step title="Maker approves AugustusRFQ">
+    The maker approves the AugustusRFQ contract to pull the `makerAsset`. It's a separate contract from the Augustus v6.2 router. Native ETH must be wrapped first.
+  </Step>
+  <Step title="Maker sizes and signs">
+    Size against [`GET /ft/fillablebalance`](/api-reference/rfq/fillable-balance), then build the order fields and sign the EIP-712 typed data.
+  </Step>
+  <Step title="Maker posts the order">
+    `POST /ft/p2p/{chainId}/` with the order and `signature`. The server returns the stored order with its `orderHash`. See [post order](/api-reference/rfq/orders-submit).
+  </Step>
+  <Step title="Deliver to the taker">
+    Hand the signed order to the taker over any channel: your backend, the listing endpoints, or directly.
+  </Step>
+  <Step title="Taker fills on-chain">
+    The taker approves AugustusRFQ for the `takerAsset`, then calls `AugustusRFQ.fillOrder` on-chain. This is a transaction, not a REST call.
+  </Step>
+</Steps>
+
+## 1. Maker: approve and size
+
+The maker approves AugustusRFQ for the `makerAsset` they're selling. Then size the order against the maker's fillable balance: the lesser of their balance, allowance, and any amount already reserved by open orders:
+
+```bash
+curl 'https://api.velora.xyz/ft/fillablebalance/1/0xMAKER?token=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+```
+
+AugustusRFQ addresses per chain are in [Chains & contracts](/resources/chains-and-contracts).
+
+## 2. Maker: build and sign
+
+The maker builds the order fields and signs them as EIP-712 typed data. The `taker` field is what makes this bilateral: name an address and only that address can fill; leave the zero address to let anyone fill.
+
+The order fields are `nonceAndMeta`, `expiry`, `makerAsset`, `takerAsset`, `makerAmount`, `takerAmount`, `maker`, and `taker`. The signing domain is:
+
+```json
+{
+  "name": "AUGUSTUS RFQ",
+  "version": "1",
+  "chainId": 1,
+  "verifyingContract": "0x... (the AugustusRFQ address for this chain)"
+}
+```
+
+`makerAsset` and `takerAsset` must be ERC-20s. To sell native ETH, wrap it to WETH first.
+
+## 3. Maker: post the order
+
+```bash
+curl -X POST 'https://api.velora.xyz/ft/p2p/1/' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nonceAndMeta": "...",
+    "expiry": 1893456000,
+    "makerAsset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "takerAsset": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "makerAmount": "10000000000",
+    "takerAmount": "3000000000000000000",
+    "maker": "0xMAKER",
+    "taker": "0xTAKER",
+    "signature": "0x..."
+  }'
+```
+
+Posting stays off-chain, so the maker pays nothing. The response is the stored order with its `orderHash` and `state`. Pass `permitMakerAsset` instead of a separate approval if the `makerAsset` supports permit. See [post order](/api-reference/rfq/orders-submit).
+
+## 4. Deliver, then the taker fills
+
+Hand the signed order to the taker over any off-chain channel, or let them find it through the listing endpoints: [maker orders](/api-reference/rfq/orders-list-maker) and [orders addressed to a taker](/api-reference/rfq/orders-list-taker):
+
+```bash
+curl 'https://api.velora.xyz/ft/p2p/1/taker/0xTAKER'
+```
+
+The taker approves AugustusRFQ for the `takerAsset`, then fills **on-chain** by calling `AugustusRFQ.fillOrder` with the order and signature. This settles atomically; the fill reverts if the order is expired, already filled, or the caller isn't the named taker. Always re-check `expiry` against the current block first. From the SDK, [`sdk.otcOrders.fillOTCOrder`](/sdk/products/otc) encodes and submits this transaction for you.
+
+## Cancelling
+
+There's no cancel endpoint. The maker cancels by sending a transaction to AugustusRFQ (`cancelOrder(bytes32)` or `cancelOrders(bytes32[])`), so cancellation costs gas. This is the one place OTC differs sharply from Delta's gasless cancel. For a short-lived order, letting it lapse past its `expiry` is often cheaper than an explicit cancel. Once the cancel is indexed, the order's `state` flips to `CANCELLED`.
+
+## Order states and detail
+
+An order reports `DRAFT`, `PENDING`, `FULFILLED`, `CANCELLED`, `SUSPENDED`, or `EXPIRED`. Fetch one with [`GET /ft/order/{orderHash}`](/api-reference/rfq/orders-get-by-hash). For the full field semantics, state machine, and per-chain availability, see the [OTC API reference](/api-reference/rfq/overview).
+
+## Related pages
+
+- [Product stack → OTC](/overview/product-stack/otc): when the counterparty matters as much as the price.
+- [Limit orders](/integrate/api/limit-orders), the open, gasless, MEV-protected alternative (Delta).
+- [OTC API reference](/api-reference/rfq/overview) for in-depth fields, states, and endpoints.
+- [SDK → OTC](/sdk/products/otc) covers maker and taker flows in TypeScript.
+- [Chains & contracts](/resources/chains-and-contracts), AugustusRFQ deployment addresses.

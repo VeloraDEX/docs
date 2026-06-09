@@ -84,7 +84,22 @@
             "pages": [
               "integrate/api",
               "integrate/trading-modes",
-              "integrate/rate-limits"
+              "integrate/rate-limits",
+              {
+                "group": "Products",
+                "pages": [
+                  {
+                    "group": "Swaps",
+                    "pages": [
+                      "integrate/api/delta-swap",
+                      "integrate/api/market-swap"
+                    ]
+                  },
+                  "integrate/api/limit-orders",
+                  "integrate/api/twap",
+                  "integrate/api/otc"
+                ]
+              }
             ]
           },
           {
@@ -147,7 +162,8 @@
             "pages": [
               "delta/overview",
               "delta/how-it-works",
-              "delta/crosschain-delta"
+              "delta/crosschain-delta",
+              "delta/native-eth"
             ]
           },
           {
@@ -297,21 +313,10 @@
         "tab": "Resources",
         "groups": [
           {
-            "group": "Migrations",
-            "pages": [
-              "resources/migrations/index",
-              "resources/migrations/delta-v1-to-v2",
-              "resources/migrations/market-to-delta-parallel",
-              "resources/migrations/market-to-delta-replace",
-              "resources/migrations/augustus-v5-to-v6-2",
-              "resources/migrations/apiv5-to-api-host",
-              "resources/migrations/paraswap-sdk-to-velora-sdk"
-            ]
-          },
-          {
             "group": "Reference",
             "pages": [
               "resources/chains-and-contracts",
+              "resources/approvals",
               {
                 "group": "Audits",
                 "pages": [
@@ -322,6 +327,18 @@
                   "resources/security/audits/augustus-rfq"
                 ]
               }
+            ]
+          },
+          {
+            "group": "Migrations",
+            "pages": [
+              "resources/migrations/index",
+              "resources/migrations/delta-v1-to-v2",
+              "resources/migrations/market-to-delta-parallel",
+              "resources/migrations/market-to-delta-replace",
+              "resources/migrations/augustus-v5-to-v6-2",
+              "resources/migrations/apiv5-to-api-host",
+              "resources/migrations/paraswap-sdk-to-velora-sdk"
             ]
           }
         ]

@@ -31,7 +31,6 @@ Pick `mode=MARKET` when:
 - The user needs synchronous, on-chain settlement (for example, composing with another contract in the same transaction).
 - The trade is small and AMM liquidity is the better route.
 - Latency matters more than slippage savings.
-- `mode=DELTA` returns no quote. Delta is BUY-side and native-source restricted, so Market is the fallback for those pairs.
 
 <Warning>
   **Fallback envelope.** Fallback runs in one direction only, and only under `mode=ALL`: when Delta can't price the trade, the response carries a `market` block plus a `fallbackReason` (`errorType`, `details`) explaining why Delta was skipped. A `mode=DELTA` request never falls back; with no Delta route it fails with a `400` carrying that same `errorType` and `details`. A `mode=MARKET` request never returns a `delta` block, and when Market pricing fails (including crosschain pairs, which Market doesn't serve) you get a `400` with body `{"errorType":"PricingError","details":"Error getting price data"}`. Branch on which block is present and handle the `400` explicitly.

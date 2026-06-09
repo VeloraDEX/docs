@@ -1,0 +1,60 @@
+---
+title: "Native ETH (dETH)"
+description: "Sell native ETH gaslessly through Delta. Native ETH is represented as dETH, the Delta Wrapped Native token, wrapped 1:1, with no need for an ERC-20 approval."
+keywords: ["dETH", "delta wrapped native", "native eth", "sell eth gasless", "wrapped native", "delta"]
+---
+
+When a user sells native ETH through Delta, the ETH is represented as **`dETH`**, the Delta Wrapped Native token, wrapped 1:1. The user still signs one off-chain order and pays no gas, and because of how `dETH` is set up there's no need for an ERC-20 approval on the source side. You don't deploy or call anything extra: pass the native placeholder as `srcToken` and the relayer handles the rest.
+
+## What dETH is
+
+`dETH` is an ERC-20 (the `DeltaWrappedNative` contract) that wraps the chain's native token 1:1: ETH on Ethereum, BNB on BSC, and so on. Its underlying is the chain's wrapped native (WETH), so `dETH` and native are interchangeable at a 1:1 rate.
+
+The Delta contract holds delegated access to a user's `dETH`. That's what lets a native-ETH Delta order settle without a separate ERC-20 approval: the user signs the order, and settlement moves the wrapped balance on their behalf. An ERC-20 source token still needs its one-time approval; native ETH does not.
+
+## Using it
+
+Selling native ETH is the normal [Delta swap](/integrate/api/delta-swap) flow with one difference: you skip the approval step. Pass the native placeholder as `srcToken`:
+
+```
+0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+```
+
+Quote, build, sign, and submit exactly as you would for an ERC-20 source. The relayer resolves the placeholder to `dETH`, and the order settles and delivers the destination token the same way.
+
+## Where it's available
+
+`dETH` is deployed alongside the Delta contract, so native ETH works as a Delta source on every chain where Delta is available. It lives at the same address on each of them:
+
+```
+0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742
+```
+
+This address is for reference and on-chain verification. In the API flow you pass the native placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` as `srcToken`, and Velora maps it to dETH for you. The [Chains & contracts](/resources/chains-and-contracts) table is the canonical list of Delta-enabled chains. Where Delta isn't deployed, use a [Market swap](/integrate/api/market-swap) instead.
+
+## Unwrapping back to ETH
+
+`dETH` works like WETH in both directions, so it's never a lock-in. Any `dETH` a user holds can be unwrapped back to native ETH at any time, 1:1, by calling `withdrawNative` on the `dETH` contract:
+
+```solidity
+withdrawNative(uint256 amount, address owner, address receiver)
+```
+
+It burns the `dETH` and sends native ETH to `receiver`. The owner can call it directly; the Delta contract can also do so on their behalf during settlement. This is the same wrap/unwrap model as WETH: `depositNative` mints `dETH` 1:1 (and sending ETH straight to the contract wraps it automatically), and `withdrawNative` redeems it. So if a user ever holds a `dETH` balance, the unfilled remainder of a cancelled or partially filled order, for example, they can convert it back to ETH whenever they want.
+
+`dETH` is a normal ERC-20, so unwrapping isn't the only exit. A user can also swap it to ETH (or any token) through a [Market swap](/integrate/api/market-swap), which routes `dETH` through the aggregator like any other token. In the Velora app that's a prefilled swap link, for example `dETH` to ETH on Ethereum:
+
+```
+https://app.velora.xyz/#/swap/0x0a0d53B6684C7B32B4cBeF5fE8483bFcc8406742-0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE/1/SELL?network=ethereum
+```
+
+<Note>
+  `dETH` can also hold yield-bearing positions for Productive orders, where the wrapped balance earns yield in a strategy while the order rests. That's a separate, advanced flow and isn't covered here.
+</Note>
+
+## Related pages
+
+- [Delta swap](/integrate/api/delta-swap): the full source-to-destination flow native ETH plugs into.
+- [Trading modes](/integrate/trading-modes) covers when to use Delta vs Market.
+- [Delta → How it works](/delta/how-it-works) for the auction and settlement model.
+- [Chains & contracts](/resources/chains-and-contracts) for supported chains and contract references.

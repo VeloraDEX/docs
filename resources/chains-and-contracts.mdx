@@ -30,7 +30,7 @@ The authoritative supported-chain list is queryable at runtime via `GET /chains`
 
 Each contract is also the ERC-20 spender for its execution mode — approve Augustus v6.2 for Market swaps, the Delta contract for Delta orders (Swap, Limit, TWAP), and AugustusRFQ for OTC/RFQ fills. A `—` means the contract isn't deployed on that chain and the corresponding mode is unavailable there. See [Token approvals for agents](/for-agents/token-approvals) for the spender-by-mode decision rules.
 
-**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` on every Delta-enabled chain. AugustusRFQ addresses vary per chain and are listed below.
+**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` and **Delta Wrapped Native (dETH)** at `0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742`, both at the same address on every Delta-enabled chain. AugustusRFQ addresses vary per chain and are listed below.
 
 | Chain (ID) | Delta | AugustusRFQ |
 |---|---|---|
@@ -57,6 +57,10 @@ Legacy router versions. Still operational but new integrations should target v6.
 ### Delta contract
 
 On-chain entry point that validates signed Delta orders and dispatches settlement to Portikus solvers. The Delta contract is the spender on EIP-712 typed-data approvals: token approvals for Delta flows must be granted to this address, **not** to Augustus. Deployed at the same address across every Delta-enabled chain.
+
+### Delta Wrapped Native (dETH)
+
+The wrapped-native token Delta uses to represent native ETH (and other native gas tokens) as an ERC-20, at a 1:1 rate. When a user sells native ETH through Delta, their ETH is represented as dETH, which is why a native source needs no ERC-20 approval. Deployed alongside the Delta contract at the same address on every Delta-enabled chain, so native ETH works as a source wherever Delta does. See [Native ETH (dETH)](/delta/native-eth) for the integration detail.
 
 ### Portikus settlement
 

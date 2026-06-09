@@ -1,0 +1,105 @@
+---
+title: "Limit orders"
+description: "Place a gasless, MEV-protected limit order over the REST API. A limit order is a Delta order with a target-price constraint: build with limitAmount, submit with type=LIMIT, end-to-end."
+keywords: ["limit order api", "delta", "target price", "gasless limit order", "orders build", "type LIMIT", "dETH"]
+---
+
+A **limit order** on Velora is a [Delta order](/integrate/api/delta-swap) with a target-price constraint: the user signs once, the [Portikus Network](/solver-network/portikus) fills it at or better than the limit price when the market allows, and the user pays no gas. This page walks the whole integration over plain HTTP. It's the Delta swap flow with two additions: you set `limitAmount` at build, and submit with `type: "LIMIT"`. Every example targets `https://api.velora.xyz`.
+
+For the conceptual model (maker, expiry, how a limit order differs from a swap or OTC), see [Product stack → Limit orders](/overview/product-stack/limit-orders). For a typed wrapper, see [SDK → Limit orders](/sdk/products/limit-orders).
+
+## The flow
+
+<Steps>
+  <Step title="Quote a reference price">
+    `GET /v2/quote?mode=DELTA` gives the current route and the `spender` to approve. The market quote is your reference point for setting the limit. See [`GET /v2/quote`](/api-reference/delta/quote).
+  </Step>
+  <Step title="Approve the spender">
+    Approve the Delta contract `spender` on-chain for the source token. Limit orders use approval, not a permit; see [Approvals and permit](/resources/approvals). Native source skips this; see [Native ETH (dETH)](/delta/native-eth).
+  </Step>
+  <Step title="Build with a limit price">
+    `POST /delta/v2/orders/build` with the `route` verbatim, `owner`, a `deadline`, and `limitAmount` (your target output for SELL, or max input for BUY). See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+  </Step>
+  <Step title="Sign and submit as LIMIT">
+    The user signs `toSign`; `POST /delta/v2/orders` with `type: "LIMIT"`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
+  </Step>
+  <Step title="Poll, or drive your UI from the order list">
+    A limit order rests `ACTIVE` until a solver can meet the price, so poll on a relaxed interval or list the user's open orders.
+  </Step>
+</Steps>
+
+## 1. Quote and approve
+
+Quote exactly as for a [Delta swap](/integrate/api/delta-swap#1-quote) (`mode=DELTA`), then approve the returned `spender` for the source token. Use the quote's expected output as the baseline for the limit price you'll pin in the next step. Approve on-chain rather than with a permit, which a resting order can't rely on (see [Approvals and permit](/resources/approvals)). Selling native ETH skips the approval; see [Native ETH (dETH)](/delta/native-eth).
+
+## 2. Build with a limit price
+
+Pass the `delta.route` verbatim and add `limitAmount`. For a SELL order it's the minimum destination amount you'll accept (your limit price); a `deadline` is strongly recommended, or the order rests until cancelled.
+
+```bash
+curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "route": { "...": "the delta.route from the quote, unchanged" },
+    "owner": "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+    "limitAmount": "3000000000000000000",
+    "deadline": 1893456000,
+    "partner": "my-app-name"
+  }'
+```
+
+Setting `limitAmount` above the quoted output is what makes this a limit order rather than a market fill: the solver network only fills once it can deliver at least that much. The response is the same `{ toSign, orderHash }` as a market order.
+
+## 3. Submit as LIMIT
+
+The user signs `toSign` (ERC-2098 compact signature). Submit with `type: "LIMIT"`. That field is what marks the order as a resting limit order instead of an immediate fill:
+
+```bash
+curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "chainId": 1,
+    "order": { "...": "toSign.value, sent verbatim" },
+    "signature": "0x...",
+    "type": "LIMIT",
+    "partner": "my-app-name"
+  }'
+```
+
+## 4. List and cancel
+
+List a user's open limit orders by filtering on `type`:
+
+```bash
+curl -G 'https://api.velora.xyz/delta/v2/orders' \
+  --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
+  --data-urlencode 'chainId=1' \
+  --data-urlencode 'type=LIMIT' \
+  --data-urlencode 'page=1' \
+  --data-urlencode 'limit=100'
+```
+
+To check one order, `GET /delta/v2/orders/{orderId}`, or open it in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}` for a human-readable status view. That's useful for a resting limit order that may sit `ACTIVE` for a while.
+
+Cancelling is gasless: the user signs a cancellation payload and you post the order IDs. It only succeeds while the order is still open.
+
+```bash
+curl -X POST 'https://api.velora.xyz/delta/v2/orders/cancel' \
+  -H 'Content-Type: application/json' \
+  -d '{ "orderIds": ["..."], "signature": "0x..." }'
+```
+
+See [`GET /delta/v2/orders`](/api-reference/delta/orders-list) and [`POST /delta/v2/orders/cancel`](/api-reference/delta/orders-cancel).
+
+## Partner fee
+
+Pass `partner` on the quote, build, and submit calls (plus optional `partnerAddress`, `partnerFeeBps`, `partnerTakesSurplus`), exactly as for a Delta swap. See [Monetize](/sdk/monetize).
+
+## Related pages
+
+- [Delta swap](/integrate/api/delta-swap): the base flow a limit order extends.
+- [TWAP](/integrate/api/twap), the other scheduled Delta order type.
+- [Native ETH (dETH)](/delta/native-eth): selling native ETH as a Delta source.
+- [Product stack → Limit orders](/overview/product-stack/limit-orders) for the conceptual model.
+- [Delta API reference](/api-reference/delta/overview) lists full parameters and response schemas.
+- [SDK → Limit orders](/sdk/products/limit-orders), a typed wrapper over this flow.

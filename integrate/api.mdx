@@ -20,6 +20,28 @@ The Velora REST API is the most flexible integration path. It works with any lan
   </Card>
 </CardGroup>
 
+## Build by product
+
+Each guide walks one product end to end over plain HTTP, then links to the API reference for full schemas.
+
+<CardGroup cols={2}>
+  <Card title="Delta swap" icon="bolt" href="/integrate/api/delta-swap">
+    Gasless, MEV-protected swaps: quote, build, sign, submit, poll.
+  </Card>
+  <Card title="Market swap" icon="chart-line" href="/integrate/api/market-swap">
+    Atomic on-chain swaps the user signs and broadcasts.
+  </Card>
+  <Card title="Limit orders" icon="bullseye" href="/integrate/api/limit-orders">
+    Delta orders with a target-price constraint.
+  </Card>
+  <Card title="TWAP" icon="clock" href="/integrate/api/twap">
+    One scheduled Delta order, settled slice-by-slice.
+  </Card>
+  <Card title="OTC" icon="handshake" href="/integrate/api/otc">
+    Bilateral AugustusRFQ trades between named counterparties.
+  </Card>
+</CardGroup>
+
 ## Get started
 
 See the **[API Reference →](/api-reference/introduction)** for endpoints, parameters, and schemas.
