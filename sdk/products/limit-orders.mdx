@@ -77,7 +77,7 @@ const auction = await sdk.delta.submitDeltaOrder({
 console.log("limit order id:", auction.id);
 ```
 
-Setting `limitAmount` above the quoted output is what makes this a limit order: it's the minimum destination amount you'll accept (your limit price), and the solver network only fills once it can deliver at least that much. A `deadline` is strongly recommended; without it the order rests until cancelled.
+Setting `limitAmount` above the quoted output is what makes this a limit order: it's the minimum destination amount you'll accept (your limit price), and the solver network only fills once it can deliver at least that much. A `deadline` is required; past it the order is unfillable.
 
 ## Split flow
 

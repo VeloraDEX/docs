@@ -18,7 +18,7 @@ For the conceptual model behind the auction and settlement, see [Delta → How i
     Authorize the `spender` (the Delta contract) to pull the source token, by on-chain approval or a permit. Native source skips this. See [Approvals and permit](/resources/approvals).
   </Step>
   <Step title="Build the order">
-    `POST /delta/v2/orders/build` with the `delta.route` passed **verbatim** and `owner` set to the user. You get back `{ toSign, orderHash }`. See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+    `POST /delta/v2/orders/build` with the `delta.route` passed **verbatim**, `owner` set to the user, and a `deadline`. You get back `{ toSign, orderHash }`. See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
   </Step>
   <Step title="Sign and submit">
     The user signs `toSign` (ERC-2098 compact signature). `POST /delta/v2/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
@@ -64,7 +64,7 @@ Authorize the Delta contract (the `spender` from the quote) to pull the source t
 
 ## 3. Build
 
-Pass the `delta.route` from the quote **verbatim** into the build call, with `owner` set to the user's address:
+Pass the `delta.route` from the quote **verbatim** into the build call, with `owner` set to the user's address and a `deadline` (unix seconds) after which the order is unfillable:
 
 ```bash
 curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \

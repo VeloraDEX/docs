@@ -737,13 +737,13 @@
       },
       "BuildOrderV2Request": {
         "type": "object",
-        "required": ["route", "owner"],
+        "required": ["route", "owner", "deadline"],
         "properties": {
           "side": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" },
           "route": { "$ref": "#/components/schemas/Route", "description": "Pass the unmodified `route` from `GET /delta/v2/prices`. The chain ID is derived from the route." },
           "owner": { "type": "string" },
           "beneficiary": { "type": "string", "description": "Defaults to `owner`." },
-          "deadline": { "type": "integer", "description": "Unix seconds. Defaults to now + 1 hour." },
+          "deadline": { "type": "integer", "description": "Required. Unix seconds after which the order is unfillable." },
           "nonce": { "type": "string" },
           "permit": { "type": "string", "description": "Permit / Permit2 payload, or `0x` if approved on-chain." },
           "slippage": { "type": "integer", "minimum": 0, "maximum": 10000, "default": 100, "description": "Slippage in basis points." },

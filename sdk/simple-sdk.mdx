@@ -157,6 +157,7 @@ if ("delta" in quote) {
     side: quote.delta.side,
     owner: account,
     slippage: slippageBps, // SDK applies slippage for you
+    deadline: Math.floor(Date.now() / 1000) + 60 * 60, // required, unix seconds
     partner: "my-app-name",
   });
 

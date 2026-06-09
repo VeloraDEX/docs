@@ -34,7 +34,7 @@ Quote exactly as for a [Delta swap](/integrate/api/delta-swap#1-quote) (`mode=DE
 
 ## 2. Build with a limit price
 
-Pass the `delta.route` verbatim and add `limitAmount`. For a SELL order it's the minimum destination amount you'll accept (your limit price); a `deadline` is strongly recommended, or the order rests until cancelled.
+Pass the `delta.route` verbatim and add `limitAmount`. For a SELL order it's the minimum destination amount you'll accept (your limit price). Every Delta order requires a `deadline` (unix seconds); past it the order is unfillable.
 
 ```bash
 curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \

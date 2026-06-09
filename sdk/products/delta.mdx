@@ -67,6 +67,7 @@ const auction = await sdk.delta.submitDeltaOrder({
   owner: account,
   partner: "my-app-name",
   slippage: 50, // 0.5% in bps
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60, // required, unix seconds
   // beneficiary: anotherAccount, // optional, default = owner
   // permit: "0x...",              // optional, if you signed a Permit instead of approving
   // partiallyFillable: true,      // optional, default = fill-or-kill
@@ -86,6 +87,7 @@ const built = await sdk.delta.buildDeltaOrder({
   owner: account,
   partner: "my-app-name",
   slippage: 50,
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60, // required, unix seconds
 });
 
 const signature = await sdk.delta.signDeltaOrder(built);
@@ -150,6 +152,7 @@ const auction = await sdk.delta.submitDeltaOrder({
   partnerAddress: "0xYourFeeCollector",
   partnerFeeBps: 25, // 0.25%
   slippage: 50,
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60, // required, unix seconds
 });
 ```
 
