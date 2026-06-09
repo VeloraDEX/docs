@@ -40,7 +40,7 @@
     "examples": { "prefill": true }
   },
   "banner": {
-    "content": "Building an AI agent? See [llms.txt](/llms.txt) and [llms-full.txt](/llms-full.txt).",
+    "content": "Building an AI agent? See [llms.txt](/docs/llms.txt) and [llms-full.txt](/docs/llms-full.txt).",
     "dismissible": true
   },
   "navigation": {

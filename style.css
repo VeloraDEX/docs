@@ -7,14 +7,14 @@ html[data-current-path="/"] [data-contextual],
 html[data-current-path="/"] button:has(> svg.lucide-chevron-down) { display: none !important; }
 
 #background-color {
-  background-image: url("images/hero-bg-light.svg") !important;
+  background-image: url("/docs/images/hero-bg-light.svg") !important;
   background-repeat: no-repeat !important;
   background-position: center center !important;
   background-size: cover !important;
 }
 
 html.dark #background-color {
-  background-image: url("images/hero-bg-dark.svg") !important;
+  background-image: url("/docs/images/hero-bg-dark.svg") !important;
 }
 
 #navbar-transition {

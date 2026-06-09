@@ -42,11 +42,18 @@ const isStaticJson = (url) => {
   return path.endsWith('.json') && STATIC_PREFIXES.some((p) => path.startsWith(p));
 };
 
+const stripDocsPrefix = (url) => {
+  if (url === '/docs') return '/';
+  if (url.startsWith('/docs/')) return url.slice('/docs'.length);
+  return url;
+};
+
 function startProxy() {
   const server = createServer(async (req, res) => {
-    if ((req.method === 'GET' || req.method === 'HEAD') && isStaticJson(req.url)) {
+    const path = stripDocsPrefix(req.url);
+    if ((req.method === 'GET' || req.method === 'HEAD') && isStaticJson(path)) {
       try {
-        const data = await readFile(join(ROOT, req.url.split('?')[0]));
+        const data = await readFile(join(ROOT, path.split('?')[0]));
         const headers = {
           'content-type': 'application/json; charset=utf-8',
           'content-length': String(data.length),
@@ -57,7 +64,7 @@ function startProxy() {
       } catch {}
     }
     const proxyReq = httpRequest(
-      { hostname: 'localhost', port: mintPort, method: req.method, path: req.url, headers: req.headers },
+      { hostname: 'localhost', port: mintPort, method: req.method, path, headers: req.headers },
       (proxyRes) => {
         res.writeHead(proxyRes.statusCode, proxyRes.headers);
         proxyRes.pipe(res);
