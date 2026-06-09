@@ -317,6 +317,7 @@
             "pages": [
               "resources/chains-and-contracts",
               "resources/approvals",
+              "resources/tools",
               {
                 "group": "Audits",
                 "pages": [
