@@ -82,7 +82,7 @@ Agent rule: never request an approval before the quote response is final and you
 | Approval transaction confirms but the next swap/order still reverts with `insufficient allowance` | Approval was granted to the wrong spender (e.g., Augustus instead of the Delta contract, or vice versa). | Re-read the quote response, identify the correct spender from the spender matrix above, and request a fresh approval to that contract. See the [Delta orders/build failure modes](/api-reference/troubleshooting) row for "Approval reverts before signing". |
 | Approval confirms on chain A but the swap is on chain B | Wallet was on a different network when the approve was signed. | Ask the user to switch to the quote's chain and re-approve there. Allowances are per-chain. |
 | `400 Invalid srcToken` on quote or build for native ETH | Sent `0x0` or lowercase `0xeee...e` instead of the canonical placeholder. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) and requote. |
-| `400 Permit / Permit2 required` from `POST /delta/orders/build` | Token requires Permit/Permit2 and no payload was attached. | Collect the signed Permit or Permit2 payload up front and include it in the build request. Falling back to a separate `approve` transaction is not supported for these tokens. |
+| `400 Permit / Permit2 required` from `POST /delta/v2/orders/build` | Token requires Permit/Permit2 and no payload was attached. | Collect the signed Permit or Permit2 payload up front and include it in the build request. Falling back to a separate `approve` transaction is not supported for these tokens. |
 | User approved infinite (`MaxUint256`) to one mode's spender, now wants the other mode | Each mode has its own spender. The first allowance is fine but does not authorize the second mode. | Read allowance against the new mode's spender and request a separate approval. Do not treat the existing infinite allowance as universal. |
 | User rejects the approve transaction or the Permit/Permit2 signature | Explicit user refusal. | Stop. Do not retry automatically. Surface the rejection and ask whether to choose a different mode (some flows might let you avoid the approval entirely, e.g., Delta for native-source pairs that route through Market is not viable, but a different src token might be). |
 
@@ -91,7 +91,7 @@ Agent rule: never request an approval before the quote response is final and you
 ### Branching by quote response
 
 ```text
-1. GET /quote?mode=ALL with chainId, srcToken, destToken, amount, partner
+1. GET /v2/quote?mode=ALL with chainId, srcToken, destToken, amount, partner
 2. If response has top-level `delta`:
    - spender = 0x0000000000bbf5c5fd284e657f01bd000933c96d (Delta contract)
 3. Else if response has top-level `market`:

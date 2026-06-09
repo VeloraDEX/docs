@@ -1,10 +1,10 @@
 ---
 title: "/quote"
 description: "Retrieve a Delta price, with optional fallback to Market via mode=ALL or mode=MARKET."
-openapi: "/api-reference/specs/delta.json GET /quote"
+openapi: "/api-reference/specs/delta-v2.json GET /v2/quote"
 ---
 
-With `mode=ALL`, `GET /quote` upgrades a Market swap to a gasless, MEV-protected Delta intent whenever a solver can fill, and otherwise returns a `market` block with the same shape as the [`GET /prices`](/api-reference/market/prices) `priceRoute`, ready for [`POST /transactions/:chainId`](/api-reference/market/transactions). Routing is decided server-side; when the response falls back to Market, `fallbackReason` explains why.
+With `mode=ALL`, `GET /v2/quote` upgrades a Market swap to a gasless, MEV-protected Delta intent whenever a solver can fill, and otherwise returns a `market` block with the same shape as the [`GET /prices`](/api-reference/market/prices) `priceRoute`, ready for [`POST /transactions/:chainId`](/api-reference/market/transactions). Routing is decided server-side; when the response falls back to Market, `fallbackReason` explains why.
 
 <Note>
   This endpoint accepts `mode=DELTA`, `mode=MARKET`, or `mode=ALL`. See [Trading

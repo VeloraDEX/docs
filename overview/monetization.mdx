@@ -47,7 +47,7 @@ Delta returns 100% of the partner fee to the partner because the protocol funds 
 
 ## How it maps to the API
 
-Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the same monetization parameters per request. `isDirectFeeTransfer` is Market-only.
+Delta (`GET /v2/quote`) and Market (`GET /prices`, `POST /transactions`) accept the same monetization parameters per request. `isDirectFeeTransfer` is Market-only.
 
 | Parameter<span style={{display: 'inline-block', width: '11rem'}} /> | Type | Default | Purpose |
 |---|---|---|---|
@@ -62,7 +62,7 @@ Delta (`GET /quote`) and Market (`GET /prices`, `POST /transactions`) accept the
 `partnerFeeBps` and `takeSurplus` are mutually exclusive: set one or the other. The legacy `positiveSlippageToUser` flag is deprecated; use `isSurplusToUser` instead.
 </Note>
 
-Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /quote`) so the fee is reflected in the displayed quote.
+Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /v2/quote`) so the fee is reflected in the displayed quote.
 
 ## Fee delivery
 
@@ -95,7 +95,7 @@ Coming soon.
     Gasless intents, solver competition, and surplus economics.
   </Card>
   <Card title="Delta API overview" icon="signature" href="/api-reference/delta/overview">
-    `GET /quote` and intent submission reference.
+    `GET /v2/quote` and intent submission reference.
   </Card>
   <Card title="Market API overview" icon="chart-line" href="/api-reference/market/overview">
     `GET /prices` and `POST /transactions` reference.

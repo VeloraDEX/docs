@@ -9,7 +9,7 @@ Get a quote for 1 ETH → USDC on Ethereum mainnet. With `mode=ALL`, Velora pick
 <CodeGroup>
 
 ```bash Delta (cURL)
-curl -s "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
   --data-urlencode "amount=1000000000000000000" \
@@ -24,7 +24,7 @@ curl -s "https://api.velora.xyz/quote" \
 ```
 
 ```bash Market (cURL)
-curl -s "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
   --data-urlencode "amount=1000000000000000000" \
@@ -56,7 +56,7 @@ const quote = await sdk.quote.getQuote({
 });
 
 if ('delta' in quote) {
-  // gasless path: sign and submit via /delta/orders
+  // gasless path: sign and submit via /delta/v2/orders
 } else {
   // calldata path: submit `market` to /transactions
 }
@@ -84,7 +84,7 @@ export default function SwapPage() {
 
 </CodeGroup>
 
-`GET /quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/orders`). `GET /quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2, same shape as `/prices`'s `priceRoute`). `GET /quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
+`GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/v2/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2, same shape as `/prices`'s `priceRoute`). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Pick your integration path
 

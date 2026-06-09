@@ -18,7 +18,7 @@ No. Every Velora REST endpoint is public: pass `&partner=<your-app-name>` to ide
 
 ### Should I use Delta (gasless) or Market?
 
-If the user can wait a few seconds and doesn't want to pay gas, prefer Delta: it's MEV-protected and solvers compete to fill at or above the quoted price. If you need synchronous on-chain settlement (composing with another contract in the same tx) or the trade is small enough that AMM routing wins, use Market. If you don't want to commit upfront, call `GET /quote?mode=ALL` and branch on whichever block (`delta` or `market`) the response carries. Full decision matrix: [Trading modes](/integrate/trading-modes).
+If the user can wait a few seconds and doesn't want to pay gas, prefer Delta: it's MEV-protected and solvers compete to fill at or above the quoted price. If you need synchronous on-chain settlement (composing with another contract in the same tx) or the trade is small enough that AMM routing wins, use Market. If you don't want to commit upfront, call `GET /v2/quote?mode=ALL` and branch on whichever block (`delta` or `market`) the response carries. Full decision matrix: [Trading modes](/integrate/trading-modes).
 
 ## Slippage & price impact
 
@@ -46,7 +46,7 @@ Market volatility can push these higher. The Widget exposes a user-configurable 
 
 ### How do I trade a token that isn't in the default list?
 
-For the API, just pass the token's contract address as `srcToken` or `destToken`, with the matching `srcDecimals` or `destDecimals`. There's no allowlist gating on `/quote` or `/prices` beyond what liquidity venues quote. For the [Widget](/widget/configure#token-lists), add custom token-list URLs via `config.tokenLists` (spread `defaults.tokenLists` to keep the curated set, or replace entirely). If the route comes back unpriced, see [Route availability](#route-availability) below.
+For the API, just pass the token's contract address as `srcToken` or `destToken`, with the matching `srcDecimals` or `destDecimals`. There's no allowlist gating on `/v2/quote` or `/prices` beyond what liquidity venues quote. For the [Widget](/widget/configure#token-lists), add custom token-list URLs via `config.tokenLists` (spread `defaults.tokenLists` to keep the curated set, or replace entirely). If the route comes back unpriced, see [Route availability](#route-availability) below.
 
 ### What about tax tokens / fee-on-transfer tokens?
 
@@ -59,7 +59,7 @@ Delta doesn't support tax or fee-on-transfer tokens today; route them through Ma
 
 ### Why is no route available for my pair?
 
-A `400` with `{"errorType":"PricingError"}` from `/quote` or `/prices` means neither Market nor Delta could source the pair on the requested chain. Common causes: the token isn't quoted by any liquidity venue Velora indexes, the trade size exceeds depth, or the chain doesn't have the relevant DEX. Check [Chains & contracts](/resources/chains-and-contracts) for per-chain coverage and [`GET /chains`](/api-reference/market/overview) at runtime for the authoritative supported-chain list. Failure modes per endpoint: [Troubleshooting](/api-reference/troubleshooting).
+A `400` with `{"errorType":"PricingError"}` from `/v2/quote` or `/prices` means neither Market nor Delta could source the pair on the requested chain. Common causes: the token isn't quoted by any liquidity venue Velora indexes, the trade size exceeds depth, or the chain doesn't have the relevant DEX. Check [Chains & contracts](/resources/chains-and-contracts) for per-chain coverage and [`GET /chains`](/api-reference/market/overview) at runtime for the authoritative supported-chain list. Failure modes per endpoint: [Troubleshooting](/api-reference/troubleshooting).
 
 ### Can I filter on specific DEXs?
 
@@ -87,4 +87,4 @@ A **free partner ID** is just a string you pass as `&partner=<your-app-name>`; t
 
 ## Troubleshooting
 
-For failure-mode tables by endpoint (`GET /prices`, `POST /transactions/:chainId`, `GET /quote`, `POST /delta/orders/build`, `POST /delta/orders`), see [Troubleshooting](/api-reference/troubleshooting). Each row maps a symptom to a root cause and a fix, and the same data is available machine-readable at [`/resources/errors.json`](/resources/errors.json).
+For failure-mode tables by endpoint (`GET /prices`, `POST /transactions/:chainId`, `GET /v2/quote`, `POST /delta/v2/orders/build`, `POST /delta/v2/orders`), see [Troubleshooting](/api-reference/troubleshooting). Each row maps a symptom to a root cause and a fix, and the same data is available machine-readable at [`/resources/errors.json`](/resources/errors.json).

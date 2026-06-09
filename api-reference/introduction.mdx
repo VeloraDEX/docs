@@ -29,7 +29,7 @@ Everything lives under `https://api.velora.xyz`.
 No key required; pass any `partner` string to tag your app. Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
 
 ```bash
-curl -s "https://api.velora.xyz/quote" \
+curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
   --data-urlencode "amount=1000000000000000000" \

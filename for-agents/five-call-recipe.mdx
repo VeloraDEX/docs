@@ -55,7 +55,7 @@ Agent rules:
 Use Market when the user wants immediate on-chain settlement or when the selected quote response has a top-level `market` object.
 
 ```text
-1. GET /quote?mode=MARKET
+1. GET /v2/quote?mode=MARKET
 2. POST /transactions/:chainId
 3. Ask the user to review and send the transaction
 4. Wait for the transaction receipt
@@ -75,7 +75,7 @@ Agent rules:
 Use `mode=ALL` when the user asks for a normal swap or best available execution without choosing Delta or Market.
 
 ```text
-1. GET /quote?mode=ALL
+1. GET /v2/quote?mode=ALL
 2. If the top-level response field is delta, continue the Delta Swap flow from build onward
 3. If the top-level response field is market, continue the Market Swap flow from transaction build onward
 4. If neither field is present, stop and handle no-route

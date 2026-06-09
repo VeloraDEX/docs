@@ -11,13 +11,13 @@ Nothing. This migration is opt-in. Your existing Market integration keeps workin
 ## Why migrate
 
 - **Better UX** — Delta intents are gasless and MEV-protected. Users sign once; the solver network fills.
-- **No code rewrite** — `GET /quote` with `mode=ALL` returns either a Market `market` block (same shape as `/prices`'s `priceRoute`) or a Delta `delta` block — Velora picks the winner server-side and you branch on which block is present. See [Trading modes](/integrate/trading-modes).
+- **No code rewrite** — `GET /v2/quote` with `mode=ALL` returns either a Market `market` block (same shape as `/prices`'s `priceRoute`) or a Delta `delta` block — Velora picks the winner server-side and you branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Steps
 
-1. Switch from `GET /prices` to `GET /quote?mode=ALL`.
+1. Switch from `GET /prices` to `GET /v2/quote?mode=ALL`.
 2. Branch on the response: if `response.delta` exists, take the gasless path; else fall back to `response.market` and the existing calldata flow (it's the same shape your code already handles).
-3. For the Delta path, call `POST /delta/orders/build`, sign the EIP-712 typed data, then `POST /delta/orders`.
+3. For the Delta path, call `POST /delta/v2/orders/build`, sign the EIP-712 typed data, then `POST /delta/v2/orders`.
 
 ## End-state check
 

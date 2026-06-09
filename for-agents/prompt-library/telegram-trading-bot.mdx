@@ -20,7 +20,7 @@ Implement `/buy <symbol_or_address> <amount_in_usd>` and `/sell <symbol_or_addre
 
 Requirements:
 - Resolve token addresses against Velora's tokens endpoint (`/tokens/:chainId`).
-- Quote with `mode=ALL` at `GET https://api.velora.xyz/quote`. Always set `partner` to the bot's partner identifier (`my-app-name` is only a placeholder). Native ETH placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
+- Quote with `mode=ALL` at `GET https://api.velora.xyz/v2/quote`. Always set `partner` to the bot's partner identifier (`my-app-name` is only a placeholder). Native ETH placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
 - Show the user `destAmount`, `destUSD`, `gasCostUSD`, and `priceImpact` BEFORE asking them to confirm.
 - If `response.delta` exists, prefer the Delta path: build → sign EIP-712 → submit → poll. The user pays no gas.
 - If only `response.market` exists, fall back to Market with `slippage=100` (1%) and warn the user about MEV exposure on larger trades (size > $5k).

@@ -10,13 +10,13 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | User intent | Prefer | Agent action | Why |
 |---|---|---|---|
-| "Swap token A to token B" | `mode=ALL` | Call [`GET /quote`](/api-reference/market/quote) with `mode=ALL`, `chainId`, token addresses, amount, slippage, and the app or project `partner` value. | Velora can choose the best available path. |
-| "Gasless swap" or "I have no gas" | Delta | Call `GET /quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | Delta uses an EIP-712 signature and solver settlement. |
+| "Swap token A to token B" | `mode=ALL` | Call [`GET /v2/quote`](/api-reference/market/quote) with `mode=ALL`, `chainId`, token addresses, amount, slippage, and the app or project `partner` value. | Velora can choose the best available path. |
+| "Gasless swap" or "I have no gas" | Delta | Call `GET /v2/quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | Delta uses an EIP-712 signature and solver settlement. |
 | "Place a limit order" or "trade only if price reaches X" | Delta `LIMIT` order | Collect the target price, side, token pair, chain, amount, expiry, recipient, and partially-fillable preference before building the order. | New limit orders are Delta orders over the Delta API, not AugustusRFQ. |
 | "TWAP this trade" or "split this order over time" | Delta TWAP | Collect side, total amount, number of slices, cadence/interval, chain, token pair, slippage/price constraints, deadline/expiry, recipient, and max source spend for buy TWAPs. | TWAP is one scheduled Delta order, not repeated independent swaps. Preserve sell-vs-buy amount semantics. |
 | "Best price" | `mode=ALL` | Quote with `mode=ALL`, then branch on `delta` vs `market`. | Velora can choose the best available path. |
-| "Protect me from MEV" | Delta | Call `GET /quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | MEV protection is a Delta-only scenario. |
-| "Swap now" or "settle in this transaction" | Market API | Call `GET /quote` with `mode=MARKET`, then build a Market transaction. | Market returns calldata the user sends on-chain. |
+| "Protect me from MEV" | Delta | Call `GET /v2/quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | MEV protection is a Delta-only scenario. |
+| "Swap now" or "settle in this transaction" | Market API | Call `GET /v2/quote` with `mode=MARKET`, then build a Market transaction. | Market returns calldata the user sends on-chain. |
 | "Sell exactly this amount" | Sell quote | Treat the user amount as the source amount. | The user fixed input. Do not reinterpret it as a target output. |
 | "Buy exactly this amount" | Buy quote | Treat the user amount as the destination amount and cap source spend. | The user fixed output. The agent should protect max spend. |
 | "Embed swaps in my app" | SDK or Widget | Use the SDK for custom UX, or the Widget for fastest integration. | The agent should not build raw API plumbing when the requested job is app embedding. |
