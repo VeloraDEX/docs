@@ -189,7 +189,7 @@ Delta V2 keeps the **same `sdk.delta.*` namespace and method names** as V1. What
 
 `getDeltaPrice` takes the same params, but the response shape changes:
 
-```diff
+```ts
   const price = await sdk.delta.getDeltaPrice({
     srcToken: USDC,
     destToken: ETH,

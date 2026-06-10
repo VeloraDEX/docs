@@ -108,7 +108,7 @@ Pass a `referrerConfig` to attribute swaps to a referrer wallet that receives a 
 
 ## Production tips
 
-Load `partner` from an environment variable so staging, production, and white-label builds can use different identifiers without code changes. Memoize `partnerConfig` like every other non-primitive config field; a new object on every render forces the widget to re-mount. And audit `partnerAddress` before shipping: once a swap is routed, fees pay to it on-chain, so treat it like any other treasury address.
+Load `partner` from an environment variable so staging, production, and white-label builds can use different identifiers without code changes. Memoize `partnerConfig` like every other non-primitive config field; a new object on every render forces the widget to re-render. And audit `partnerAddress` before shipping: once a swap is routed, fees pay to it on-chain, so treat it like any other treasury address.
 
 ## Related pages
 

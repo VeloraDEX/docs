@@ -87,7 +87,7 @@ export function SafeWidget() {
 
 ### Memoize non-primitive config
 
-Passing inline arrays or objects forces re-mount on every render. Memoize them.
+Passing inline arrays or objects forces a re-render. Memoize them.
 
 ```tsx
 import { useMemo } from "react";

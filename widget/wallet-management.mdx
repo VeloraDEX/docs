@@ -66,7 +66,7 @@ Most wallet connectors (wagmi connectors, RainbowKit, raw `window.ethereum`) sat
 ### The Connect Wallet button in dApp mode
 
 <Warning>
-In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. Without an `onConnectWalletClick` handler, the button is disabled. With one, the button is enabled but still won't open the widget's own drawer: you must run your host app's wallet connection flow inside the handler.
+In `dapp` mode the widget's internal Connect Wallet drawer is **not** rendered. Without an `onConnectWalletClick` event handler, the button is disabled. With one, the button is enabled but still won't open the widget's own drawer: you must run your host app's wallet connection flow inside the handler.
 </Warning>
 
 ```tsx

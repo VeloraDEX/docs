@@ -67,7 +67,7 @@ export default function App() {
 The widget is a single React component shipped as `@velora-dex/widget`:
 
 - Quotes come from the same [Delta API](/api-reference/delta/overview) and [Market API](/api-reference/market/overview) you'd hit from the SDK; there's no separate widget backend.
-- Wallet is either the widget's built-in wagmi connectors (default, `widgetMode: "standalone"`) or an EIP-1193 provider you pass (`widgetMode: "dapp"`).
+- Wallet uses either the widget's built-in wagmi connectors (default, `widgetMode: "standalone"`) or an EIP-1193 provider you pass (`widgetMode: "dapp"`).
 - Styles are auto-injected on import and scoped under `.velora-widget` so they don't leak into your app.
 - State is owned by the widget, but every important transition fires through the `events` prop so you can sync analytics or your own UI.
 

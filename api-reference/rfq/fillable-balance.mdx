@@ -1,10 +1,10 @@
 ---
 title: "GET /ft/fillablebalance/:chainId/:account"
-description: "A maker's fillable balance per token: the lesser of balance, AugustusRFQ allowance, and amount not reserved by live orders."
+description: "A maker's fillable balance per token: the amount reserved by live orders."
 openapi: "/api-reference/specs/rfq.json GET /ft/fillablebalance/{chainId}/{account}"
 ---
 
-Return the maker's fillable balance per token: the lesser of the account's token balance, its AugustusRFQ allowance, and the amount not already reserved by live orders. Call it before posting a new order so the `makerAmount` is actually backed; an order that exceeds the fillable balance is stored as `SUSPENDED` until the maker tops up balance or allowance.
+Return the maker's fillable balance per token: the amount reserved by live orders. Call it before posting a new order so the `makerAmount` is actually backed; an order that exceeds the fillable balance is stored as `SUSPENDED` until the maker tops up balance or allowance.
 
 The response maps each lowercase token address to its fillable balance in raw units. Scope to a single token by appending its address: `GET /ft/fillablebalance/:chainId/:account/:token`.
 

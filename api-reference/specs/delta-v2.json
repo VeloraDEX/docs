@@ -568,7 +568,7 @@
     "/delta/v2/orders/fillablebalance/{chainId}/{userAddress}/{tokenAddress}": {
       "get": {
         "summary": "Compute a user's fillable balance for limit orders",
-        "description": "Returns the user's wallet balance **minus** any source-token already committed to open limit orders on a chain. Use this when sizing a new limit order so it doesn't double-commit funds.\n\n`tokenAddress` is an optional trailing path segment — **omit it** (`/delta/v2/orders/fillablebalance/{chainId}/{userAddress}`) to get the fillable balance for every token with open commitments. With `tokenAddress` set, the response holds a single entry for that token (or `\"0\"` if the user has no open commitments on it).",
+        "description": "Returns the amount of a source-token already committed to open limit orders on a chain for the given user. Use this when sizing a new limit order so it doesn't double-commit funds.\n\n`tokenAddress` is an optional trailing path segment — **omit it** (`/delta/v2/orders/fillablebalance/{chainId}/{userAddress}`) to get the fillable balance for every token with open commitments. With `tokenAddress` set, the response holds a single entry for that token (or `\"0\"` if the user has no open commitments on it).",
         "operationId": "deltaV2OrdersFillableBalance",
         "parameters": [
           { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } },
