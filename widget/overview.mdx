@@ -4,7 +4,7 @@ description: "Embed the Velora swap widget in your React app with @velora-dex/wi
 keywords: ["widget", "overview", "embed", "react"]
 ---
 
-The Velora Widget is a React component that gives your users a complete trading interface (swaps, limit orders, OTC, and TWAP) across every chain Velora supports. Drop `<Widget />` into your app, pass a `QueryClientProvider`, and you have a working DEX inside your product.
+The Velora Widget is a React component that gives your users a complete trading interface (swaps, limit orders, OTC, and TWAP) across every chain Velora supports. Drop `<Widget />` into your app and you have a working DEX inside your product.
 
 ## Try it live
 
@@ -49,20 +49,15 @@ The Velora Widget is a React component that gives your users a complete trading 
 
 ```tsx
 import { Widget } from "@velora-dex/widget";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
 
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Widget
-        config={{
-          theme: "light",
-          partnerConfig: { partner: "my-app-name" },
-        }}
-      />
-    </QueryClientProvider>
+    <Widget
+      config={{
+        theme: "light",
+        partnerConfig: { partner: "my-app-name" },
+      }}
+    />
   );
 }
 ```

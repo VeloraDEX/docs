@@ -12,7 +12,7 @@ keywords: ["widget","compatibility","ssr","nextjs","vite","tailwind"]
 | `react-dom` | `18.x` or `19.x` |
 | `@tanstack/react-query` | `^5.90` |
 
-A `QueryClientProvider` from `@tanstack/react-query` must wrap `<Widget />` somewhere above it in the tree.
+`@tanstack/react-query` only needs to be installed. The widget manages its own query client internally.
 
 ## Tested frameworks
 
@@ -21,7 +21,7 @@ A `QueryClientProvider` from `@tanstack/react-query` must wrap `<Widget />` some
 | Vite + React | ✅ Works out of the box | See [examples/react](/widget/examples/react). |
 | Next.js (app router) | ✅ Works with client-only mount | Use `dynamic(... { ssr: false })`. See [examples/nextjs](/widget/examples/nextjs). |
 | Next.js (pages router) | ✅ Works with `dynamic` | Same dynamic-import pattern as app router. |
-| Create React App | ✅ Works | No special setup beyond `QueryClientProvider`. |
+| Create React App | ✅ Works | No special setup. |
 
 ## SSR caveat
 

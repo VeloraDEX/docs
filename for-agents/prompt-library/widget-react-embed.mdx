@@ -7,7 +7,7 @@ keywords: ["widget","react","theme","embed","events"]
 
 ## Outcome
 
-A React component that mounts the Velora Widget, wrapped in the required `QueryClientProvider`. Its light/dark theme follows the host app, `partnerConfig.partner` attributes swaps to the host, and lifecycle events feed the host's analytics.
+A React component that mounts the Velora Widget. Its light/dark theme follows the host app, `partnerConfig.partner` attributes swaps to the host, and lifecycle events feed the host's analytics.
 
 <Note>
 The widget is a drop-in React component — there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://velora.xyz/docs/widget/customize).
@@ -23,7 +23,6 @@ You are integrating the Velora Widget into an existing React 18+ app.
 Requirements:
 - Install `@velora-dex/widget` and `@tanstack/react-query` (peer dependency).
 - Mount the widget at the `/swap` route via React Router or Next.js routing.
-- Wrap the widget in a `QueryClientProvider` with a module-level `QueryClient`.
 - Pass `config.partnerConfig.partner` (a `partner` identifier from env, e.g. `my-app-name`).
 - Theme: the widget only supports `theme: "light" | "dark"` (omit to follow the
   OS `prefers-color-scheme`). Drive the `theme` config field from the host app's
@@ -58,7 +57,6 @@ white-label) can use different values.
 
 ## End-state check
 
-- The widget renders inside a `QueryClientProvider`; mounting it without one throws.
 - Toggling the host app between light and dark flips the widget's `theme` to match.
 - A successful test swap fires the host's analytics events (`Swap:confirmed`) with the expected payload.
 - The `partner` identifier is present at runtime but not hardcoded in the source tree.
