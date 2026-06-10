@@ -84,7 +84,7 @@ export default function SwapPage() {
 
 </CodeGroup>
 
-`GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/v2/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2, same shape as `/prices`'s `priceRoute`). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
+`GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/delta/v2/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Pick your integration path
 

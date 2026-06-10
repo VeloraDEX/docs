@@ -32,16 +32,16 @@ Requests without a partner identifier fall back to the `anon` partner, which cha
 
 ## Revenue splits at a glance
 
-How fees and surplus are split between the partner, the end user, and Velora:
+How each lever splits revenue between the partner and Velora:
 
-| Configuration | Delta | Market |
+| Lever | Delta | Market |
 |---|---|---|
-| Partner fee, no surplus opt-in* | 100% partner | 85% partner / 15% Velora |
-| Surplus share, no fee | 50% Velora / 50% partner or user | 50% Velora / 50% partner or user |
-| No fee, no surplus opt-in | 100% Velora | 100% Velora |
-| Partner fee + surplus flags both set | Fee wins; surplus flag ignored | Fee wins; surplus flag ignored |
+| Partner fee* | 100% partner | 85% partner / 15% Velora |
+| Surplus share | 50% partner / 50% Velora | 50% partner / 50% Velora |
 
 Delta returns 100% of the partner fee to the partner because the protocol funds itself from surplus on the Delta side, not from per-swap fees. On Market, Velora takes a 15% cut of the partner fee to fund routing infrastructure.
+
+The partner's half of the surplus can be redirected to the end user instead by setting `isSurplusToUser: true`. And if neither lever is active, any surplus the route captures stays with Velora.
 
 <sub>* Tailored arrangements available on request.</sub>
 
