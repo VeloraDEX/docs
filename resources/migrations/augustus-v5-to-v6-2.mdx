@@ -10,9 +10,9 @@ Calldata returned by `POST /transactions` now targets Augustus v6.2 by default. 
 
 ## High-level diffs
 
-- **`TokenTransferProxy` is gone.** v6.2 pulls tokens directly via the router contract. ERC-20 approvals must be granted to the v6.2 router address, not to a separate proxy.
-- **`excludeContractMethodsWithoutFeeModel`** has been renamed (see new param list in [API Reference](/api-reference/market/overview)).
-- **Method signatures changed.** v6.2 introduces `swapExactAmountIn` and `swapExactAmountOut` as canonical entry points; v5's `multiSwap`/`megaSwap` are deprecated.
+- `TokenTransferProxy` is gone. v6.2 pulls tokens directly via the router contract, so ERC-20 approvals must be granted to the v6.2 router address, not to a separate proxy.
+- `excludeContractMethodsWithoutFeeModel` has been renamed (see the new param list in [API Reference](/api-reference/market/overview)).
+- Method signatures changed: v6.2 introduces `swapExactAmountIn` and `swapExactAmountOut` as canonical entry points, and v5's `multiSwap`/`megaSwap` are deprecated.
 
 ## Steps
 

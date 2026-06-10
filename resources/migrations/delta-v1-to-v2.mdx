@@ -17,7 +17,7 @@ V2 keeps the same on-chain settlement model but cleans up the protocol surface:
 - Orders are built server-side. `POST /delta/v2/orders/build` returns EIP-712 typed data ready to sign, and you stop composing `domain`, `types`, and `value` on the client.
 - Pricing is route-based. `GET /delta/v2/prices` returns a recommended `route` plus `alternatives`, so users can pick a different bridge and you stop juggling the `bridge` / `bridgeInfo` / `availableBridges` triple V1 returns.
 - Order history is paginated. `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }` where V1 returns a flat array with no total.
-- Status is one field. Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) collapse V1's `status` + `bridgeStatus` columns into one.
+- Status is a single field. Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) replace V1's `status` + `bridgeStatus` pair.
 - Partner fees resolve on the server. Pass `partner` / `partnerAddress` / `partnerFeeBps` directly on every call; the separate `GET /prices/partnerfee/{chainId}` round-trip goes away.
 - The `hmac` is gone. V2 doesn't sign the price payload, so there's no opaque blob to thread from `/prices` into `/orders/build`.
 
@@ -146,7 +146,7 @@ V2 returns `{ toSign: { domain, types, value }, orderHash }`: `value` is the on-
 
 ### 3. Sign
 
-The EIP-712 domain (`name: "Portikus"`, `version: "2.0.0"`, `chainId`, `verifyingContract`) is **unchanged**. The signature you compute over V2's `toSign` is the same string V1 would produce over its `data`/`domain`/`types` triple.
+The EIP-712 domain (`name: "Portikus"`, `version: "2.0.0"`, `chainId`, `verifyingContract`) is unchanged. The signature you compute over V2's `toSign` is the same string V1 would produce over its `data`/`domain`/`types` triple.
 
 ### 4. Submit
 
