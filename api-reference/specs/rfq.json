@@ -141,7 +141,7 @@
       "get": {
         "summary": "Get a maker's fillable balance",
         "operationId": "rfqFillableBalance",
-        "description": "Return the maker's fillable balance per token — the lesser of the account's balance, its AugustusRFQ allowance, and the amount not already reserved by live orders. Use it to size a new order so it won't be suspended for insufficient balance.",
+        "description": "Return the maker's fillable balance per token — the amount reserved by live orders. Use it to size a new order so it won't be suspended for insufficient balance.",
         "parameters": [
           { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID." },
           { "name": "account", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/Address" }, "description": "The maker's wallet address." }

@@ -30,7 +30,7 @@ OTC is for **bilateral, counterparty-specific** trades. For an open, target-pric
 
 ## 1. Maker: approve and size
 
-The maker approves AugustusRFQ for the `makerAsset` they're selling. Then size the order against the maker's fillable balance: the lesser of their balance, allowance, and any amount already reserved by open orders:
+The maker approves AugustusRFQ for the `makerAsset` they're selling. Then size the order against the maker's fillable balance: the amount reserved by open orders:
 
 ```bash
 curl 'https://api.velora.xyz/ft/fillablebalance/1/0xMAKER?token=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
