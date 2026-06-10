@@ -26,7 +26,7 @@ Everything lives under `https://api.velora.xyz`.
 
 ## Your first call
 
-No key required; pass any `partner` string to tag your app. Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
+No key required; pass a `partner` value that identifies your app or project (the examples use `my-app-name` as a placeholder — replace it). Quote 1 ETH → USDC and let Velora pick the best path with `mode=ALL`:
 
 ```bash
 curl -s "https://api.velora.xyz/v2/quote" \
@@ -47,7 +47,7 @@ The response carries either a `delta` block (gasless: sign and submit later) or 
 
 ## Auth & rate limits
 
-`partner` is your free, no-signup ID. Pass `&partner=<your-app-name>` on any endpoint. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
+`partner` is your free, no-signup app identifier, not a secret. Pass `&partner=my-app-name` (a placeholder; use a stable value for your integration) on quote, swap, and order endpoints. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
 
 <Tip>
   Need contract addresses at runtime? [`contracts.json`](/resources/contracts.json) has canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable: [Chains & contracts](/resources/chains-and-contracts).
