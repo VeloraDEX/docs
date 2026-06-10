@@ -21,7 +21,7 @@ import { Widget } from "@velora-dex/widget";
 ```
 
 <Warning>
-**Memoize non-primitive config values.** Arrays and objects passed inline (like `srcChains: [1, 137]`) get a new reference on every render and force the widget to re-mount its state. Move them to `useMemo` or to a module-level constant.
+**Memoize non-primitive config values.** Arrays and objects passed inline (like `srcChains: [1, 137]`) get a new reference on every render and force the widget to re-render its state. Move them to `useMemo` or to a module-level constant.
 </Warning>
 
 ## Configuration options

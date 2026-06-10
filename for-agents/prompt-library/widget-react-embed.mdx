@@ -29,7 +29,7 @@ Requirements:
   current light/dark mode so the two stay in sync. Do NOT attempt to pass brand
   colors, fonts, or border-radius — there is no API for that.
 - Memoize any non-primitive `config` value (objects/arrays) with `useMemo` or a
-  module-level constant, or the widget re-mounts on every render.
+  module-level constant, or the widget will re-render.
 - Subscribe to widget events via the `events` prop and pipe them into the host's
   analytics module. Use `onSwap` and branch on `event.name`:
   `Swap:request` (start), `Swap:confirmed` (success), `Swap:failed` (error).
