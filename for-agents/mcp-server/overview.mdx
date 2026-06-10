@@ -1,15 +1,79 @@
 ---
-title: "MCP server overview"
-description: "Connect Claude, Cursor, and other MCP clients to the Velora MCP server."
-keywords: ["mcp","claude","cursor"]
+title: "Velora MCP server"
+description: "The hosted Velora MCP server gives Claude, Cursor, and any other MCP client live DEX quotes, Delta routing guidance, and unsigned swap transactions at one URL, with no API key."
+keywords: ["Velora MCP server", "MCP", "Model Context Protocol", "DEX aggregator MCP", "swap MCP server", "AI agent trading", "gasless swap", "Delta", "claude", "cursor"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora MCP server is a hosted [Model Context Protocol](https://modelcontextprotocol.io) endpoint that connects any MCP client to Velora: live quotes across 10+ EVM chains, deterministic Delta and Market routing guidance, unsigned transaction building, and the full Velora documentation. There is nothing to install and no API key to request. Add the URL and your agent works against live Velora data instead of guessing from training data.
 
-## When to use this
+```text
+https://ai.velora.xyz/mcp
+```
 
-## How it works
+```json
+{
+  "mcpServers": {
+    "velora": { "url": "https://ai.velora.xyz/mcp" }
+  }
+}
+```
 
-## Examples
+Works with Claude Code, Claude Desktop, claude.ai, Cursor, Windsurf, VS Code, the MCP Inspector, and custom agents. See [Installation](/for-agents/mcp-server/installation) for per-client setup.
 
-## Related pages
+## The server never signs
+
+This is the property that makes the server safe to wire into an autonomous agent. No tool accepts a private key, and no tool signs or submits anything:
+
+- `velora_build_transaction` returns an **unsigned** Market transaction. Your client signs it with the user's wallet.
+- Delta quotes hand back the documented build → sign → submit path. The EIP-712 typed data is signed externally, never by the server.
+- Raw quote payloads, including the `delta` object and its `hmac`, are preserved byte-for-byte. The server never mutates what the API returned.
+
+An agent connected to this server can research, quote, and prepare trades. It cannot move funds.
+
+## Velora's rules, encoded as tools
+
+LLMs forget API rules under pressure; deterministic tools don't. Three guidance tools run pure rule-based logic, with no network calls and no model in the loop:
+
+| Tool | What it prevents |
+|---|---|
+| `velora_decide_execution_route` | Quoting with the wrong mode. MEV protection, crosschain, Limit Orders, and TWAP all route to Delta; OTC is flagged as the AugustusRFQ flow, not a quote mode. |
+| `velora_validate_agent_plan` | Shipping a plan with classic mistakes: `network` instead of `chainId`, crosschain with `mode=MARKET`, Limit Orders treated as RFQ, or any signing step (flagged critical). |
+| `velora_explain_quote` | Misreading a quote. Classifies the response as `delta` or `market` and surfaces any `fallbackReason`, so the agent branches on shape instead of assumptions. |
+
+Every tool response also carries `agentHints` (the next safe step) and `docs` (links into this site), so an agent that has never seen Velora can complete a flow correctly on the first pass.
+
+## Tools at a glance
+
+| Category | Tools |
+|---|---|
+| Quoting and building | `velora_get_quote` (Delta, Market, or ALL), `velora_build_transaction` (unsigned, Market only) |
+| Agent guidance | `velora_decide_execution_route`, `velora_explain_quote`, `velora_validate_agent_plan` |
+| Market data | `velora_get_supported_chains`, `velora_get_tokens` |
+| Documentation | `velora_search_docs`, `velora_get_docs_page` |
+
+Five MCP resources expose the docs index (`llms.txt`), the full documentation, and the OpenAPI specs for Delta, Market, and AugustusRFQ. Full schemas are on [Available tools](/for-agents/mcp-server/available-tools).
+
+## When to use it
+
+- Trading agents that need live quotes plus a safety rail between the model and the user's wallet.
+- Coding agents building a Velora integration: the docs tools and OpenAPI resources keep generated code grounded in canonical behavior.
+- Chat assistants answering "what would this swap cost" questions with real routes.
+
+For raw HTTP integrations, start from the [Five-call recipe](/for-agents/five-call-recipe) instead; the MCP server wraps the same API.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="plug" href="/for-agents/mcp-server/installation">
+    Add the server to Claude Code, Claude Desktop, Cursor, Windsurf, or VS Code in under a minute.
+  </Card>
+  <Card title="Available tools" icon="wrench" href="/for-agents/mcp-server/available-tools">
+    Every tool and resource, with verbatim parameters and the agent rules each one enforces.
+  </Card>
+  <Card title="Examples" icon="list-check" href="/for-agents/mcp-server/examples">
+    Worked tool-call sequences: Delta swaps, Market swaps, fallback handling, plan validation.
+  </Card>
+  <Card title="Build an MCP client" icon="code" href="/for-agents/prompt-library/mcp-client-from-scratch">
+    A verified prompt that gets a coding agent to a working client in 50 lines.
+  </Card>
+</CardGroup>

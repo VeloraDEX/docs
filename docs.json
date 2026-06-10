@@ -232,26 +232,12 @@
             ]
           },
           {
-            "group": "Agent tools",
+            "group": "MCP server",
             "pages": [
-              {
-                "group": "MCP server",
-                "pages": [
-                  "for-agents/mcp-server/overview",
-                  "for-agents/mcp-server/installation",
-                  "for-agents/mcp-server/available-tools",
-                  "for-agents/mcp-server/examples"
-                ]
-              },
-              {
-                "group": "CLI",
-                "pages": [
-                  "for-agents/cli/overview",
-                  "for-agents/cli/installation",
-                  "for-agents/cli/commands",
-                  "for-agents/cli/examples"
-                ]
-              }
+              "for-agents/mcp-server/overview",
+              "for-agents/mcp-server/installation",
+              "for-agents/mcp-server/available-tools",
+              "for-agents/mcp-server/examples"
             ]
           }
         ]
