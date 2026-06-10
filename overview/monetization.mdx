@@ -135,7 +135,7 @@ async function withdrawAllFees(
     return;
   }
 
-  // Simulate first to catch reverts (e.g. zero balance) before sending
+  // Simulate first to catch reverts
   const { request } = await publicClient.simulateContract({
     account,
     address: DELTA_ADDRESS,
@@ -204,7 +204,7 @@ async function withdrawAllFees(
     return;
   }
 
-  // Simulate first to catch reverts (e.g. zero balance) before sending
+  // Simulate first to catch reverts
   const { request } = await publicClient.simulateContract({
     account,
     address: FEE_CLAIMER_ADDRESS,
