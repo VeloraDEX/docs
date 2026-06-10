@@ -1,6 +1,6 @@
 ---
 title: "Chains & contracts"
-description: "Canonical reference for Augustus, Delta, Portikus, and AugustusRFQ contract addresses across every supported EVM chain."
+description: "Canonical reference for Augustus, Delta, Portikus, AugustusRFQ, and Fee Claimer contract addresses across every supported EVM chain."
 keywords: ["chains", "contracts", "addresses", "deployments"]
 ---
 
@@ -30,7 +30,7 @@ The authoritative supported-chain list is queryable at runtime via `GET /chains`
 
 Each contract is also the ERC-20 spender for its execution mode — approve Augustus v6.2 for Market swaps, the Delta contract for Delta orders (Swap, Limit, TWAP), and AugustusRFQ for OTC/RFQ fills. A `—` means the contract isn't deployed on that chain and the corresponding mode is unavailable there. See [Token approvals for agents](/for-agents/token-approvals) for the spender-by-mode decision rules.
 
-**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` and **Delta Wrapped Native (dETH)** at `0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742`, both at the same address on every Delta-enabled chain. AugustusRFQ addresses vary per chain and are listed below.
+**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` and **Delta Wrapped Native (dETH)** at `0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742`, both at the same address on every Delta-enabled chain. **Fee Claimer** is deployed at `0x00700052c0608F670705380a4900e0a8080010CC` on every supported chain. AugustusRFQ addresses vary per chain and are listed below.
 
 | Chain (ID) | Delta | AugustusRFQ |
 |---|---|---|
@@ -69,6 +69,10 @@ The solver-facing settlement infrastructure. Solvers execute fills against Porti
 ### AugustusRFQ
 
 On-chain limit-order and OTC contract. Supports partial fills and bilateral signed orders.
+
+### Fee Claimer
+
+Holds partner fees accrued from Market swaps until the partner claims them. Fees taken via `partnerAddress` accumulate in this contract per chain, and partners withdraw them through the [Fee Claimer app](https://velora.xyz/fee_claimer). Delta fees never pass through it; they accrue in the Delta contract itself. Deployed at the same address on every supported chain. See [Monetization](/overview/monetization) for fee parameters and the claim flow.
 
 ## Related
 

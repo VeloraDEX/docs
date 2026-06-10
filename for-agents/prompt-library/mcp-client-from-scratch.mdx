@@ -1,13 +1,13 @@
 ---
 title: "Velora MCP client in 50 lines"
-description: "Prompt an AI agent to build a minimal MCP client against the Velora MCP server."
-last-verified: 2026-05-15
+description: "Prompt an AI agent to build a minimal MCP client against the hosted Velora MCP server."
+last-verified: 2026-06-10
 keywords: ["mcp","client","agents"]
 ---
 
 ## Outcome
 
-A minimal MCP client (≤50 lines of TypeScript) that connects to the Velora MCP server, lists available tools, and runs a single end-to-end `quote → swap` flow via tool calls.
+A minimal MCP client (≤50 lines of TypeScript) that connects to the hosted Velora MCP server, lists available tools, and runs an end-to-end `velora_get_quote → velora_build_transaction` flow that prints an unsigned Market swap transaction.
 
 ## Prompt
 
@@ -17,10 +17,11 @@ A minimal MCP client (≤50 lines of TypeScript) that connects to the Velora MCP
 You are building a tiny standalone MCP client in TypeScript using the `@modelcontextprotocol/sdk` package.
 
 Requirements:
-- Connect to the Velora MCP server (transport and endpoint per /for-agents/mcp-server/installation).
-- After connection, call `tools/list` and print the available tools.
-- Run a `quote` tool call for 1 ETH → USDC on Ethereum mainnet with the `partner` set to the app or project partner key (`my-app-name` is only a placeholder), then a `swap` tool call against the resulting quote.
-- Print every tool result. Exit cleanly when the swap returns success or terminal failure.
+- Connect to the Velora MCP server over Streamable HTTP at https://ai.velora.xyz/mcp (no API key; transport details per /for-agents/mcp-server/installation).
+- After connection, call `tools/list` and print the available tools (expect 9, all prefixed `velora_`).
+- Call `velora_get_quote` for selling 1 ETH (srcToken 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE, srcDecimals 18) to USDC (destDecimals 6) on Ethereum mainnet (chainId 1, never `network`) with `mode: "MARKET"` and `partner` set to the app or project partner key (`my-app-name` is only a placeholder).
+- Call `velora_build_transaction` with the quote's `priceRoute` passed verbatim, and print the resulting UNSIGNED transaction. Do not sign or broadcast anything — the server never signs, and neither does this client.
+- Print every tool result, including `agentHints` and `warnings` from the response envelope. Exit cleanly after printing the unsigned transaction or a terminal error.
 - Total file size: ≤ 50 lines, excluding imports.
 
 Reference these docs and follow them exactly:
@@ -29,7 +30,7 @@ Reference these docs and follow them exactly:
 - https://velora.xyz/docs/for-agents/mcp-server/available-tools
 - https://velora.xyz/docs/for-agents/mcp-server/examples
 
-Do NOT hardcode tool schemas — read them from `tools/list` and use the response shape at runtime.
+Do NOT hardcode tool schemas; read them from `tools/list` and use the response shape at runtime.
 ```
 
 ```text Cursor
@@ -44,5 +45,6 @@ Do NOT hardcode tool schemas — read them from `tools/list` and use the respons
 
 ## End-state check
 
-- The script runs end-to-end and prints a successful `swap` result.
+- The script runs end-to-end and prints an unsigned transaction object (`from`, `to`, `value`, `data`) from `velora_build_transaction`.
+- Nothing in the script signs, stores keys, or broadcasts.
 - `wc -l` on the source file (sans imports) reports ≤ 50.

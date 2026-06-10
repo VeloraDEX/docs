@@ -1,15 +1,122 @@
 ---
 title: "MCP server installation"
-description: "Install and configure the Velora MCP server in your AI tool of choice."
-keywords: ["mcp","install"]
+description: "Connect Claude Code, Claude Desktop, Cursor, Windsurf, or VS Code to the hosted Velora MCP server — one URL, no API key, no local process."
+keywords: ["Velora MCP server", "MCP installation", "MCP setup", "claude mcp add", "cursor mcp", "remote MCP server", "Model Context Protocol"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora MCP server is hosted, so installation is one step: point your client at the endpoint. Nothing runs on your machine, and the server requires no API key.
 
-## When to use this
+```text
+https://ai.velora.xyz/mcp
+```
 
-## Quickstart
+The endpoint speaks Streamable HTTP, the current MCP transport. Clients that only support the legacy HTTP+SSE transport (pre-2025-03-26 spec) use `https://ai.velora.xyz/mcp/sse` instead.
 
-## Examples
+## Client setup
 
-## Related pages
+<Tabs>
+  <Tab title="Claude Code">
+    ```bash
+    claude mcp add --transport http velora https://ai.velora.xyz/mcp
+    ```
+
+    Run `/mcp` inside Claude Code to confirm the server is connected and list its tools.
+  </Tab>
+  <Tab title="Claude Desktop / claude.ai">
+    Add the server as a custom connector:
+
+    1. Open **Settings → Connectors**.
+    2. Click **Add custom connector**.
+    3. Name it `velora` and set the URL to `https://ai.velora.xyz/mcp`.
+
+    No OAuth or token step appears because the server requires no authentication.
+  </Tab>
+  <Tab title="Cursor">
+    Add to `.cursor/mcp.json` in your project (or `~/.cursor/mcp.json` globally):
+
+    ```json
+    {
+      "mcpServers": {
+        "velora": { "url": "https://ai.velora.xyz/mcp" }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="VS Code">
+    Add to `.vscode/mcp.json` in your workspace:
+
+    ```json
+    {
+      "servers": {
+        "velora": {
+          "type": "http",
+          "url": "https://ai.velora.xyz/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Add to `~/.codeium/windsurf/mcp_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "velora": { "serverUrl": "https://ai.velora.xyz/mcp" }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Other clients">
+    Any MCP-compatible client works with the generic remote-server config:
+
+    ```json
+    {
+      "mcpServers": {
+        "velora": { "url": "https://ai.velora.xyz/mcp" }
+      }
+    }
+    ```
+
+    The server is stateless: each JSON-RPC POST stands alone, no `initialize` handshake or session header is required, and any number of clients can connect concurrently. CORS allows any origin, so browser-based clients work too.
+  </Tab>
+</Tabs>
+
+## Verify the connection
+
+A correctly connected client lists **9 tools** (all prefixed `velora_`) and **5 resources** (all prefixed `velora://docs/`).
+
+1. List the server's tools (`tools/list`, or your client's MCP panel). Expect 9 tools, from `velora_search_docs` to `velora_validate_agent_plan`.
+2. Call `velora_get_supported_chains` with no arguments. Expect a chain list that includes Ethereum (1), Base (8453), and Arbitrum (42161).
+
+You can also smoke-test from the command line without any MCP client:
+
+```bash
+curl -s https://ai.velora.xyz/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+The response arrives as a single SSE frame; the JSON-RPC result is on the `data:` line.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `405` on GET `/mcp` | The stateless endpoint has no standalone SSE stream. | POST JSON-RPC to `/mcp`, or use the legacy transport at `/mcp/sse` if your client requires a GET-opened stream. |
+| `406 Not Acceptable` from your own client code | Missing `Accept` header values. | Send `Accept: application/json, text/event-stream` on every POST. |
+| Client expects an SSE `endpoint` event | The client speaks the pre-2025-03-26 HTTP+SSE transport. | Point it at `https://ai.velora.xyz/mcp/sse` instead. |
+| Client asks for an API key or OAuth flow | Misconfigured auth settings. | Leave authentication empty; the server is public and requires none. |
+| Connection works but tool calls are rejected | Per-IP rate limiting. | Back off and retry; batch agent work instead of polling in a tight loop. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Available tools" icon="wrench" href="/for-agents/mcp-server/available-tools">
+    Parameters, return shapes, and the agent rules each tool enforces.
+  </Card>
+  <Card title="Examples" icon="list-check" href="/for-agents/mcp-server/examples">
+    End-to-end tool-call sequences for Delta and Market flows.
+  </Card>
+</CardGroup>

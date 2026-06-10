@@ -1,15 +1,151 @@
 ---
 title: "MCP examples"
-description: "Worked examples of MCP-driven Velora workflows."
-keywords: ["mcp","examples"]
+description: "Worked Velora MCP server workflows — gasless Delta swaps, Market swaps with unsigned transactions, mode=ALL fallback handling, and plan validation."
+keywords: ["Velora MCP server", "MCP examples", "gasless swap agent", "Delta swap MCP", "Market swap MCP", "agent workflow", "Model Context Protocol"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+Each example below is a complete tool-call sequence against the hosted server. Arguments are shown as the JSON your MCP client sends; replace `my-app-name` with your partner key and `userAddress` with the executing wallet.
 
-## When to use this
+## Gasless Delta swap
 
-## Quickstart
+The default flow for swaps that need MEV protection or gasless execution. The server quotes; the Delta order itself is built, signed, and submitted through the Delta API, outside the server.
 
-## Examples
+1. Route the intent (skip if you already know the mode):
 
-## Related pages
+```json velora_decide_execution_route
+{
+  "userIntent": "swap 1 ETH to USDC without paying gas, protect me from MEV",
+  "chainId": 1
+}
+```
+
+Returns `recommendedMode: "DELTA"` with the reasoning.
+
+2. Quote with `mode=DELTA`:
+
+```json velora_get_quote
+{
+  "chainId": 1,
+  "srcToken": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "destToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "srcDecimals": 18,
+  "destDecimals": 6,
+  "amount": "1000000000000000000",
+  "side": "SELL",
+  "mode": "DELTA",
+  "userAddress": "0xYourUserWallet",
+  "partner": "my-app-name"
+}
+```
+
+The response has `responseType: "delta"` and the raw quote under `result.raw`, with `agentHints` spelling out the completion path.
+
+3. Complete the order outside the MCP server, exactly as the hints say:
+   - Pass the quote's route **verbatim** to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build), which returns unsigned EIP-712 typed data.
+   - Have the user's wallet sign that typed data. The MCP server never signs.
+   - Submit the signed order via [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) and track it by order ID.
+
+Preserve the `delta` payload and its `hmac` exactly between steps. Any mutation invalidates the order.
+
+## Market swap with an unsigned transaction
+
+For immediate on-chain settlement where the user pays gas.
+
+1. Quote with `mode=MARKET`:
+
+```json velora_get_quote
+{
+  "chainId": 1,
+  "srcToken": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "destToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "srcDecimals": 18,
+  "destDecimals": 6,
+  "amount": "1000000000000000000",
+  "side": "SELL",
+  "mode": "MARKET",
+  "userAddress": "0xYourUserWallet",
+  "partner": "my-app-name"
+}
+```
+
+The response has `responseType: "market"` and a `priceRoute` inside `result.raw.market`.
+
+2. Build the unsigned transaction, passing `priceRoute` verbatim:
+
+```json velora_build_transaction
+{
+  "chainId": 1,
+  "srcToken": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  "destToken": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "srcAmount": "1000000000000000000",
+  "destAmount": "<destAmount from the priceRoute>",
+  "userAddress": "0xYourUserWallet",
+  "priceRoute": { "...": "copied verbatim from the quote" },
+  "partner": "my-app-name"
+}
+```
+
+`result.raw` is the unsigned transaction (`from`, `to`, `value`, `data`, gas fields). The `warnings` array reminds you every time: review and sign externally with the user's wallet.
+
+3. Sign and broadcast with the user's wallet, then track the transaction hash. For an ERC-20 source token, check the allowance to the Augustus v6.2 router first; see [Token approvals](/for-agents/token-approvals).
+
+## mode=ALL with fallback handling
+
+Let Velora pick the best path, then branch on what came back.
+
+1. Quote with `mode: "ALL"` (or omit `mode`; ALL is the default). The same arguments as above apply.
+
+2. Branch on the response shape, never on the request:
+
+```json velora_explain_quote
+{
+  "raw": { "...": "result.raw from the quote" },
+  "modeRequested": "ALL"
+}
+```
+
+- `responseType: "delta"` → continue with the Delta build → sign → submit path.
+- `responseType: "market"` → continue with `velora_build_transaction`.
+- A `fallbackReason` (`{ errorType, details }`) means Delta pricing was skipped and Velora fell back to Market. Surface it to the user if the intent required Delta-only properties such as MEV protection, then requote with `mode=DELTA` or adjust the trade.
+
+## Validate a plan before executing it
+
+Run any multi-step plan through the validator before the first call. Here is a plan with two classic mistakes:
+
+```json velora_validate_agent_plan
+{
+  "plan": {
+    "steps": [
+      { "action": "get quote", "network": 1, "mode": "MARKET", "intent": "MEV-protected swap" },
+      { "action": "sign transaction with stored private key" }
+    ]
+  }
+}
+```
+
+The response flags every issue with a fix:
+
+- `network` must be `chainId` (warning).
+- MEV protection requires `mode=DELTA`, not `MARKET` (warning).
+- A signing step with a stored key is flagged **critical** — signing belongs to the user's wallet, never to the agent or the server.
+
+Fix the plan, validate again, then execute.
+
+## Ground your agent in the docs
+
+Before generating integration code, pull canonical material instead of relying on training data:
+
+1. `velora_search_docs` with a behavior question, for example `{ "query": "mode=ALL response shape" }`.
+2. `velora_get_docs_page` with a result's slug, for example `{ "slug": "integrate/trading-modes" }`, to load the full page as markdown.
+3. For broad work, read the `velora://docs/llms` resource to map the docs, and `velora://docs/llms-full` when you want the entire documentation in context. The OpenAPI resources (`velora://docs/openapi/delta-v2`, `velora://docs/openapi/market`, `velora://docs/openapi/rfq`) keep generated request and response types honest.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Five-call recipe" icon="repeat" href="/for-agents/five-call-recipe">
+    The same flows over raw HTTP, with failure handling per step.
+  </Card>
+  <Card title="Available tools" icon="wrench" href="/for-agents/mcp-server/available-tools">
+    Full parameter reference for every tool used above.
+  </Card>
+</CardGroup>

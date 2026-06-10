@@ -1,13 +1,187 @@
 ---
 title: "MCP available tools"
-description: "Every tool the Velora MCP server exposes, with arguments and return types."
-keywords: ["mcp","tools","reference"]
+description: "Reference for all 9 Velora MCP server tools and 5 resources — parameters, return shapes, and the agent rules each tool enforces."
+keywords: ["Velora MCP server", "MCP tools", "velora_get_quote", "velora_build_transaction", "MCP resources", "DEX quote tool", "Model Context Protocol"]
 ---
 
-<Note>This page is a stub. Content coming soon.</Note>
+The Velora MCP server exposes 9 tools and 5 read-only resources. Tool and parameter names below are verbatim from the server's public contract; the contract is stable, so agents can hardcode against it.
 
-## Parameters
+## Response envelope
 
-## Examples
+Every tool returns the same envelope:
 
-## Related pages
+```json
+{
+  "result": {},
+  "agentHints": [],
+  "docs": [{ "title": "...", "url": "https://velora.xyz/docs/...", "uri": "velora://docs/..." }],
+  "warnings": []
+}
+```
+
+- `result` — the tool-specific payload. Raw API responses appear unmodified under `result.raw`.
+- `agentHints` — the next safe step, as plain strings. Follow them.
+- `docs` — links into this documentation relevant to the result.
+- `warnings` — user-facing caveats (for example, the sign-externally reminder on every built transaction).
+
+Errors use the same envelope with `isError: true` and `result.error.{type, message}`. Validation failures and documented upstream errors surface their `errorType` and `details`; unexpected failures stay generic.
+
+## Quoting and building
+
+### velora_get_quote
+
+Get a Velora quote. Delta, Market, or both modes via the unified quote endpoint.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | Always `chainId`, never `network`. |
+| `destChainId` | number | No | Set for Crosschain quotes. Crosschain is Delta-only; `mode=MARKET` with a different `destChainId` is rejected before any API call. |
+| `srcToken` | string | Yes | Token address. Native token placeholder: `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`. |
+| `destToken` | string | Yes | Token address, same format. |
+| `amount` | string | Yes | Raw units (wei-style), digits only. |
+| `srcDecimals` | number | Yes | Source token decimals. |
+| `destDecimals` | number | Yes | Destination token decimals. |
+| `side` | `"SELL"` \| `"BUY"` | Yes | |
+| `userAddress` | string | No | The wallet that will execute. |
+| `mode` | `"DELTA"` \| `"MARKET"` \| `"ALL"` | No | Default `ALL`. Use `DELTA` for MEV protection, Limit Orders, TWAP, and Crosschain. |
+| `partner` | string | No | Your partner key; `my-app-name` is the placeholder to replace. |
+
+Returns `{ modeRequested, responseType, raw }` where `responseType` is `"delta"`, `"market"`, or `"unknown"` and `raw` is the upstream payload, preserved unchanged.
+
+Agent rules:
+- Branch on `responseType`, never on what you requested. `mode=ALL` returns either a Delta or a Market response, never both.
+- A Delta quote is completed through the Delta path (`POST /delta/v2/orders/build`, sign externally, `POST /delta/v2/orders`) — not through `velora_build_transaction`. The quote's `agentHints` repeat these steps.
+- Preserve the `delta` payload and its `hmac` exactly. Never normalize, reconstruct, or mutate it.
+- Under `mode=ALL`, a Delta pricing failure falls back to Market and surfaces a structured `fallbackReason` in `warnings`.
+
+### velora_build_transaction
+
+Build an **unsigned** Market swap transaction from a quote's `priceRoute`. Market only.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | |
+| `srcToken` | string | Yes | Token address. |
+| `destToken` | string | Yes | Token address. |
+| `srcAmount` | string | Yes | Raw units. |
+| `destAmount` | string | Yes | Raw units. |
+| `userAddress` | string | Yes | The wallet that will sign and send. |
+| `priceRoute` | object | Yes | Copied **verbatim** from the Market quote's `priceRoute`. |
+| `partner` | string | No | Your partner key. |
+
+Returns `result.raw` with the unsigned transaction fields: `from`, `to` (the Augustus v6.2 router), `value`, `data`, gas pricing, and `chainId`.
+
+Agent rules:
+- The transaction is never signed here. Every response carries the warning "Review and sign externally with the user's wallet."
+- Delta-shaped input (anything containing `delta`, `orderType`, or `alternatives` keys) is rejected with an error pointing to the Delta build → sign → submit path.
+
+## Agent guidance
+
+These three tools are deterministic, rule-based logic. They make no network calls and involve no model, so the same input always produces the same answer.
+
+### velora_decide_execution_route
+
+Decide whether a trading intent should use Delta, Market, ALL, or none of the quote modes. Call it before `velora_get_quote` when the mode is unclear.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `userIntent` | string | Yes | The user's request, free-form. |
+| `chainId` | number | No | |
+| `destChainId` | number | No | A different `destChainId` forces the Crosschain (Delta) rule. |
+| `srcToken` | string | No | |
+| `destToken` | string | No | |
+| `amount` | string | No | |
+| `side` | `"SELL"` \| `"BUY"` | No | |
+
+Returns `{ recommendedMode, reasoning }` where `recommendedMode` is `"DELTA"`, `"MARKET"`, `"ALL"`, or `"NONE"`.
+
+Rule precedence (first match wins): OTC intent → `NONE` (it's the AugustusRFQ maker/taker flow, not a quote mode) · MEV protection → `DELTA` · Crosschain → `DELTA` · Limit Orders → `DELTA` · TWAP or DCA → `DELTA` · explicit Market → `MARKET` · explicit Delta → `DELTA` · best-execution language → `ALL` · default → `ALL`.
+
+### velora_explain_quote
+
+Classify a raw quote response and return the safe completion path. Never mutates the payload.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `raw` | object | Yes | The `result.raw` from `velora_get_quote`. |
+| `modeRequested` | string | Yes | The mode you passed to the quote call. |
+
+Returns `{ responseType, summary, fallbackReason }`. A top-level `delta` key classifies as `"delta"`, a top-level `market` key as `"market"`, anything else as `"unknown"`. `fallbackReason` (`{ errorType, details }`) appears when Delta pricing was skipped under `mode=ALL`.
+
+### velora_validate_agent_plan
+
+Check a free-form plan against the mistakes agents actually make with Velora, before any of them execute.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `plan` | object | Yes | Your plan as a free-form JSON object. |
+
+Returns `{ issues }`, each issue carrying `severity` (`"info"`, `"warning"`, or `"critical"`), `message`, and `fix`.
+
+Checks include: a `network` key anywhere in the plan (must be `chainId`), MEV intent with a non-Delta mode, Crosschain with `mode=MARKET`, Limit Orders or TWAP treated as RFQ, and any signing, private-key, or Delta-payload-mutation step (critical — the server never signs).
+
+## Market data
+
+### velora_get_supported_chains
+
+List the EVM chains Velora supports. No parameters.
+
+Returns `result.raw.chains` as `{ chainId, name }` pairs with `source: "server-known"`: Ethereum (1), Optimism (10), BNB Chain (56), Gnosis (100), Unichain (130), Polygon (137), Sonic (146), Base (8453), Arbitrum (42161), Avalanche (43114).
+
+This is a server-known list, not a live API response, and may lag actual support. Confirm a specific chain with `velora_get_tokens`; do not assume every EVM chain is supported.
+
+### velora_get_tokens
+
+List the tokens Velora can route on a chain. Use it to resolve token addresses and decimals before quoting instead of inventing them.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | Always `chainId`, never `network`. |
+
+Returns `result.raw.tokens` as `{ symbol, address, decimals, img, network }` entries.
+
+## Documentation
+
+### velora_search_docs
+
+Search Velora's canonical documentation. Use it before guessing Velora behavior.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `query` | string | Yes | |
+| `limit` | number | No | 1–20, default 5. |
+
+Returns search results as `{ title, url, resourceUri, snippet }`.
+
+### velora_get_docs_page
+
+Fetch a single docs page as markdown by its slug.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `slug` | string | Yes | A docs slug such as `integrate/trading-modes`. Absolute URLs and path traversal are rejected. |
+
+Returns `{ slug, content }`.
+
+## Resources
+
+Five read-only documents an MCP client can pull straight into context:
+
+| Resource URI | What it is | When to read it |
+|---|---|---|
+| `velora://docs/llms` | The docs index (`llms.txt`), a compact map of the documentation. | First. Orient before fetching pages. |
+| `velora://docs/llms-full` | The full documentation concatenated. | When you need authoritative detail and have the context budget. |
+| `velora://docs/openapi/delta-v2` | OpenAPI spec for the Delta v2 intent API. | Generating or checking Delta integration code. |
+| `velora://docs/openapi/market` | OpenAPI spec for the Market aggregator API. | Generating or checking Market integration code. |
+| `velora://docs/openapi/rfq` | OpenAPI spec for AugustusRFQ (OTC maker/taker). | OTC flows. RFQ is not a quote mode. |
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Examples" icon="list-check" href="/for-agents/mcp-server/examples">
+    These tools composed into end-to-end Delta and Market workflows.
+  </Card>
+  <Card title="Decision tables" icon="route" href="/for-agents/decision-tables">
+    The full intent-to-action mapping the guidance tools implement.
+  </Card>
+</CardGroup>
