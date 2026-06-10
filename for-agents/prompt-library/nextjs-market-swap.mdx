@@ -6,7 +6,7 @@ keywords: ["nextjs","wagmi","viem","market","swap"]
 ---
 
 <Tip>
-  Want gasless + MEV-protected fills instead? Start with [`nextjs-delta-swap`](/for-agents/prompt-library/nextjs-delta-swap), or call `GET /v2/quote?mode=ALL` and let Velora pick the path — see [Trading modes](/integrate/trading-modes).
+  Want gasless + MEV-protected fills instead? Start with [`nextjs-delta-swap`](/for-agents/prompt-library/nextjs-delta-swap), or call `GET /v2/quote?mode=ALL` and let Velora pick the path; see [Trading modes](/integrate/trading-modes).
 </Tip>
 
 ## Outcome
@@ -25,7 +25,7 @@ Build a `/swap` page that lets the user swap any ERC-20 → any ERC-20 on Velora
 Requirements:
 - Use the Velora Market REST API at `https://api.velora.xyz`. Endpoints: `GET /prices` and `POST /transactions/:chainId`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
-- For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed-case — lowercase is rejected).
+- For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case; lowercase is rejected).
 - Quote first, then call `/transactions/:chainId` with the `priceRoute` returned by the quote, passed verbatim.
 - Use Viem's `useWalletClient` to send the transaction. Read `chainId` from Wagmi.
 - Handle the three real failure modes: stale `priceRoute` (re-quote on submit), `INSUFFICIENT_OUTPUT` revert (increase slippage and retry), and ERC-20 allowance missing (prompt approval to the v6.2 router from the quote response's `contractAddress` field).
@@ -40,7 +40,7 @@ Do NOT invent endpoint paths. Do NOT cache `priceRoute` longer than 30 seconds. 
 ```
 
 ```text Cursor
-[Same prompt body as Claude Code above. Cursor reads workspace docs by default — if you have the Velora docs cloned, point Cursor at them via @docs.]
+[Same prompt body as Claude Code above. Cursor reads workspace docs by default. If you have the Velora docs cloned, point Cursor at them via @docs.]
 ```
 
 ```text Codex

@@ -26,7 +26,7 @@ Requirements:
 - Pass the `delta.route` returned by `/v2/quote` verbatim to `/delta/v2/orders/build`, with `owner` set to the user address. Do not normalize, sort, or re-stringify it.
 - Use Viem's `signTypedData` to sign the `toSign` payload returned by `/delta/v2/orders/build`. Then submit to `/delta/v2/orders` with `order` set to `toSign.value`, the `signature`, `chainId`, and `partner`.
 - Poll `GET /delta/v2/orders/{orderId}` and display lifecycle states (`PENDING` → `COMPLETED` / `FAILED`).
-- Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain — fetch from /resources/chains-and-contracts, use the `delta.spender` from the quote response, or read it from the typed-data `domain.verifyingContract`.
+- Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain: fetch from /resources/chains-and-contracts, use the `delta.spender` from the quote response, or read it from the typed-data `domain.verifyingContract`.
 
 Reference these docs and follow them exactly:
 - https://velora.xyz/docs/delta/overview
@@ -35,7 +35,7 @@ Reference these docs and follow them exactly:
 - https://velora.xyz/docs/api-reference/delta/orders-build
 - https://velora.xyz/docs/api-reference/delta/orders-submit
 
-Do NOT mutate the `delta.route` between quote and build. Do NOT grant approval to Augustus — Delta has its own spender contract.
+Do NOT mutate the `delta.route` between quote and build. Do NOT grant approval to Augustus; Delta has its own spender contract.
 ```
 
 ```text Cursor

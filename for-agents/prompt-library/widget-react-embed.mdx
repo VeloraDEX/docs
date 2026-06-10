@@ -1,5 +1,5 @@
 ---
-title: "Velora Widget — React embed with theme sync"
+title: "Velora Widget: React embed with theme sync"
 description: "Prompt an AI agent to embed the Velora Widget into a React app, sync its light/dark theme with the host, and wire up partner attribution and events."
 last-verified: 2026-06-05
 keywords: ["widget","react","theme","embed","events"]
@@ -10,7 +10,7 @@ keywords: ["widget","react","theme","embed","events"]
 A React component that mounts the Velora Widget. Its light/dark theme follows the host app, `partnerConfig.partner` attributes swaps to the host, and lifecycle events feed the host's analytics.
 
 <Note>
-The widget is a drop-in React component — there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://velora.xyz/docs/widget/customize).
+The widget is a drop-in React component; there is no iframe build, and no design-token theming API. You can switch between bundled **light** and **dark** themes (or follow system preference), but you cannot pass brand colors, fonts, or a border-radius scale. See [Customize](https://velora.xyz/docs/widget/customize).
 </Note>
 
 ## Prompt
@@ -27,7 +27,7 @@ Requirements:
 - Theme: the widget only supports `theme: "light" | "dark"` (omit to follow the
   OS `prefers-color-scheme`). Drive the `theme` config field from the host app's
   current light/dark mode so the two stay in sync. Do NOT attempt to pass brand
-  colors, fonts, or border-radius — there is no API for that.
+  colors, fonts, or border-radius; there is no API for that.
 - Memoize any non-primitive `config` value (objects/arrays) with `useMemo` or a
   module-level constant, or the widget re-mounts on every render.
 - Subscribe to widget events via the `events` prop and pipe them into the host's

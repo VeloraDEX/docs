@@ -7,7 +7,7 @@ keywords: ["parallel","aggregators","routing","price-comparison"]
 
 ## Outcome
 
-A backend service that **fans out a single user swap intent** to Velora and one other aggregator, compares the quotes, and returns the winner. Velora is queried either as two parallel calls (`mode=DELTA` and `mode=MARKET`) to compare paths head-to-head, or as a single `mode=ALL` call where Velora has already picked the winner server-side and the client checks which block — `delta` or `market` — is present.
+A backend service that **fans out a single user swap intent** to Velora and one other aggregator, compares the quotes, and returns the winner. Velora is queried either as two parallel calls (`mode=DELTA` and `mode=MARKET`) to compare paths head-to-head, or as a single `mode=ALL` call where Velora has already picked the winner server-side and the client checks which block is present: `delta` or `market`.
 
 ## Prompt
 
@@ -28,7 +28,7 @@ Reference these docs and follow them exactly:
 - https://velora.xyz/docs/api-reference/market/prices
 - https://velora.xyz/docs/api-reference/market/quote
 
-Do NOT race-update shared state across the two aggregators' callbacks. Do NOT fall back silently to the slower source if the budget is exceeded — surface a clear error.
+Do NOT race-update shared state across the two aggregators' callbacks. Do NOT fall back silently to the slower source if the budget is exceeded; surface a clear error.
 ```
 
 ```text Cursor
