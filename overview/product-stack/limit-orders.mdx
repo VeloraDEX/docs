@@ -15,7 +15,7 @@ Limit orders separate **trade intent** from **trade timing**. Delta represents t
 - The maker says what they are willing to sell or buy.
 - The maker sets constraints such as price, token pair, amount, expiry, and eligible taker behavior.
 - When the limit price becomes reachable, the order enters the Delta pricing auction. Solvers from the Portikus network act as takers and compete on fill quotes, so the user gets the best committed return, not just the limit price.
-- Delta settles the order on-chain when the winning solver fills it.
+- Delta settles the order on-chain when the winning solver's fill satisfies it.
 
 This gives users price control without forcing them to watch the market and submit a swap at the exact moment liquidity appears.
 

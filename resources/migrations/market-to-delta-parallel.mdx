@@ -10,7 +10,7 @@ Nothing. This migration is opt-in. Your existing Market integration keeps workin
 
 ## Why migrate
 
-Delta intents are gasless and MEV-protected: users sign once and the solver network fills. And you don't rewrite anything to get there. `GET /v2/quote` with `mode=ALL` returns either a Delta `delta` block or a Market `market` block (the same shape as `/prices`'s `priceRoute`). Velora picks the winner server-side; you branch on which block is present. See [Trading modes](/integrate/trading-modes).
+Delta intents are gasless and MEV-protected: users sign once, solvers compete to fill, and Delta settles the winning fill. And you don't rewrite anything to get there. `GET /v2/quote` with `mode=ALL` returns either a Delta `delta` block or a Market `market` block (the same shape as `/prices`'s `priceRoute`). Velora picks the winner server-side; you branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
 ## Steps
 

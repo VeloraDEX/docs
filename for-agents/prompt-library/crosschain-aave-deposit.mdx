@@ -20,7 +20,7 @@ Requirements:
 - The user holds (say) USDC on Polygon. They want to end up with aUSDC supplied to Aave v3 on Base. One signature.
 - Use Velora's Crosschain Delta V2 API. Endpoints: `GET /v2/quote` (with `mode=DELTA` and `destChainId` per [Crosschain Delta docs]), `POST /delta/v2/orders/build`, `POST /delta/v2/orders`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
-- The solver fills on Base; you provide a post-fill calldata hook that calls `aavePool.supply(USDC, amount, user, 0)` against Aave v3's Base pool address.
+- The winning fill resolves on Base; you provide a post-fill calldata hook that calls `aavePool.supply(USDC, amount, user, 0)` against Aave v3's Base pool address.
 - Read the Aave v3 pool address from a constants file (do NOT hardcode in component code).
 - Surface clear status: "Quoting" → "Signing" → "Filling on Base" → "Depositing into Aave" → "Done".
 - On failure at any stage, return the user to a recoverable state. Cancel the Delta order if it hasn't filled.

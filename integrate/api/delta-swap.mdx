@@ -4,7 +4,7 @@ description: "Integrate a gasless, MEV-protected Delta swap over the REST API: q
 keywords: ["delta api", "gasless swap", "intent", "quote", "orders build", "orders submit", "dETH", "native eth"]
 ---
 
-A **Delta swap** lets your user sign one off-chain intent and have the [Portikus Network](/solver-network/portikus) settle it gaslessly, with MEV protection. This page walks the whole integration end to end: quote the trade, build the order, have the user sign it, submit it, and poll until it settles. Every example is a `curl` or `fetch` call against `https://api.velora.xyz`; no SDK required.
+A **Delta swap** lets your user sign one off-chain intent that Delta settles gaslessly through the [Portikus Network](/solver-network/portikus), with MEV protection. This page walks the whole integration end to end: quote the trade, build the order, have the user sign it, submit it, and poll until it settles. Every example is a `curl` or `fetch` call against `https://api.velora.xyz`; no SDK required.
 
 For the conceptual model behind the auction and settlement, see [Delta → How it works](/delta/how-it-works). For a typed wrapper over these same calls, see [SDK → Delta](/sdk/products/delta).
 
@@ -111,7 +111,7 @@ The relayer validates the signature, balance, and allowance, then enrolls the or
 curl 'https://api.velora.xyz/delta/v2/orders/{orderId}'
 ```
 
-Poll until the order reaches a terminal status. A market Delta order settles in seconds once a solver wins the auction, so a short interval is fine.
+Poll until the order reaches a terminal status. A market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine.
 
 For a human-readable view (status, fills, the settlement transaction), open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. It's handy for debugging and for linking users to their order.
 
