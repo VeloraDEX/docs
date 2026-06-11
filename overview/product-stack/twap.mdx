@@ -47,5 +47,5 @@ TWAP and limit orders are both signed Delta orders that settle after signing. Th
 ## Build it
 
 - Use the [Widget](/widget/overview) if you want a ready-made TWAP form in your app; [Configure Widget](/widget/configure) controls whether it appears.
-- Use [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build) if you are building the HTTP flow directly. Submit the signed order through [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) and track slice execution through the Delta order endpoints.
+- Use [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build) if you are building the HTTP flow directly. Submit the signed order through [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) and track slice execution through the Delta order endpoints.
 - [How Delta works](/delta/how-it-works) explains how signed orders are auctioned and settled.

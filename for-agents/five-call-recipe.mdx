@@ -34,19 +34,19 @@ Use Delta when the user wants gasless execution, MEV protection, solver competit
 
 ```text
 1. GET /v2/quote?mode=DELTA
-2. POST /delta/v2/orders/build
+2. POST /v2/delta/orders/build
    - pass the returned delta.route verbatim
    - set owner to the user's address
 3. Ask the user to sign the returned toSign EIP-712 payload
-4. POST /delta/v2/orders with order=toSign.value, signature, chainId, and partner
-5. GET /delta/v2/orders/{orderId} until COMPLETED, FAILED, or EXPIRED
+4. POST /v2/delta/orders with order=toSign.value, signature, chainId, and partner
+5. GET /v2/delta/orders/{orderId} until COMPLETED, FAILED, or EXPIRED
 ```
 
 Agent rules:
 
 - Use `chainId`, not `network`, on quote requests.
 - Include a `partner` value on quote requests. Use the app or project partner key; examples use `my-app-name` only as a placeholder.
-- Pass the `delta.route` from the quote response into `/delta/v2/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
+- Pass the `delta.route` from the quote response into `/v2/delta/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
 - Do not grant approval to Augustus for a Delta order; approve the Delta contract (the `spender` from the quote response).
 - Track by Delta order ID, not by transaction hash.
 
@@ -93,14 +93,14 @@ Use a Delta Limit Order when the user wants target-price execution, delayed sett
 
 ```text
 1. Normalize the target-price intent
-2. GET /delta/v2/prices for the route
-3. POST /delta/v2/orders/build
+2. GET /v2/delta/prices for the route
+3. POST /v2/delta/orders/build
    - pass the returned route verbatim
    - set type=LIMIT at submission time
    - use limitAmount for the user's target-price constraint when needed
 4. Ask the user to sign the returned toSign EIP-712 payload
-5. POST /delta/v2/orders with order=toSign.value, signature, type=LIMIT, chainId, and partner
-6. Track with GET /delta/v2/orders/{orderId}, GET /delta/v2/orders/hash/{hash}, or GET /delta/v2/orders
+5. POST /v2/delta/orders with order=toSign.value, signature, type=LIMIT, chainId, and partner
+6. Track with GET /v2/delta/orders/{orderId}, GET /v2/delta/orders/hash/{hash}, or GET /v2/delta/orders
 ```
 
 Agent rules:
@@ -108,27 +108,27 @@ Agent rules:
 - Limit orders are Delta orders, not AugustusRFQ orders.
 - Preserve the user's target price, side, amount, token pair, chain, recipient, expiry/deadline, and partially-fillable preference.
 - Treat `LIMIT` as the order type constraint; do not turn it into a Market Swap just because a spot quote is available.
-- Pass `route` into `/delta/v2/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
+- Pass `route` into `/v2/delta/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
 - If the target price, expiry, amount, or recipient changes, rebuild and ask the user to sign again.
 
 ## Delta TWAP
 
-Use a Delta TWAP when the user wants one signed order to split execution across time. Delta exposes TWAP as advanced order families in `/delta/v2/orders/build`: `orderType=TWAPOrder` for sell-side schedules and `orderType=TWAPBuyOrder` for buy-side schedules.
+Use a Delta TWAP when the user wants one signed order to split execution across time. Delta exposes TWAP as advanced order families in `/v2/delta/orders/build`: `orderType=TWAPOrder` for sell-side schedules and `orderType=TWAPBuyOrder` for buy-side schedules.
 
 ```text
 1. Normalize the TWAP schedule
-2. GET /delta/v2/prices for one slice
+2. GET /v2/delta/prices for one slice
    - Sell TWAP: route.origin.input.amount = floor(totalSrcAmount / numSlices)
    - Buy TWAP: route.origin.output.amount = floor(totalDestAmount / numSlices)
-3. POST /delta/v2/orders/build
+3. POST /v2/delta/orders/build
    - pass the returned route verbatim
    - set orderType=TWAPOrder for sell schedules, or orderType=TWAPBuyOrder for buy schedules
    - include interval and numSlices
    - include totalSrcAmount for TWAPOrder
    - include totalDestAmount and maxSrcAmount for TWAPBuyOrder
 4. Ask the user to sign the returned toSign EIP-712 payload
-5. POST /delta/v2/orders with order=toSign.value, signature, chainId, and partner
-6. Track with GET /delta/v2/orders/{orderId}, GET /delta/v2/orders/hash/{hash}, or GET /delta/v2/orders
+5. POST /v2/delta/orders with order=toSign.value, signature, chainId, and partner
+6. Track with GET /v2/delta/orders/{orderId}, GET /v2/delta/orders/hash/{hash}, or GET /v2/delta/orders
 ```
 
 Agent rules:

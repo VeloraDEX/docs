@@ -25,10 +25,10 @@ A TWAP is either a sell or a buy, and the field that fixes the total differs:
     Approve the **total** source on-chain (`totalSrcAmount` for sell, `maxSrcAmount` for buy), not one slice. A TWAP uses approval, not a permit; see [Approvals and permit](/resources/approvals). Native source skips this.
   </Step>
   <Step title="Build the schedule">
-    `POST /delta/v2/orders/build` with the `orderType`, `interval`, `numSlices`, a `deadline`, and the totals. See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+    `POST /v2/delta/orders/build` with the `orderType`, `interval`, `numSlices`, a `deadline`, and the totals. See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).
   </Step>
   <Step title="Sign and submit">
-    The user signs `toSign`; `POST /delta/v2/orders`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
+    The user signs `toSign`; `POST /v2/delta/orders`. See [`POST /v2/delta/orders`](/api-reference/delta/orders-submit).
   </Step>
   <Step title="Poll over the order's lifetime">
     Each slice settles as it becomes eligible; the order completes when the final slice settles, or expires if its constraints can no longer be met.
@@ -58,7 +58,7 @@ For a sell TWAP, `route.origin.input.amount` must equal `floor(totalSrcAmount / 
 ## 2. Build the schedule (sell TWAP)
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build' \
   -H 'Content-Type: application/json' \
   -d '{
     "orderType": "TWAPOrder",
@@ -80,7 +80,7 @@ curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
 A buy TWAP fixes how much to receive and caps what's spent. Quote a single slice by the per-slice destination amount, then build with `totalDestAmount` and `maxSrcAmount`:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build' \
   -H 'Content-Type: application/json' \
   -d '{
     "orderType": "TWAPBuyOrder",
@@ -101,7 +101,7 @@ curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
 The user signs `toSign` (ERC-2098 compact signature), then you submit the order. There's no TWAP-specific submit; it's the same call as a market Delta order:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders' \
   -H 'Content-Type: application/json' \
   -d '{
     "chainId": 1,
@@ -113,10 +113,10 @@ curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
 
 ## 4. Poll, list, and cancel
 
-Poll `GET /delta/v2/orders/{orderId}` over the order's lifetime; the `input`/`output` amounts carry expected and executed totals, so you can show fill progress without computing it yourself. For a human-readable view of slice-by-slice progress, open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. List a user's TWAPs by filtering on `onChainOrderType`:
+Poll `GET /v2/delta/orders/{orderId}` over the order's lifetime; the `input`/`output` amounts carry expected and executed totals, so you can show fill progress without computing it yourself. For a human-readable view of slice-by-slice progress, open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. List a user's TWAPs by filtering on `onChainOrderType`:
 
 ```bash
-curl -G 'https://api.velora.xyz/delta/v2/orders' \
+curl -G 'https://api.velora.xyz/v2/delta/orders' \
   --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
   --data-urlencode 'chainId=1' \
   --data-urlencode 'onChainOrderType=TWAPOrder'
@@ -125,12 +125,12 @@ curl -G 'https://api.velora.xyz/delta/v2/orders' \
 Cancel the remaining (unsettled) slices with a gasless signed cancellation, the same call as any Delta order:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/cancel' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/cancel' \
   -H 'Content-Type: application/json' \
   -d '{ "orderIds": ["..."], "signature": "0x..." }'
 ```
 
-See [`GET /delta/v2/orders`](/api-reference/delta/orders-list) and [`POST /delta/v2/orders/cancel`](/api-reference/delta/orders-cancel).
+See [`GET /v2/delta/orders`](/api-reference/delta/orders-list) and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
 
 ## Partner fee
 

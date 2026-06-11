@@ -82,7 +82,7 @@ Whatever a solver does off-chain, the Portikus contract holds the same line on-c
 
 ## Order lifecycle
 
-Each app exposes its own surface for tracking an intent. Delta's is the order status you poll with `GET /delta/v2/orders/{orderId}`, which moves from submission to a terminal state like this:
+Each app exposes its own surface for tracking an intent. Delta's is the order status you poll with `GET /v2/delta/orders/{orderId}`, which moves from submission to a terminal state like this:
 
 ```mermaid
 stateDiagram-v2

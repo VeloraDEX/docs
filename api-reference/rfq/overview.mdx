@@ -13,7 +13,7 @@ An OTC trade on Velora is a deal between two parties who already know each other
 - The fill resolves on-chain through AugustusRFQ, so the outcome is auditable and non-custodial.
 
 <Note>
-  Want an **open, target-price order** any solver can fill, gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /v2/quote`](/api-reference/delta/quote) and submit with `type=LIMIT` via [`POST /delta/v2/orders`](/api-reference/delta/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
+  Want an **open, target-price order** any solver can fill, gasless and MEV-protected? That's a Delta limit order, not OTC. Call [`GET /v2/quote`](/api-reference/delta/quote) and submit with `type=LIMIT` via [`POST /v2/delta/orders`](/api-reference/delta/overview). This RFQ surface is specifically for **bilateral OTC/P2P settlement** against a known counterparty.
 </Note>
 
 ## Lifecycle

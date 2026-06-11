@@ -20,7 +20,7 @@ Each is deployed at the same address on every chain that supports it. See [Chain
 Both methods work for Delta and for Market:
 
 - **On-chain approval**: a standard ERC-20 `approve(spender, amount)`. One transaction, once per token.
-- **Permit**: sign an EIP-2612 permit or a Permit2 message naming the spender, and pass it in the build call instead of approving on-chain. Delta takes it as the `permit` field on [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build); Market takes it as the `permit` field on [`POST /transactions/{chainId}`](/api-reference/market/transactions). Both the Delta contract and Augustus v6.2 accept either an EIP-2612 or a Permit2 payload.
+- **Permit**: sign an EIP-2612 permit or a Permit2 message naming the spender, and pass it in the build call instead of approving on-chain. Delta takes it as the `permit` field on [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build); Market takes it as the `permit` field on [`POST /transactions/{chainId}`](/api-reference/market/transactions). Both the Delta contract and Augustus v6.2 accept either an EIP-2612 or a Permit2 payload.
 
 A permit skips the separate approval transaction, which is the reason to use it.
 

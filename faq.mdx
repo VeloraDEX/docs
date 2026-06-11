@@ -26,7 +26,7 @@ If the user can wait a few seconds and doesn't want to pay gas, prefer Delta: it
 
 For Market, pass `slippage` (basis points) on the quote, or set `destAmount` directly as a hard floor. Omitting both returns `400`.
 
-For Delta, slippage is applied at the build step. Pass `slippage` to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /delta/v2/orders`](/api-reference/delta/orders-submit). The signed `order.destAmount` is the limit-order floor: solvers must deliver at least that amount or the fill doesn't settle.
+For Delta, slippage is applied at the build step. Pass `slippage` to [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build); the API returns an order with `destAmount` reduced by that slippage. You then sign and submit via [`POST /v2/delta/orders`](/api-reference/delta/orders-submit). The signed `order.destAmount` is the limit-order floor: solvers must deliver at least that amount or the fill doesn't settle.
 
 ### What slippage tolerance should I use?
 
@@ -87,4 +87,4 @@ A **free partner ID** is just a string you pass as `&partner=<your-app-name>`; t
 
 ## Troubleshooting
 
-For failure-mode tables by endpoint (`GET /prices`, `POST /transactions/:chainId`, `GET /v2/quote`, `POST /delta/v2/orders/build`, `POST /delta/v2/orders`), see [Troubleshooting](/api-reference/troubleshooting). Each row maps a symptom to a root cause and a fix, and the same data is available machine-readable at [`/resources/errors.json`](/resources/errors.json).
+For failure-mode tables by endpoint (`GET /prices`, `POST /transactions/:chainId`, `GET /v2/quote`, `POST /v2/delta/orders/build`, `POST /v2/delta/orders`), see [Troubleshooting](/api-reference/troubleshooting). Each row maps a symptom to a root cause and a fix, and the same data is available machine-readable at [`/resources/errors.json`](/resources/errors.json).

@@ -6,9 +6,9 @@ keywords: ["delta", "delta v2", "api-reference"]
 
 Build new Delta integrations on V2. The server carries most of the protocol work, so your client stays thin:
 
-- Orders come back from `POST /delta/v2/orders/build` as EIP-712 typed data ready to sign. You never compose `domain`, `types`, and `value` yourself.
-- `GET /delta/v2/prices` recommends a `route` and lists `alternatives`, so users can pick a different bridge or path.
-- Order history is paginated: `GET /delta/v2/orders` returns `{ data, total, page, limit, hasMore }`.
+- Orders come back from `POST /v2/delta/orders/build` as EIP-712 typed data ready to sign. You never compose `domain`, `types`, and `value` yourself.
+- `GET /v2/delta/prices` recommends a `route` and lists `alternatives`, so users can pick a different bridge or path.
+- Order history is paginated: `GET /v2/delta/orders` returns `{ data, total, page, limit, hasMore }`.
 - A single `status` field covers the whole lifecycle (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`), replacing the V1 split between `status` and `bridgeStatus`.
 - Partner fees are resolved server-side. Pass `partner` / `partnerAddress` / `partnerFeeBps` raw; the server validates and encodes them, and the `getPartnerFee` round-trip disappears.
 
@@ -16,22 +16,22 @@ Build new Delta integrations on V2. The server carries most of the protocol work
 
 <Steps>
   <Step title="Price">
-    `GET /delta/v2/prices` — returns `route`, `alternatives`, and the `spender` contract address.
+    `GET /v2/delta/prices` — returns `route`, `alternatives`, and the `spender` contract address.
   </Step>
   <Step title="Approve">
     ERC-20 `approve(spender, amount)` against `price.spender`, or sign Permit / Permit2 with the same `verifyingContract`. Native tokens skip this.
   </Step>
   <Step title="Build">
-    `POST /delta/v2/orders/build` — returns `{ toSign: { domain, types, value }, orderHash }`.
+    `POST /v2/delta/orders/build` — returns `{ toSign: { domain, types, value }, orderHash }`.
   </Step>
   <Step title="Sign">
     Sign `toSign` with `signTypedData` on the user's wallet.
   </Step>
   <Step title="Submit">
-    `POST /delta/v2/orders` — passes `order: toSign.value` and `signature` to the relayer.
+    `POST /v2/delta/orders` — passes `order: toSign.value` and `signature` to the relayer.
   </Step>
   <Step title="Poll">
-    `GET /delta/v2/orders/{orderId}` until `status === "COMPLETED"` (or a terminal failure).
+    `GET /v2/delta/orders/{orderId}` until `status === "COMPLETED"` (or a terminal failure).
   </Step>
 </Steps>
 
@@ -39,19 +39,19 @@ Build new Delta integrations on V2. The server carries most of the protocol work
 
 | Method | Path | Purpose |
 |---|---|---|
-| `GET` | `/delta/v2/prices` | Recommended route + alternatives, same-chain or crosschain |
-| `GET` | `/delta/v2/prices/bridge-routes` | Supported `(srcChainId, destChainId, tokens)` triples |
-| `GET` | `/delta/v2/prices/bridge-protocols` | Active bridge protocols (slug, name, icon) |
-| `GET` | `/delta/v2/prices/strategies/{chainId}` | Delta yield strategies with APR |
-| `GET` | `/delta/v2/prices/is-token-supported` | Quick token-support check |
-| `POST` | `/delta/v2/orders/build` | Server-built EIP-712 typed data ready to sign |
-| `POST` | `/delta/v2/orders` | Submit a signed order |
-| `POST` | `/delta/v2/orders/cancel` | Sign-and-post cancellation |
-| `GET` | `/delta/v2/orders` | List a user's orders (paginated) |
-| `GET` | `/delta/v2/orders/{orderId}` | Order by UUID |
-| `GET` | `/delta/v2/orders/hash/{hash}` | Order by EIP-712 hash |
-| `GET` | `/delta/v2/orders/fillablebalance/...` | Fillable balance for limit-order sizing |
-| `GET` | `/delta/v2/agents/list/{chainId}` | List active auction agents |
+| `GET` | `/v2/delta/prices` | Recommended route + alternatives, same-chain or crosschain |
+| `GET` | `/v2/delta/prices/bridge-routes` | Supported `(srcChainId, destChainId, tokens)` triples |
+| `GET` | `/v2/delta/prices/bridge-protocols` | Active bridge protocols (slug, name, icon) |
+| `GET` | `/v2/delta/prices/strategies/{chainId}` | Delta yield strategies with APR |
+| `GET` | `/v2/delta/prices/is-token-supported` | Quick token-support check |
+| `POST` | `/v2/delta/orders/build` | Server-built EIP-712 typed data ready to sign |
+| `POST` | `/v2/delta/orders` | Submit a signed order |
+| `POST` | `/v2/delta/orders/cancel` | Sign-and-post cancellation |
+| `GET` | `/v2/delta/orders` | List a user's orders (paginated) |
+| `GET` | `/v2/delta/orders/{orderId}` | Order by UUID |
+| `GET` | `/v2/delta/orders/hash/{hash}` | Order by EIP-712 hash |
+| `GET` | `/v2/delta/orders/fillablebalance/...` | Fillable balance for limit-order sizing |
+| `GET` | `/v2/delta/agents/list/{chainId}` | List active auction agents |
 
 ## SDK shortcut
 

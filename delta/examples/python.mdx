@@ -60,10 +60,10 @@ You should see the recommended route's expected output (USDC, 6 decimals) and th
 
 ## Next: build, sign, submit
 
-Pass the unmodified `delta.route` into `POST /delta/v2/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }`. Sign `toSign` with an ERC-2098 compact signature, then `POST /delta/v2/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /delta/v2/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
+Pass the unmodified `delta.route` into `POST /v2/delta/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }`. Sign `toSign` with an ERC-2098 compact signature, then `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /v2/delta/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
 
 <Warning>
-  Pass `delta.route` **verbatim** to `/delta/v2/orders/build`. Reordering or re-encoding it will cause the build call to reject.
+  Pass `delta.route` **verbatim** to `/v2/delta/orders/build`. Reordering or re-encoding it will cause the build call to reject.
 </Warning>
 
 ## Related pages

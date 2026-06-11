@@ -43,6 +43,6 @@ Limit orders and OTC can look similar because both use signed terms. The differe
 ## Build it
 
 - Use the [Widget](/widget/overview) if you want limit orders in a ready-made trading interface.
-- Building the HTTP flow directly? Build the order the user will sign with [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build), then submit it through [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) and track its status from there.
+- Building the HTTP flow directly? Build the order the user will sign with [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build), then submit it through [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) and track its status from there.
 - [How Delta works](/delta/how-it-works) covers how signed orders are auctioned, settled, and tracked.
 - If the trade is negotiated with a known counterparty, you probably want [OTC](/overview/product-stack/otc) instead.
