@@ -4,7 +4,7 @@ description: "From signed intent to on-chain settlement: the full Delta flow end
 keywords: ["delta","architecture","flow","portikus","solver"]
 ---
 
-Delta separates **what the user wants** (the intent) from **how it gets executed** (the solver fill). The user signs once, off-chain. Solvers on the [Portikus Network](/solver-network/portikus) race to fill the order at the best price, then settle on-chain via the Delta contract.
+Delta separates **what the user wants** (the intent) from **how it gets executed** (the fill). The user signs once, off-chain. Solvers on the [Portikus Network](/solver-network/portikus) race to provide the best executable calldata, and protocol settlement executes the winning calldata through the Delta contract.
 
 ## The flow at a glance
 
@@ -16,6 +16,7 @@ sequenceDiagram
   participant API as Velora API
   participant OS as Order Server
   participant Solvers as Portikus Network<br/>(solvers)
+  participant Settlement as Protocol settlement
   participant Delta as Delta contract<br/>0x...c96d
 
   User->>DApp: "Swap 1000 USDC for USDT"
@@ -34,11 +35,12 @@ sequenceDiagram
   rect rgb(232, 245, 233)
     note over OS,Solvers: Off-chain auction
     OS->>Solvers: Broadcast order
-    Solvers-->>OS: Competing fill quotes
+    Solvers-->>OS: Competing fill calldata
     OS->>Solvers: Award winner
   end
 
-  Solvers->>Delta: settle(order, signature, fillData)
+  OS->>Settlement: Winning calldata + signed order
+  Settlement->>Delta: settle(order, signature, fillData)
   Delta-->>User: destToken delivered
 
   loop Until terminal status
@@ -67,17 +69,17 @@ The user signs the returned `toSign` typed data with their wallet. The build res
 
 ### 4. Auction
 
-You `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits to fill the order with their own capital; they take on inventory and settlement risk in exchange for the spread.
+You `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits fill calldata and the capital needed to deliver it; they take on inventory and pricing risk in exchange for the spread.
 
 ### 5. Settle
 
-The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain). The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, or `CANCELLED`).
+The protocol settlement layer calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain) with the signed order and the winning solver's fill calldata. The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, or `CANCELLED`).
 
 ## Why this design
 
 <CardGroup cols={2}>
   <Card title="Gasless for users" icon="gas-pump">
-    Users sign off-chain. Solvers pay gas and recoup it from their margin.
+    Users sign off-chain. Settlement gas is handled inside the Delta flow.
   </Card>
   <Card title="MEV-protected" icon="shield">
     Orders are auctioned privately. There's no public mempool to sandwich.

@@ -18,6 +18,7 @@ sequenceDiagram
   participant API as Velora API
   participant OS as Order Server
   participant Solvers as Solver network<br/>(Portikus)
+  participant Settlement as Protocol settlement
   participant Delta as Delta contract<br/>source chain
   participant Bridge as Bridge provider<br/>(CCTP / Across / Relay / ...)
   participant Dest as Destination chain
@@ -38,11 +39,12 @@ sequenceDiagram
   rect rgb(232, 245, 233)
     note over OS,Solvers: Source-chain Delta auction
     OS->>Solvers: Broadcast order
-    Solvers-->>OS: Competing fills
+    Solvers-->>OS: Competing fill calldata
     OS->>Solvers: Award winner
   end
 
-  Solvers->>Delta: Settle on source chain
+  OS->>Settlement: Winning calldata + signed order
+  Settlement->>Delta: Settle on source chain
   Delta->>Bridge: Initiate selected bridge leg
   API-->>DApp: status = BRIDGING
 
@@ -115,7 +117,7 @@ Then use the same build, sign, and submit calls as a same-chain Delta order:
 
 Delta does not ask the user to perform a separate bridge transaction. The user signs a Delta order that already contains the selected destination chain, output token, and bridge execution data.
 
-At settlement time, the winning solver executes the source-chain Delta order through Portikus. If the order is crosschain, the settlement module sends the post-swap output into the selected bridge module instead of transferring it locally to the user. The destination output is delivered to the order beneficiary on the destination chain.
+At settlement time, the protocol executes the winning solver's source-chain calldata through Portikus. If the order is crosschain, the settlement module sends the post-swap output into the selected bridge module instead of transferring it locally to the user. The destination output is delivered to the order beneficiary on the destination chain.
 
 For USDC routes, CCTP support is USDC-specific. Delta can still quote arbitrary source tokens when the source-chain leg swaps into the bridge token first, but the CCTP bridge leg itself moves USDC between supported chains.
 
