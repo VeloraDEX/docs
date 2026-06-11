@@ -8,7 +8,22 @@ Get a quote for 1 ETH → USDC on Ethereum mainnet. With `mode=ALL`, Velora pick
 
 <CodeGroup>
 
-```bash Delta (cURL)
+```bash Best path (cURL)
+curl -s "https://api.velora.xyz/v2/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G | jq
+```
+
+```bash Force Delta (cURL)
 curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
@@ -23,7 +38,7 @@ curl -s "https://api.velora.xyz/v2/quote" \
   -G | jq
 ```
 
-```bash Market (cURL)
+```bash Force Market (cURL)
 curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
   --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
@@ -83,6 +98,10 @@ export default function SwapPage() {
 ```
 
 </CodeGroup>
+
+<Note>
+  `my-app-name` is a placeholder. Replace it with your own app or project partner identifier. It tags your integration for analytics, support, and rate-limit upgrades; it is not an API key, and no signup is required.
+</Note>
 
 `GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/v2/delta/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
