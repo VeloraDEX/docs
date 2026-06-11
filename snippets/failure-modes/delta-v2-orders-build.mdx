@@ -1,6 +1,6 @@
 | Symptom | Root cause | Fix |
 |---|---|---|
-| 400 `route` validation failed                                  | `route` object was mutated, re-stringified, or had numeric fields cast to numbers (they're strings)             | Pass `route` from [GET /delta/v2/prices](/api-reference/delta/prices) **verbatim** — don't normalize, sort, or re-encode amounts |
+| 400 `route` validation failed                                  | `route` object was mutated, re-stringified, or had numeric fields cast to numbers (they're strings)             | Pass `route` from [GET /v2/delta/prices](/api-reference/delta/prices) **verbatim** — don't normalize, sort, or re-encode amounts |
 | 400 missing `deadline`                                         | `deadline` is required on every Delta order; the build call rejects when it's absent             | Pass `deadline` as unix seconds (e.g. `Math.floor(Date.now() / 1000) + 3600`); past it the order is unfillable |
 | 400 `InvalidTWAPParams` / `InvalidTWAPBuyParams`                | TWAP / TWAPBuy without `interval`, `numSlices`, and a totals field                             | Provide all four: `interval` (seconds, ≥ 60), `numSlices` (≥ 2), `totalSrcAmount` (TWAP), or `totalDestAmount` + `maxSrcAmount` (TWAPBuy) |
 | 400 `InvalidTWAPSrcAmount` / `InvalidTWAPBuyDestAmount`         | Slice amount in `route.origin` doesn't equal `floor(total / numSlices)`              | Re-quote per slice with `amount = floor(total / numSlices)` and pass the totals separately; non-divisible remainders are intentional and you can't ship slice×n |

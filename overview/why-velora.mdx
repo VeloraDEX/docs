@@ -1,17 +1,22 @@
 ---
 title: "Why Velora"
-description: "Velora is best execution across 10+ EVM chains: quote, swap, and gasless intents from one API, SDK, or Widget. Ship your first swap in 60 seconds."
+description: "Velora unifies intent-based execution and DEX aggregation in a single platform. With one integration, you can route trades across 10+ EVM chains, execute gasless swaps, and access the best available liquidity without managing multiple providers."
 keywords: ["velora","overview","quickstart","why"]
 ---
 
-Velora is a DEX aggregator and intents protocol. One integration gives you:
+One integration gives you:
 
-- **Delta intents** — gasless, MEV-protected swaps and signed orders, including limit orders. Single signature.
-- **Market routing** — best price across every major DEX, AMM, and bridge on every chain Velora supports (10+ EVM chains).
-- **Crosschain** — Delta orders that resolve across chains via bridge-aware solvers.
-- **AugustusRFQ** — on-chain OTC for ERC-20, with optional partial fills.
+- **Delta intents**: Let users swap on the same chain or across chains through a single gasless, MEV-protected flow secured by one signature.
+- **Market routing**: Get the best available price across major DEXs and AMMs without building or maintaining your own routing infrastructure.
+- **OTC**: Enable peer-to-peer token trades with custom pricing and settlement terms, including optional partial fills.
 
-You can pick a single surface or run them side by side. The Delta API exposes `GET /v2/quote`, which accepts a `mode` (`ALL`, `DELTA`, `MARKET`) and returns either a `delta` block or a `market` block. Velora picks the winner server-side. The Market API exposes `GET /prices` for direct aggregator routing. See [Trading modes](/integrate/trading-modes).
+You can use Delta, Market, or both through a single integration.
+
+The Delta API's `GET /v2/quote` endpoint supports `DELTA`, `MARKET`, and `ALL` modes. With `ALL`, Velora compares intent-based and market-based execution, then automatically returns the better result.
+
+If you only need aggregator routing, use the Market API's `GET /prices` endpoint.
+
+See [Trading modes](/integrate/trading-modes).
 
 ## Choose your integration
 

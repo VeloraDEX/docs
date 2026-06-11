@@ -18,13 +18,13 @@ For the conceptual model behind the auction and settlement, see [Delta → How i
     Authorize the `spender` (the Delta contract) to pull the source token, by on-chain approval or a permit. Native source skips this. See [Approvals and permit](/resources/approvals).
   </Step>
   <Step title="Build the order">
-    `POST /delta/v2/orders/build` with the `delta.route` passed **verbatim**, `owner` set to the user, and a `deadline`. You get back `{ toSign, orderHash }`. See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+    `POST /v2/delta/orders/build` with the `delta.route` passed **verbatim**, `owner` set to the user, and a `deadline`. You get back `{ toSign, orderHash }`. See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).
   </Step>
   <Step title="Sign and submit">
-    The user signs `toSign` (ERC-2098 compact signature). `POST /delta/v2/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
+    The user signs `toSign` (ERC-2098 compact signature). `POST /v2/delta/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /v2/delta/orders`](/api-reference/delta/orders-submit).
   </Step>
   <Step title="Poll until settled">
-    `GET /delta/v2/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`). See [`GET /delta/v2/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
+    `GET /v2/delta/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`). See [`GET /v2/delta/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
   </Step>
 </Steps>
 
@@ -67,7 +67,7 @@ Authorize the Delta contract (the `spender` from the quote) to pull the source t
 Pass the `delta.route` from the quote **verbatim** into the build call, with `owner` set to the user's address and a `deadline` (unix seconds) after which the order is unfillable:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build' \
   -H 'Content-Type: application/json' \
   -d '{
     "route": { "...": "the delta.route from the quote, unchanged" },
@@ -93,7 +93,7 @@ curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
 The user signs the `toSign` typed data. Delta uses **ERC-2098 compact signatures** (64 bytes); viem, ethers v6, and wagmi produce them natively. Then submit the signed order:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders' \
   -H 'Content-Type: application/json' \
   -d '{
     "chainId": 1,
@@ -108,7 +108,7 @@ The relayer validates the signature, balance, and allowance, then enrolls the or
 ## 5. Poll for settlement
 
 ```bash
-curl 'https://api.velora.xyz/delta/v2/orders/{orderId}'
+curl 'https://api.velora.xyz/v2/delta/orders/{orderId}'
 ```
 
 Poll until the order reaches a terminal status. A market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine.

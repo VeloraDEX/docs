@@ -12,7 +12,7 @@
     "/v2/quote": {
       "get": {
         "summary": "Get a Delta V2 quote (Delta price, optional Market fallback)",
-        "description": "Unified V2 entry point. Returns a `delta` block (a Delta V2 price with `route` + `alternatives`) and, depending on `mode`, an optional `market` block. With `mode=DELTA` the response carries the `delta` block only; pass `delta.route` verbatim to `POST /delta/v2/orders/build`. The `delta` block has the same shape as the `GET /delta/v2/prices` response — there is no `hmac` in V2.",
+        "description": "Unified V2 entry point. Returns a `delta` block (a Delta V2 price with `route` + `alternatives`) and, depending on `mode`, an optional `market` block. With `mode=DELTA` the response carries the `delta` block only; pass `delta.route` verbatim to `POST /v2/delta/orders/build`. The `delta` block has the same shape as the `GET /v2/delta/prices` response — there is no `hmac` in V2.",
         "operationId": "deltaV2Quote",
         "parameters": [
           {
@@ -163,7 +163,7 @@
                           "$ref": "#/components/schemas/PriceV2"
                         }
                       ],
-                      "description": "Delta V2 price. Present for `mode=DELTA` and `mode=ALL` (when Delta can price). Pass `delta.route` verbatim to `POST /delta/v2/orders/build`."
+                      "description": "Delta V2 price. Present for `mode=DELTA` and `mode=ALL` (when Delta can price). Pass `delta.route` verbatim to `POST /v2/delta/orders/build`."
                     },
                     "market": {
                       "type": "object",
@@ -265,10 +265,10 @@
         }
       }
     },
-    "/delta/v2/prices": {
+    "/v2/delta/prices": {
       "get": {
         "summary": "Get a Delta V2 price (same-chain or crosschain)",
-        "description": "Returns a recommended `route` plus `alternatives` (up to a few bridge options for crosschain). Pass the returned `route` and `side` verbatim to `POST /delta/v2/orders/build`.",
+        "description": "Returns a recommended `route` plus `alternatives` (up to a few bridge options for crosschain). Pass the returned `route` and `side` verbatim to `POST /v2/delta/orders/build`.",
         "operationId": "deltaV2Prices",
         "parameters": [
           { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 }, "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 8453, 42161, 43114." },
@@ -305,7 +305,7 @@
         }
       }
     },
-    "/delta/v2/prices/bridge-routes": {
+    "/v2/delta/prices/bridge-routes": {
       "get": {
         "summary": "List supported crosschain bridge routes",
         "description": "Returns the set of `(srcChainId, destChainId, tokens)` triples that the relayer can quote.",
@@ -341,7 +341,7 @@
         }
       }
     },
-    "/delta/v2/prices/bridge-protocols": {
+    "/v2/delta/prices/bridge-protocols": {
       "get": {
         "summary": "List active bridge protocols",
         "description": "Display catalogue of every bridge protocol currently active in the relayer's `BridgeApi`. Useful for rendering a bridge picker.",
@@ -359,7 +359,7 @@
                       "items": {
                         "type": "object",
                         "properties": {
-                          "protocol": { "type": "string", "description": "Stable protocol slug. Use this for `includeBridges` / `excludeBridges` filters on `GET /delta/v2/prices`." },
+                          "protocol": { "type": "string", "description": "Stable protocol slug. Use this for `includeBridges` / `excludeBridges` filters on `GET /v2/delta/prices`." },
                           "displayName": { "type": "string" },
                           "icon": { "type": "string", "description": "Absolute URL to a 1:1 SVG icon hosted on cdn.velora.xyz." }
                         }
@@ -373,7 +373,7 @@
         }
       }
     },
-    "/delta/v2/prices/strategies/{chainId}": {
+    "/v2/delta/prices/strategies/{chainId}": {
       "get": {
         "summary": "List Delta yield strategies (with APR) for a chain",
         "description": "Returns the on-chain Delta-token vaults wired for `ProductiveOrder` swaps, keyed by the underlying token address. APRs are refreshed server-side every 3 hours; `apr` is `null` when the strategy is too new to compute.",
@@ -397,7 +397,7 @@
                         "items": {
                           "type": "object",
                           "properties": {
-                            "vault": { "type": "string", "description": "ERC-4626 vault address. Pass this as `strategy` to `POST /delta/v2/orders/build` for a `ProductiveOrder`." },
+                            "vault": { "type": "string", "description": "ERC-4626 vault address. Pass this as `strategy` to `POST /v2/delta/orders/build` for a `ProductiveOrder`." },
                             "name": { "type": "string" },
                             "apr": {
                               "type": "object",
@@ -420,7 +420,7 @@
         }
       }
     },
-    "/delta/v2/prices/is-token-supported": {
+    "/v2/delta/prices/is-token-supported": {
       "get": {
         "summary": "Check whether a token is supported for Delta on a chain",
         "operationId": "deltaV2IsTokenSupported",
@@ -443,10 +443,10 @@
         }
       }
     },
-    "/delta/v2/orders/build": {
+    "/v2/delta/orders/build": {
       "post": {
         "summary": "Build a signable Delta V2 order from a route",
-        "description": "Returns EIP-712 typed data ready to sign and the order hash. Pass the unmodified `route` from `GET /delta/v2/prices`. Use `orderType` to select Standard / External / Productive / TWAP families.",
+        "description": "Returns EIP-712 typed data ready to sign and the order hash. Pass the unmodified `route` from `GET /v2/delta/prices`. Use `orderType` to select Standard / External / Productive / TWAP families.",
         "operationId": "deltaV2OrdersBuild",
         "requestBody": {
           "required": true,
@@ -469,7 +469,7 @@
         }
       }
     },
-    "/delta/v2/orders": {
+    "/v2/delta/orders": {
       "post": {
         "summary": "Submit a signed Delta V2 order",
         "description": "Validates EIP-712 signature, nonce, balance, and allowance, then enrolls the order into the sealed-bid auction.",
@@ -527,7 +527,7 @@
         }
       }
     },
-    "/delta/v2/orders/cancel": {
+    "/v2/delta/orders/cancel": {
       "post": {
         "summary": "Cancel one or more Delta V2 orders",
         "description": "Sign-and-post cancellation. Only succeeds for orders still open in the auction (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`).",
@@ -565,10 +565,10 @@
         }
       }
     },
-    "/delta/v2/orders/fillablebalance/{chainId}/{userAddress}/{tokenAddress}": {
+    "/v2/delta/orders/fillablebalance/{chainId}/{userAddress}/{tokenAddress}": {
       "get": {
         "summary": "Compute a user's fillable balance for limit orders",
-        "description": "Returns the amount of a source-token already committed to open limit orders on a chain for the given user. Use this when sizing a new limit order so it doesn't double-commit funds.\n\n`tokenAddress` is an optional trailing path segment — **omit it** (`/delta/v2/orders/fillablebalance/{chainId}/{userAddress}`) to get the fillable balance for every token with open commitments. With `tokenAddress` set, the response holds a single entry for that token (or `\"0\"` if the user has no open commitments on it).",
+        "description": "Returns the amount of a source-token already committed to open limit orders on a chain for the given user. Use this when sizing a new limit order so it doesn't double-commit funds.\n\n`tokenAddress` is an optional trailing path segment — **omit it** (`/v2/delta/orders/fillablebalance/{chainId}/{userAddress}`) to get the fillable balance for every token with open commitments. With `tokenAddress` set, the response holds a single entry for that token (or `\"0\"` if the user has no open commitments on it).",
         "operationId": "deltaV2OrdersFillableBalance",
         "parameters": [
           { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } },
@@ -594,7 +594,7 @@
         }
       }
     },
-    "/delta/v2/orders/{orderId}": {
+    "/v2/delta/orders/{orderId}": {
       "get": {
         "summary": "Get a Delta V2 order by ID",
         "operationId": "deltaV2OrderById",
@@ -614,12 +614,12 @@
         }
       }
     },
-    "/delta/v2/orders/hash/{hash}": {
+    "/v2/delta/orders/hash/{hash}": {
       "get": {
         "summary": "Get a Delta V2 order by EIP-712 hash",
         "operationId": "deltaV2OrderByHash",
         "parameters": [
-          { "name": "hash", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Order hash returned by `POST /delta/v2/orders/build`." }
+          { "name": "hash", "in": "path", "required": true, "schema": { "type": "string" }, "description": "Order hash returned by `POST /v2/delta/orders/build`." }
         ],
         "responses": {
           "200": {
@@ -634,10 +634,10 @@
         }
       }
     },
-    "/delta/v2/agents/list/{chainId}": {
+    "/v2/delta/agents/list/{chainId}": {
       "get": {
         "summary": "List active agents competing in the auction for a chain",
-        "description": "Use the names returned here to filter pricing via the `includeAgents` / `excludeAgents` params on `GET /delta/v2/prices`.",
+        "description": "Use the names returned here to filter pricing via the `includeAgents` / `excludeAgents` params on `GET /v2/delta/prices`.",
         "operationId": "deltaV2AgentsList",
         "parameters": [
           { "name": "chainId", "in": "path", "required": true, "schema": { "type": "integer", "example": 1 } }
@@ -740,7 +740,7 @@
         "required": ["route", "owner", "deadline"],
         "properties": {
           "side": { "type": "string", "enum": ["SELL", "BUY"], "default": "SELL" },
-          "route": { "$ref": "#/components/schemas/Route", "description": "Pass the unmodified `route` from `GET /delta/v2/prices`. The chain ID is derived from the route." },
+          "route": { "$ref": "#/components/schemas/Route", "description": "Pass the unmodified `route` from `GET /v2/delta/prices`. The chain ID is derived from the route." },
           "owner": { "type": "string" },
           "beneficiary": { "type": "string", "description": "Defaults to `owner`." },
           "deadline": { "type": "integer", "description": "Required. Unix seconds after which the order is unfillable." },
@@ -793,7 +793,7 @@
         "required": ["chainId", "order", "signature", "partner"],
         "properties": {
           "chainId": { "type": "integer" },
-          "order": { "type": "object", "description": "The `toSign.value` returned by `POST /delta/v2/orders/build`, sent verbatim." },
+          "order": { "type": "object", "description": "The `toSign.value` returned by `POST /v2/delta/orders/build`, sent verbatim." },
           "signature": { "type": "string", "description": "EIP-712 signature over `order`." },
           "type": { "type": "string", "enum": ["MARKET", "LIMIT"], "default": "MARKET" },
           "partner": { "type": "string", "example": "my-app-name" },

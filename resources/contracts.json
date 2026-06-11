@@ -39,6 +39,9 @@
     "130": {
       "name": "Unichain",
       "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
+      "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
+      "deltaWrappedNative": "0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742",
+      "augustusRFQ": "0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241",
       "feeClaimer": "0x00700052c0608F670705380a4900e0a8080010CC"    },
     "137": {
       "name": "Polygon",

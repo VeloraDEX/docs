@@ -41,9 +41,9 @@ Returns `recommendedMode: "DELTA"` with the reasoning.
 The response has `responseType: "delta"` and the raw quote under `result.raw`, with `agentHints` spelling out the completion path.
 
 3. Complete the order outside the MCP server, exactly as the hints say:
-   - Pass the quote's route **verbatim** to [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build), which returns unsigned EIP-712 typed data.
+   - Pass the quote's route **verbatim** to [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build), which returns unsigned EIP-712 typed data.
    - Have the user's wallet sign that typed data. The MCP server never signs.
-   - Submit the signed order via [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) and track it by order ID.
+   - Submit the signed order via [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) and track it by order ID.
 
 Preserve the `delta` payload and its `hmac` exactly between steps. Any mutation invalidates the order.
 

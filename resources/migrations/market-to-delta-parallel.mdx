@@ -16,7 +16,7 @@ Delta intents are gasless and MEV-protected: users sign once, solvers compete to
 
 1. Switch from `GET /prices` to `GET /v2/quote?mode=ALL`.
 2. Branch on the response: if `response.delta` exists, take the gasless path; else fall back to `response.market` and the existing calldata flow (it's the same shape your code already handles).
-3. For the Delta path, call `POST /delta/v2/orders/build`, sign the EIP-712 typed data, then `POST /delta/v2/orders`.
+3. For the Delta path, call `POST /v2/delta/orders/build`, sign the EIP-712 typed data, then `POST /v2/delta/orders`.
 
 ## End-state check
 

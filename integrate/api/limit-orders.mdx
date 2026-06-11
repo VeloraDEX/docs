@@ -18,10 +18,10 @@ For the conceptual model (maker, expiry, how a limit order differs from a swap o
     Approve the Delta contract `spender` on-chain for the source token. Limit orders use approval, not a permit; see [Approvals and permit](/resources/approvals). Native source skips this; see [Native ETH (dETH)](/delta/native-eth).
   </Step>
   <Step title="Build with a limit price">
-    `POST /delta/v2/orders/build` with the `route` verbatim, `owner`, a `deadline`, and `limitAmount` (your target output for SELL, or max input for BUY). See [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build).
+    `POST /v2/delta/orders/build` with the `route` verbatim, `owner`, a `deadline`, and `limitAmount` (your target output for SELL, or max input for BUY). See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).
   </Step>
   <Step title="Sign and submit as LIMIT">
-    The user signs `toSign`; `POST /delta/v2/orders` with `type: "LIMIT"`. See [`POST /delta/v2/orders`](/api-reference/delta/orders-submit).
+    The user signs `toSign`; `POST /v2/delta/orders` with `type: "LIMIT"`. See [`POST /v2/delta/orders`](/api-reference/delta/orders-submit).
   </Step>
   <Step title="Poll, or drive your UI from the order list">
     A limit order rests `ACTIVE` until a solver can meet the price, so poll on a relaxed interval or list the user's open orders.
@@ -37,7 +37,7 @@ Quote exactly as for a [Delta swap](/integrate/api/delta-swap#1-quote) (`mode=DE
 Pass the `delta.route` verbatim and add `limitAmount`. For a SELL order it's the minimum destination amount you'll accept (your limit price). Every Delta order requires a `deadline` (unix seconds); past it the order is unfillable.
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/build' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build' \
   -H 'Content-Type: application/json' \
   -d '{
     "route": { "...": "the delta.route from the quote, unchanged" },
@@ -55,7 +55,7 @@ Setting `limitAmount` above the quoted output is what makes this a limit order r
 The user signs `toSign` (ERC-2098 compact signature). Submit with `type: "LIMIT"`. That field is what marks the order as a resting limit order instead of an immediate fill:
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders' \
   -H 'Content-Type: application/json' \
   -d '{
     "chainId": 1,
@@ -71,7 +71,7 @@ curl -X POST 'https://api.velora.xyz/delta/v2/orders' \
 List a user's open limit orders by filtering on `type`:
 
 ```bash
-curl -G 'https://api.velora.xyz/delta/v2/orders' \
+curl -G 'https://api.velora.xyz/v2/delta/orders' \
   --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
   --data-urlencode 'chainId=1' \
   --data-urlencode 'type=LIMIT' \
@@ -79,17 +79,17 @@ curl -G 'https://api.velora.xyz/delta/v2/orders' \
   --data-urlencode 'limit=100'
 ```
 
-To check one order, `GET /delta/v2/orders/{orderId}`, or open it in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}` for a human-readable status view. That's useful for a resting limit order that may sit `ACTIVE` for a while.
+To check one order, `GET /v2/delta/orders/{orderId}`, or open it in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}` for a human-readable status view. That's useful for a resting limit order that may sit `ACTIVE` for a while.
 
 Cancelling is gasless: the user signs a cancellation payload and you post the order IDs. It only succeeds while the order is still open.
 
 ```bash
-curl -X POST 'https://api.velora.xyz/delta/v2/orders/cancel' \
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/cancel' \
   -H 'Content-Type: application/json' \
   -d '{ "orderIds": ["..."], "signature": "0x..." }'
 ```
 
-See [`GET /delta/v2/orders`](/api-reference/delta/orders-list) and [`POST /delta/v2/orders/cancel`](/api-reference/delta/orders-cancel).
+See [`GET /v2/delta/orders`](/api-reference/delta/orders-list) and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
 
 ## Partner fee
 

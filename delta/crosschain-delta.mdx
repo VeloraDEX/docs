@@ -29,11 +29,11 @@ sequenceDiagram
   Bridge-->>API: estimated time, fees, destination amount
   API-->>DApp: delta block<br/>(route.bridge populated)
 
-  DApp->>API: POST /delta/v2/orders/build<br/>(route from prices)
+  DApp->>API: POST /v2/delta/orders/build<br/>(route from prices)
   API-->>DApp: toSign (EIP-712)<br/>(destination chain + bridge params)
   DApp->>User: Request signature
   User-->>DApp: Signed intent
-  DApp->>API: POST /delta/v2/orders
+  DApp->>API: POST /v2/delta/orders
   API->>OS: Persist signed order
 
   rect rgb(232, 245, 233)
@@ -59,7 +59,7 @@ Use crosschain Delta when:
 
 - The user starts on one supported EVM chain and wants output on another.
 - You want one user signature instead of a manual swap, bridge, and destination-chain claim flow.
-- Your integration already uses Delta orders and can pass the `delta.route` from the quote response through to `POST /delta/v2/orders/build` unchanged.
+- Your integration already uses Delta orders and can pass the `delta.route` from the quote response through to `POST /v2/delta/orders/build` unchanged.
 - You can show bridge-specific timing clearly: destination delivery is asynchronous after source-chain settlement.
 
 Keep same-chain Delta for routes where `chainId` and `destChainId` are the same or where no supported bridge route is available.
@@ -70,7 +70,7 @@ The integration shape stays close to the standard [Delta flow](/delta/how-it-wor
 
 - Add `destChainId` to `GET /v2/quote`. `chainId` remains the source chain.
 - When `destChainId` is set, the `delta` block's `route.bridge` is populated and `delta.alternatives` lists other bridge routes.
-- Treat the returned `delta.route` as the source of truth. Pass it verbatim into `POST /delta/v2/orders/build`.
+- Treat the returned `delta.route` as the source of truth. Pass it verbatim into `POST /v2/delta/orders/build`.
 - Read `delta.route.bridge` for the selected bridge route and `delta.route.fees` for gas and bridge fees.
 - Use `delta.alternatives` when you want to show other bridge routes.
 - After source-chain settlement, expect an intermediate `BRIDGING` state before `COMPLETED`.
@@ -103,13 +103,13 @@ Then use the same build, sign, and submit calls as a same-chain Delta order:
 
 <Steps>
   <Step title="Build the order">
-    Send the returned `delta.route` in `POST /delta/v2/orders/build`, with `owner` set to the user's address.
+    Send the returned `delta.route` in `POST /v2/delta/orders/build`, with `owner` set to the user's address.
   </Step>
   <Step title="Request the signature">
     Ask the user to sign the returned `toSign` typed data. It includes the destination chain and bridge parameters.
   </Step>
   <Step title="Submit and poll">
-    Submit the order with `POST /delta/v2/orders`, then poll `GET /delta/v2/orders/{orderId}` until the status reaches a terminal state.
+    Submit the order with `POST /v2/delta/orders`, then poll `GET /v2/delta/orders/{orderId}` until the status reaches a terminal state.
   </Step>
 </Steps>
 

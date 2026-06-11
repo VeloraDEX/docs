@@ -30,7 +30,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | API result | Next action | Preserve | Do not |
 |---|---|---|---|
-| Top-level response field is `delta` | Continue the Delta order flow with [`POST /delta/v2/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
+| Top-level response field is `delta` | Continue the Delta order flow with [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
 | Top-level response field is `market` | Continue the Market transaction flow with [`POST /transactions/:chainId`](/api-reference/market/transactions). | Pass the returned `market` object into the transaction build step. | Do not try to submit it as a Delta order. |
 | Response has neither `delta` nor `market` | Stop the flow and surface the no-route result. | Keep the user's original tokens, chain, amount, and mode for retry suggestions. | Do not fabricate a quote, route, gas estimate, or output amount. |
 | Quote expired, HMAC invalid, or build rejected | Requote, then rebuild from the fresh response. | Use the newest `delta`, `hmac`, or `market` object. | Do not reuse stale quote payloads. |
@@ -53,9 +53,9 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | Flow | User signs | User pays gas | Submit with | Track with |
 |---|---|---|---|---|
 | Market Swap | On-chain transaction | Yes | Wallet transaction send | Transaction hash |
-| Delta Swap | EIP-712 typed data | No | [`POST /delta/v2/orders`](/api-reference/delta/orders-submit) | Delta order ID and status |
-| Delta `LIMIT` order | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` with `order=toSign.value`, `signature`, `type=LIMIT`, `chainId`, and `partner` | Order ID and fill status |
-| Delta TWAP | EIP-712 typed data from `POST /delta/v2/orders/build` | No at order creation | `POST /delta/v2/orders` after signing the built `TWAPOrder` or `TWAPBuyOrder` payload | Slice execution and order status |
+| Delta Swap | EIP-712 typed data | No | [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) | Delta order ID and status |
+| Delta `LIMIT` order | EIP-712 typed data from `POST /v2/delta/orders/build` | No at order creation | `POST /v2/delta/orders` with `order=toSign.value`, `signature`, `type=LIMIT`, `chainId`, and `partner` | Order ID and fill status |
+| Delta TWAP | EIP-712 typed data from `POST /v2/delta/orders/build` | No at order creation | `POST /v2/delta/orders` after signing the built `TWAPOrder` or `TWAPBuyOrder` payload | Slice execution and order status |
 | AugustusRFQ OTC flow | RFQ order or fill transaction, depending on the integration | Depends on fill path | AugustusRFQ flow | RFQ order/fill state |
 
 ## Order type → required details
@@ -72,10 +72,10 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | Advanced order | API path | Agent rule |
 |---|---|---|
-| Limit order | `GET /delta/v2/prices` → `POST /delta/v2/orders/build` → user signs `toSign` → `POST /delta/v2/orders` with `type=LIMIT`. | Pass `route` and `toSign.value` verbatim. Use `limitAmount` when the target-price constraint needs an explicit amount override. |
-| Sell TWAP | `GET /delta/v2/prices` for one source slice → `POST /delta/v2/orders/build` with `orderType=TWAPOrder`, `interval`, `numSlices`, and `totalSrcAmount`. | Preserve total source amount and split source across slices. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`. |
-| Buy TWAP | `GET /delta/v2/prices` for one destination slice → `POST /delta/v2/orders/build` with `orderType=TWAPBuyOrder`, `interval`, `numSlices`, `totalDestAmount`, and `maxSrcAmount`. | Preserve total destination amount, split destination across slices, and cap source spend. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`. |
-| Read status | `GET /delta/v2/orders/{orderId}`, `GET /delta/v2/orders/hash/{hash}`, or paginated `GET /delta/v2/orders`. | Narrow on `type` and `onChainOrderType`: `LIMIT`, `TWAPOrder`, `TWAPBuyOrder`, `FillableOrder`, etc. |
+| Limit order | `GET /v2/delta/prices` → `POST /v2/delta/orders/build` → user signs `toSign` → `POST /v2/delta/orders` with `type=LIMIT`. | Pass `route` and `toSign.value` verbatim. Use `limitAmount` when the target-price constraint needs an explicit amount override. |
+| Sell TWAP | `GET /v2/delta/prices` for one source slice → `POST /v2/delta/orders/build` with `orderType=TWAPOrder`, `interval`, `numSlices`, and `totalSrcAmount`. | Preserve total source amount and split source across slices. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`. |
+| Buy TWAP | `GET /v2/delta/prices` for one destination slice → `POST /v2/delta/orders/build` with `orderType=TWAPBuyOrder`, `interval`, `numSlices`, `totalDestAmount`, and `maxSrcAmount`. | Preserve total destination amount, split destination across slices, and cap source spend. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`. |
+| Read status | `GET /v2/delta/orders/{orderId}`, `GET /v2/delta/orders/hash/{hash}`, or paginated `GET /v2/delta/orders`. | Narrow on `type` and `onChainOrderType`: `LIMIT`, `TWAPOrder`, `TWAPBuyOrder`, `FillableOrder`, etc. |
 
 ## Missing information → ask or proceed
 

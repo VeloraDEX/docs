@@ -50,7 +50,7 @@ Returns `{ modeRequested, responseType, raw }` where `responseType` is `"delta"`
 
 Agent rules:
 - Branch on `responseType`, never on what you requested. `mode=ALL` returns either a Delta or a Market response, never both.
-- A Delta quote is completed through the Delta path (`POST /delta/v2/orders/build`, sign externally, `POST /delta/v2/orders`) — not through `velora_build_transaction`. The quote's `agentHints` repeat these steps.
+- A Delta quote is completed through the Delta path (`POST /v2/delta/orders/build`, sign externally, `POST /v2/delta/orders`) — not through `velora_build_transaction`. The quote's `agentHints` repeat these steps.
 - Preserve the `delta` payload and its `hmac` exactly. Never normalize, reconstruct, or mutate it.
 - Under `mode=ALL`, a Delta pricing failure falls back to Market and surfaces a structured `fallbackReason` in `warnings`.
 
