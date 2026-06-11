@@ -71,6 +71,10 @@ Market only. Pass `includeDEXS` or `excludeDEXS` to [`GET /prices`](/api-referen
 
 A signed Delta order fills only when a solver can hit your limit price and net the spread. If the market hasn't reached your price, it stays pending; if it expires past the `deadline`, it transitions to `EXPIRED`; if your token allowance to the Delta contract was revoked or balance moved, it transitions to `FAILED` post-acceptance. Confirm your approval points at the Delta contract per [Token approvals for agents](/for-agents/token-approvals).
 
+### Does a failed Delta order cost anything?
+
+No. Whether the order expires, is rejected, or settlement reverts on-chain, you pay no gas and your funds stay in your wallet. On Market, by contrast, a reverted swap still costs you the gas of the failed call. Side-by-side breakdown: [Trading modes](/integrate/trading-modes).
+
 ### How do I cancel a pending order?
 
 How you cancel depends on the order type. Non-ETH Delta orders cancel off-chain via signed typed data, so cancellation costs no gas. ETH-source Delta orders cancel on-chain via `withdrawAndCancel`, a single tx that withdraws the ETH and invalidates the order. OTC orders also cancel on-chain.
