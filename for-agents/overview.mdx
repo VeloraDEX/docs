@@ -58,7 +58,7 @@ That lets an agent branch deterministically instead of guessing which route was 
 - Use [Five-call recipe](/for-agents/five-call-recipe) to implement the canonical trade loop.
 - Use [Prompt library](/for-agents/prompt-library) to generate working integrations with AI coding agents.
 - Use [Trading modes](/integrate/trading-modes) to understand `mode=DELTA`, `mode=MARKET`, and `mode=ALL`.
-- Use [Limit orders](/overview/product-stack/limit-orders) and [TWAP](/overview/product-stack/twap) when the user wants delayed execution, target prices, or time-sliced trades. For API-based agents, build these flows through `/delta/v2/prices`, `/delta/v2/orders/build`, `/delta/v2/orders`, and Delta order read endpoints.
+- Use [Limit orders](/overview/product-stack/limit-orders) and [TWAP](/overview/product-stack/twap) when the user wants delayed execution, target prices, or time-sliced trades. For API-based agents, build these flows through `/v2/delta/prices`, `/v2/delta/orders/build`, `/v2/delta/orders`, and Delta order read endpoints.
 
 ## Guardrails
 

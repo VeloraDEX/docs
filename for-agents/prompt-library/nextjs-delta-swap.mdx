@@ -19,13 +19,13 @@ You are working in a Next.js 14 App Router project with Wagmi v2 and Viem alread
 Build a `/swap-gasless` page that lets the user place a Velora Delta intent for any ERC-20 → any ERC-20.
 
 Requirements:
-- Use the Velora Delta V2 REST API at `https://api.velora.xyz`. Endpoints: `GET /v2/quote` (with `mode=DELTA`), `POST /delta/v2/orders/build`, `POST /delta/v2/orders`, `GET /delta/v2/orders/{orderId}`.
+- Use the Velora Delta V2 REST API at `https://api.velora.xyz`. Endpoints: `GET /v2/quote` (with `mode=DELTA`), `POST /v2/delta/orders/build`, `POST /v2/delta/orders`, `GET /v2/delta/orders/{orderId}`.
 - Always set `partner` to the host app's partner identifier on every quote call (`my-app-name` is only a placeholder).
 - For the native ETH placeholder, use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`.
-- Pass `slippage` (basis points) to `POST /delta/v2/orders/build`; it defaults to 100 (1%) if omitted.
-- Pass the `delta.route` returned by `/v2/quote` verbatim to `/delta/v2/orders/build`, with `owner` set to the user address. Do not normalize, sort, or re-stringify it.
-- Use Viem's `signTypedData` to sign the `toSign` payload returned by `/delta/v2/orders/build`. Then submit to `/delta/v2/orders` with `order` set to `toSign.value`, the `signature`, `chainId`, and `partner`.
-- Poll `GET /delta/v2/orders/{orderId}` and display lifecycle states (`PENDING` → `COMPLETED` / `FAILED`).
+- Pass `slippage` (basis points) to `POST /v2/delta/orders/build`; it defaults to 100 (1%) if omitted.
+- Pass the `delta.route` returned by `/v2/quote` verbatim to `/v2/delta/orders/build`, with `owner` set to the user address. Do not normalize, sort, or re-stringify it.
+- Use Viem's `signTypedData` to sign the `toSign` payload returned by `/v2/delta/orders/build`. Then submit to `/v2/delta/orders` with `order` set to `toSign.value`, the `signature`, `chainId`, and `partner`.
+- Poll `GET /v2/delta/orders/{orderId}` and display lifecycle states (`PENDING` → `COMPLETED` / `FAILED`).
 - Token approvals must be granted to the **Delta contract** (not Augustus). The address is per-chain: fetch from /resources/chains-and-contracts, use the `delta.spender` from the quote response, or read it from the typed-data `domain.verifyingContract`.
 
 Reference these docs and follow them exactly:
