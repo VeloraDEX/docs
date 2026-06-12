@@ -73,8 +73,8 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | Advanced order | API path | Agent rule |
 |---|---|---|
 | Limit order | `GET /v2/delta/prices` → `POST /v2/delta/orders/build` → user signs `toSign` → `POST /v2/delta/orders` with `type=LIMIT`. | Pass `route` and `toSign.value` verbatim. Use `limitAmount` when the target-price constraint needs an explicit amount override. |
-| Sell TWAP | `GET /v2/delta/prices` for one source slice → `POST /v2/delta/orders/build` with `orderType=TWAPOrder`, `interval`, `numSlices`, and `totalSrcAmount`. | Preserve total source amount and split source across slices. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`. |
-| Buy TWAP | `GET /v2/delta/prices` for one destination slice → `POST /v2/delta/orders/build` with `orderType=TWAPBuyOrder`, `interval`, `numSlices`, `totalDestAmount`, and `maxSrcAmount`. | Preserve total destination amount, split destination across slices, and cap source spend. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`. |
+| Sell TWAP | `GET /v2/delta/prices` for one source slice → `POST /v2/delta/orders/build` with `orderType=TWAPOrder`, `interval`, `numSlices`, and `totalSrcAmount`. | Preserve total source amount and split source across slices. `route.origin.input.amount` must equal `floor(totalSrcAmount / numSlices)`. `deadline` must be at least `numSlices * interval` seconds in the future. |
+| Buy TWAP | `GET /v2/delta/prices` for one destination slice → `POST /v2/delta/orders/build` with `orderType=TWAPBuyOrder`, `interval`, `numSlices`, `totalDestAmount`, and `maxSrcAmount`. | Preserve total destination amount, split destination across slices, and cap source spend. `route.origin.output.amount` must equal `floor(totalDestAmount / numSlices)`. `deadline` must be at least `numSlices * interval` seconds in the future. |
 | Read status | `GET /v2/delta/orders/{orderId}`, `GET /v2/delta/orders/hash/{hash}`, or paginated `GET /v2/delta/orders`. | Narrow on `type` and `onChainOrderType`: `LIMIT`, `TWAPOrder`, `TWAPBuyOrder`, `FillableOrder`, etc. |
 
 ## Missing information → ask or proceed

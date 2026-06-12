@@ -126,6 +126,7 @@ Use a Delta TWAP when the user wants one signed order to split execution across 
    - include interval and numSlices
    - include totalSrcAmount for TWAPOrder
    - include totalDestAmount and maxSrcAmount for TWAPBuyOrder
+   - set deadline at least numSlices * interval seconds in the future
 4. Ask the user to sign the returned toSign EIP-712 payload
 5. POST /v2/delta/orders with order=toSign.value, signature, chainId, and partner
 6. Track with GET /v2/delta/orders/{orderId}, GET /v2/delta/orders/hash/{hash}, or GET /v2/delta/orders
