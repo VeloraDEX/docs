@@ -27,11 +27,30 @@ For a side-by-side breakdown of when to pick `mode=DELTA`, `mode=MARKET`, or `mo
 The basic flow is two calls (get a price, build a transaction), then your user signs and submits it:
 
 ```bash
-# 1. Get a price quote
-curl "https://api.velora.xyz/prices?...&partner=my-app-name"
+# 1. Get a price quote (returns a priceRoute)
+curl -G 'https://api.velora.xyz/prices' \
+  --data-urlencode 'srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' \
+  --data-urlencode 'destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48' \
+  --data-urlencode 'amount=1000000000000000000' \
+  --data-urlencode 'srcDecimals=18' \
+  --data-urlencode 'destDecimals=6' \
+  --data-urlencode 'side=SELL' \
+  --data-urlencode 'network=1' \
+  --data-urlencode 'userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045' \
+  --data-urlencode 'partner=my-app-name' \
+  --data-urlencode 'version=6.2' \
+  -o price.json
 
-# 2. Build the transaction
-curl -X POST "https://api.velora.xyz/transactions/:chainId" -d @price.json
+# 2. Build the transaction: wrap the priceRoute verbatim with the swap params
+jq '{priceRoute,
+     srcToken: .priceRoute.srcToken,
+     destToken: .priceRoute.destToken,
+     srcAmount: .priceRoute.srcAmount,
+     slippage: 50,
+     userAddress: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+     partner: "my-app-name"}' price.json > tx.json
+curl -X POST 'https://api.velora.xyz/transactions/1' \
+  -H 'Content-Type: application/json' -d @tx.json
 
 # 3. User signs and submits the transaction with their wallet
 ```

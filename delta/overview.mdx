@@ -29,15 +29,34 @@ The full lifecycle is four calls (quote, build, sign, submit), then you poll for
 
 ```bash
 # 1. Get a Delta quote (returns a delta block: route + alternatives + spender)
-curl "https://api.velora.xyz/v2/quote?...&mode=DELTA&partner=my-app-name"
+curl -s "https://api.velora.xyz/v2/quote" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=DELTA" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name" \
+  -G -o quote.json
 
-# 2. Build the order from the route (returns toSign + orderHash)
-curl -X POST "https://api.velora.xyz/v2/delta/orders/build" -d @build.json
+# 2. Build the order from the quote's delta.route (returns toSign + orderHash)
+jq --argjson deadline "$(($(date +%s) + 1800))" \
+   '{route: .delta.route,
+     owner: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+     deadline: $deadline,
+     partner: "my-app-name"}' quote.json > build.json
+curl -X POST "https://api.velora.xyz/v2/delta/orders/build" \
+  -H "Content-Type: application/json" -d @build.json
 
 # 3. Sign the returned toSign with the user's wallet (ERC-2098 compact)
+#    and write the order + signature to signed.json
 
 # 4. Submit the signed order
-curl -X POST "https://api.velora.xyz/v2/delta/orders" -d @signed.json
+curl -X POST "https://api.velora.xyz/v2/delta/orders" \
+  -H "Content-Type: application/json" -d @signed.json
 
 # 5. Poll status
 curl "https://api.velora.xyz/v2/delta/orders/{orderId}"
