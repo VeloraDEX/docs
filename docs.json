@@ -317,6 +317,15 @@
             ]
           },
           {
+            "group": "Market makers",
+            "pages": [
+              "resources/market-makers/index",
+              "resources/market-makers/testing",
+              "resources/market-makers/api-specification",
+              "resources/market-makers/order-structure"
+            ]
+          },
+          {
             "group": "Migrations",
             "pages": [
               "resources/migrations/index",
@@ -381,6 +390,17 @@
     { "source": "/intro-to-velora/velora-overview/protocol-revenue", "destination": "/", "permanent": true },
     { "source": "/api/augustusrfq/api-references/nft", "destination": "/api-reference/rfq/overview", "permanent": true },
     { "source": "/api/augustusrfq/api-references/nft/:slug*", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/augustusrfq", "destination": "/resources/market-makers", "permanent": true },
+    { "source": "/api/augustusrfq/introduction", "destination": "/resources/market-makers", "permanent": true },
+    { "source": "/api/augustusrfq/augustusrfq-api-specification", "destination": "/resources/market-makers/api-specification", "permanent": true },
+    { "source": "/api/augustusrfq/on-chain-data-structure", "destination": "/resources/market-makers/order-structure", "permanent": true },
+    { "source": "/api/augustusrfq/data-structure-in-our-centralized-system", "destination": "/resources/market-makers/order-structure", "permanent": true },
+    { "source": "/api/augustusrfq/contracts", "destination": "/resources/chains-and-contracts", "permanent": true },
+    { "source": "/api/augustusrfq/api-references", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/augustusrfq/api-references/fungible-tokens", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/augustusrfq/api-references/fungible-tokens/:slug*", "destination": "/api-reference/rfq/overview", "permanent": true },
+    { "source": "/api/augustusrfq/sdk", "destination": "/sdk/products/otc", "permanent": true },
+    { "source": "/api/augustusrfq/sdk/:slug*", "destination": "/sdk/products/otc", "permanent": true },
     { "source": "/api/velora-api/velora-market-api/master/api-v5", "destination": "/api-reference/market/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/velora-delta", "destination": "/delta/overview", "permanent": true },
     { "source": "/intro-to-velora/protocols/aggregation-protocol", "destination": "/market/overview", "permanent": true },

@@ -1,0 +1,123 @@
+---
+title: "Order structure and signing"
+description: "How to build and sign an AugustusRFQ order for Velora: order fields, nonceAndMeta encoding, the EIP-712 domain, and off-chain tracking fields."
+keywords: ["AugustusRFQ order", "EIP-712 signature", "nonceAndMeta", "order structure", "RFQ order format", "EIP-1271"]
+---
+
+Every trade that settles through [AugustusRFQ](/resources/chains-and-contracts#addresses-by-chain) uses the same object: a maker signs an order off-chain, then the AugustusRFQ contract verifies that signature and transfers tokens on-chain. Market-maker firm quotes and bilateral OTC deals use this same shape.
+
+For market makers, the important detail is that the signed order names a Velora execution contract as `taker`, while `nonceAndMeta` embeds the actual user address. That lets Velora execute through its router without letting another user steal the quote.
+
+## What you sign
+
+The EIP-712 hash covers the eight order fields below: who gives which token, who may fill, the amounts, expiry, and `nonceAndMeta`. The `signature` is returned alongside those fields after signing. Velora may store extra metadata after the order is posted, but that metadata is not part of the EIP-712 hash.
+
+## On-chain order
+
+```json
+{
+  "maker": "0x05182E579FDfCf69E4390c3411D8FeA1fb6467cf",
+  "taker": "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57",
+  "nonceAndMeta": "7433034152904838547212883274543254857465784035140417181410394112",
+  "expiry": 0,
+  "makerAsset": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+  "takerAsset": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+  "makerAmount": "10000000000000000",
+  "takerAmount": "7775870000000000",
+  "signature": "0x43de8dbc8228594171d0ed3e623ca0ab5c24f46bf0575800624ae56723712f807ecaf7dc8edfcf0d4517f80f11bf016bde0a9a20e243eea2bb32e55eadbb6b0d1b"
+}
+```
+
+- `maker` — the order's owner: the account swapping `makerAsset` for `takerAsset`. This account must hold enough `makerAsset` and approve AugustusRFQ, not Augustus v6.2, before the order can settle.
+- `taker` — who may fill the order on-chain. With the zero address, anybody can fill; with any other address, the contract requires `msg.sender == taker`. In market-maker flows this is a Velora execution contract, and the real user is enforced through `nonceAndMeta` instead.
+- `nonceAndMeta` — a `uint256` combining a nonce (which makes the order unique) with metadata; see [below](#the-nonceandmeta-field).
+- `expiry` — Unix timestamp in seconds after which the order is unfillable. `0` means the order never expires.
+- `makerAsset` — address of the ERC-20 token the maker sells.
+- `takerAsset` — address of the ERC-20 token the maker buys.
+- `makerAmount` — amount of `makerAsset` the maker gives.
+- `takerAmount` — amount of `takerAsset` the maker receives in exchange.
+- `signature` — the maker's EIP-712 signature over the eight order fields above, excluding `signature` itself.
+
+The contract also settles ERC-721 and ERC-1155 orders through a variant of this structure with packed asset fields, but market making on Velora uses ERC-20 orders only.
+
+## EIP-712 signing
+
+The order is hashed as EIP-712 typed data. Use this domain:
+
+| Domain field | Value |
+|---|---|
+| `name` | `"AUGUSTUS RFQ"` |
+| `version` | `"1"` |
+| `chainId` | The chain where the order will settle |
+| `verifyingContract` | That chain's AugustusRFQ address |
+
+The contract accepts two signature types at settlement:
+
+- An EOA signature: the maker signs the typed data with its private key (`eth_signTypedData`).
+- An EIP-1271 signature: the maker is a smart contract, and AugustusRFQ calls its `isValidSignature` to verify the bytes. How those bytes are produced depends entirely on your contract.
+
+For EOA examples, the [Velora SDK](/sdk/products/otc) wraps build → sign → post, and the [agent prompt library](/for-agents/prompt-library/rfq-otc-flow) has a self-contained TypeScript flow.
+
+## The nonceAndMeta field
+
+On-chain, `nonceAndMeta` only has to make the order hash unique. In Velora's market-maker flow, it also binds the firm quote to the actual user.
+
+The lower 160 bits carry the user address. The upper bits carry random or unpredictable data, which makes the order unique:
+
+```text
+nonceAndMeta = userAddress + (randomInt << 160)
+```
+
+Velora's API constructs the random part from integers up to 2^53 − 1. Firm quotes from market makers may use any random integer below 2^96.
+
+Velora's execution contracts extract the embedded address and verify it matches the user actually swapping. An order quoted for one user cannot be filled on behalf of another. The same check also makes blacklisting meaningful: requesting a firm quote burns a real user address, not just an anonymous routing attempt.
+
+## Off-chain representation
+
+When an order is posted to Velora's API, Velora stores the signed order plus tracking data: the maker's live balance and allowance, the decoded counterparty, and the order's lifecycle state.
+
+```json
+{
+  "expiry": 0,
+  "createdAt": 1661165141,
+  "updatedAt": 1661165141,
+  "transactionHash": null,
+  "chainId": 137,
+  "nonceAndMeta": "7433034152904838547212883274543254857465784035140417181410394112",
+  "maker": "0x05182e579fdfcf69e4390c3411d8fea1fb6467cf",
+  "taker": "0xdef171fe48cf0115b1d80b88dc8eab59176fee57",
+  "takerFromMeta": "0x0000000000000000000000000000000000000000",
+  "makerAsset": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+  "takerAsset": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
+  "makerAmount": "10000000000000000",
+  "fillableBalance": "10000000000000000",
+  "swappableBalance": "10000000000000000",
+  "makerBalance": "10000000000000000",
+  "takerAmount": "7775870000000000",
+  "signature": "0x43dd8dbc8228594171d0ed3e633ca0eb5c24f46bf0575100623ae56723712f807ecaf7dc8edfcf0d4517f80f11bf016bde0a9a20e243eea2bb32e55eadbb6b0d1b",
+  "orderHash": "0xdef400fd95d028d8caaba2c4887d2694563e0bc7f73c17d747feac2e24ed411d",
+  "permitMakerAsset": null,
+  "type": "LIMIT",
+  "state": "PENDING"
+}
+```
+
+The fields beyond the signed on-chain order:
+
+- `orderHash` — the EIP-712 hash of the on-chain order; the order's unique ID, used to fetch, fill, and cancel it.
+- `takerFromMeta` — the counterparty address decoded from `nonceAndMeta`. The zero address means the order wasn't restricted to a counterparty.
+- `fillableBalance` — the amount still unfilled. When it differs from `makerAmount`, the order has been partially filled.
+- `swappableBalance` — the amount that can actually be filled right now.
+- `makerBalance` — the maximum the maker can currently cover after considering balance and allowance.
+- `permitMakerAsset` — always `null` for now; reserved for a future permit flow.
+- `type` — `P2P` when `takerFromMeta` names a counterparty, `LIMIT` when it's the zero address and anyone can fill. Despite the legacy value name, these are AugustusRFQ orders; on Velora today, [Limit Orders](/api-reference/delta/overview) are a Delta product.
+- `state` — the order's lifecycle state. The states and their meaning are documented in the [OTC API overview](/api-reference/rfq/overview#order-states).
+
+Only the original order fields and `signature` are needed for settlement. The additional fields help clients decide whether an order is still usable before they try to fill it.
+
+## Related pages
+
+- [Market making on Velora](/resources/market-makers) — how the firm-quote flow uses these orders.
+- [Market maker API specification](/resources/market-makers/api-specification) — the `POST /firm` endpoint that returns a signed order.
+- [OTC API overview](/api-reference/rfq/overview) — posting, filling, and cancelling orders as a taker or maker.
+- [Chains & contracts](/resources/chains-and-contracts#addresses-by-chain) — AugustusRFQ addresses per chain.

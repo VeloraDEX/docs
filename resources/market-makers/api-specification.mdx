@@ -1,0 +1,293 @@
+---
+title: "Market maker API specification"
+description: "The chain-scoped market maker API Velora consumes: token and pair listings, a bid/ask price grid, signed AugustusRFQ firm quotes, and a user blacklist."
+keywords: ["market maker API", "RFQ API specification", "firm quote endpoint", "price grid", "AugustusRFQ order", "HMAC authentication", "market maker integration"]
+---
+
+This is the API contract Velora consumes from market makers. You expose one chain-scoped surface for each chain you trade on. That can mean separate hosts, separate base paths on the same host, or any other layout that gives Velora a distinct base URL per chain. Velora caches your `/prices` grid for routing and calls `POST /firm` only when a user executes a swap against your liquidity.
+
+## Endpoint map
+
+Each chain-scoped surface implements the same five HTTP endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /tokens` | Tokens you trade on this chain |
+| `GET /pairs` | Base/quote pairs Velora may route through |
+| `GET /prices` | Bid/ask grids used for cached routing |
+| `POST /firm` | Firm quote returned as a signed AugustusRFQ order |
+| `GET /blacklist` | User addresses you do not want Velora to route to you |
+
+You may also expose a WebSocket stream for cache updates. The WebSocket is optional, but it is the preferred path once pricing changes often enough that polling becomes wasteful.
+
+## General requirements
+
+All HTTP endpoints for a given chain share a common base URL. For example, both of these layouts work:
+
+- Separate hosts: `https://base.example-mm.com/tokens`, `https://mainnet.example-mm.com/tokens`
+- Shared host, chain-specific paths: `https://mm.example.com/base/tokens`, `https://mm.example.com/mainnet/tokens`
+
+For Velora, those are simply two chain-scoped base URLs: `https://base.example-mm.com`, `https://mainnet.example-mm.com`, or `https://mm.example.com/base`, `https://mm.example.com/mainnet`.
+
+The WebSocket interface may live on a different URL, or on the same chain-scoped surface with a path such as `/ws`.
+
+- Every response is JSON, including errors.
+- Error responses use a 4xx or 5xx status and a body containing an `"error"` string.
+- Any successful response may include a `"message"` key alongside the payload. Velora logs it on every request, which is useful when you need diagnostics from your side to appear in integration logs.
+- You may additionally whitelist Velora server IPs, but the endpoints should still implement the authentication below.
+
+## Authentication (optional)
+
+If you want Velora's requests authenticated, exchange three credentials during onboarding:
+
+- `Domain` — a string identifying the traffic source, so you can tell Velora apart from other integrations and, if you want, distinguish production from staging.
+- `Access Key` — a passcode Velora echoes back in request headers for a quick origin check. Per-domain, and shared with no one but Velora.
+- `Secret Key` — the key Velora uses to sign requests. Per-domain, and shared with no one but Velora.
+
+Velora signs each request as follows:
+
+1. Take the current timestamp in milliseconds since the Unix epoch (what `Date.now()` returns in JavaScript).
+2. Build the signed payload by concatenating these values with no separator:
+   1. The timestamp as a decimal string.
+   2. The HTTP method in uppercase (`GET` or `POST`).
+   3. The request path, beginning with `/`, e.g. `/prices`. If your base URL itself contains a path such as `/mainnet`, it is included.
+   4. The query string exactly as sent, including the leading `?`, or an empty string if there is none. No endpoint in this specification uses query parameters, so this is normally empty.
+   5. The request body exactly as sent (always a JSON object in this spec), or an empty string for `GET` requests.
+
+   For a request to `https://example-mm.com/endpoint?key=value`, the payload looks like:
+
+   ```text
+   1234512345123POST/endpoint?key=value{"amount":"123"}
+   ```
+
+   For WebSocket connections, the handshake is signed assuming the current timestamp, method `GET`, the path of the connect URL, no query parameters, and no body.
+3. Compute the HMAC-SHA256 of that payload in hexadecimal, keyed with the Secret Key:
+
+   ```javascript
+   const { createHmac } = require('crypto');
+   const hmac = createHmac('sha256', '<secret key>');
+   hmac.update('<payload>');
+   console.log(hmac.digest('hex'));
+   ```
+4. Attach the headers:
+   - `X-AUTH-DOMAIN` — the Domain
+   - `X-AUTH-ACCESS-KEY` — the Access Key for that Domain
+   - `X-AUTH-TIMESTAMP` — the timestamp used in the signature
+   - `X-AUTH-SIGNATURE` — the HMAC-SHA256 from the previous step
+
+Your side verifies all four headers and rejects stale timestamps. A tolerance of around ±30 seconds is enough for normal clock drift. Return a JSON error when verification fails, and make the error specific enough to debug during onboarding.
+
+## GET /tokens
+
+Lists every token you trade on this chain. The response has a `"tokens"` object keyed by Token ID. A token symbol is a good ID when it is unique within the chain-scoped surface.
+
+Most fields are informational, but `address`, `decimals`, and `type` need to be correct for routing and amount handling.
+
+- `symbol` (string) — the token's symbol, normally matching the token contract.
+- `name` (string) — the token's full name, normally matching the token contract.
+- `description` (string) — free-form notes, e.g. flagging a token deprecated in favor of another.
+- `address` (string) — the token contract address. Case is ignored and normalized to lowercase on Velora's side.
+- `decimals` (number) — the token's decimals, normally the value returned by the contract's `decimals()` method.
+- `type` (string) — only `"ERC20"` is supported for market making today. The AugustusRFQ contract itself also settles `ERC721` and `ERC1155` orders, so other types may be enabled later.
+
+Example response:
+
+```json
+{
+  "tokens": {
+    "WETH": {
+      "symbol": "WETH",
+      "name": "Wrapped Ether",
+      "description": "Canonical wrapped Ether on Ethereum mainnet",
+      "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "decimals": 18,
+      "type": "ERC20"
+    },
+    "USDC": {
+      "symbol": "USDC",
+      "name": "USD Coin",
+      "description": "Popular US dollar stablecoin, provided by Circle",
+      "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "decimals": 6,
+      "type": "ERC20"
+    }
+  }
+}
+```
+
+## GET /pairs
+
+Lists the trading pairs you support, or have recently disabled, on this chain. Each pair points to two Token IDs from `/tokens` and includes a rough USD liquidity estimate. Velora uses that estimate when it searches for routes between tokens.
+
+Quote each pair in one direction only. Velora derives reverse pricing from the same grid.
+
+The response has a `"pairs"` object keyed by Pair ID. The recommended Pair ID format is `BASE/QUOTE`, e.g. `WETH/USDC`.
+
+- `base` (string) — Token ID of the base token, the one bids and asks are denominated in.
+- `quote` (string) — Token ID of the quote token, the one prices are given in.
+- `liquidityUSD` (number) — an estimate of the liquidity backing this pair in US dollars. One way to compute it: the maximum you are willing to sell in both tokens, converted to USD and summed.
+
+```json
+{
+  "pairs": {
+    "WETH/USDC": {
+      "base": "WETH",
+      "quote": "USDC",
+      "liquidityUSD": 468000
+    },
+    "WETH/USDT": {
+      "base": "WETH",
+      "quote": "USDT",
+      "liquidityUSD": 512500
+    },
+    "WBTC/WETH": {
+      "base": "WBTC",
+      "quote": "WETH",
+      "liquidityUSD": 129800
+    }
+  }
+}
+```
+
+## GET /prices
+
+Returns the full bid/ask grid Velora should cache for routing. This endpoint is the live pricing source for indicative routes; `POST /firm` is only called later, when a user is ready to execute.
+
+The response has a `"prices"` object keyed by Pair ID. Each pair may contain `"bids"`, `"asks"`, or both:
+
+- Omitting `"bids"` disables trading in the bid direction and clears that cached side.
+- Omitting `"asks"` disables trading in the ask direction and clears that cached side.
+- Returning an empty object, `{}`, disables the pair entirely.
+
+`"bids"` and `"asks"` are arrays of `[price, amount]` tuples. `price` is the price of one base token in quote-token terms. `amount` is the base-token quantity available at that level. Both values are strings, and Velora parses them with `bignumber.js` so decimal precision is preserved.
+
+Velora consumes each side in array order until the requested amount is reached. Put the best price first and worsen from there. The generic RFQ harness rejects crossed books, where the highest bid is greater than or equal to the lowest ask, so keep the best ask above the best bid.
+
+```json
+{
+  "prices": {
+    "WETH/USDC": {
+      "bids": [
+        ["1540", "0.5"],
+        ["1500", "1.5"],
+        ["1480", "3"]
+      ],
+      "asks": [
+        ["1560", "1"],
+        ["1580", "1.5"],
+        ["1600", "2"],
+        ["1650", "9"]
+      ]
+    },
+    "WETH/USDT": {}
+  }
+}
+```
+
+In this example, WETH/USDT trading is disabled and its cached prices are cleared.
+
+For WETH/USDC:
+
+- A user selling 1.5 WETH receives `1540 * 0.5 + 1500 * 1 = 2270` USDC, an average price of `1513.333`.
+- A user buying 10 WETH spends `1560 * 1 + 1580 * 1.5 + 1600 * 2 + 1650 * 5.5 = 16205` USDC, an average price of `1620.5`.
+
+When the user specifies an amount in the quote token instead, Velora inverts the book: bids become asks, asks become bids, each price becomes `1 / price`, and each amount becomes `price * amount`. It then applies the same fill process.
+
+To retire a pair, don't drop it from `/pairs` immediately. Keep it listed and serve `{}` for its prices for a period, as WETH/USDT above, then remove it.
+
+If this endpoint fails or returns an error, Velora temporarily disables your market making on that chain. That behavior is also the off switch: serve an error here when you want to stop trading for a while.
+
+## POST /firm
+
+Returns a firm quote as a signed order for the AugustusRFQ contract.
+
+Within Velora, the order's `taker` is set to a Velora execution contract (Augustus v6.2 or one of its executors, depending on execution context), and the actual user (the `msg.sender` to the router) is encoded in the `nonceAndMeta` field. Velora's contracts always check that the user and the metadata match when filling through AugustusRFQ. That has two effects: nobody can steal the order from the user it was quoted for, and a firm quote always burns a real user address, so an address that spams firm quotes without executing can be blacklisted.
+
+The request body:
+
+- `makerAsset` (string) — address of the token you (the maker) are selling.
+- `takerAsset` (string) — address of the token the taker is selling.
+- `makerAmount` or `takerAmount` (string) — the traded amount of the maker or taker asset, as an integer scaled by token decimals. Exactly one is given; you compute the other from your current prices.
+- `userAddress` (string) — the end user's address, as described above.
+- `takerAddress` (string) — the Velora contract that will fill the order. Velora picks it per execution context; the current whitelist for a chain is at `https://api.velora.xyz/adapters/contract-takers?network={chainId}`, and the contracts themselves are listed on [Chains & contracts](/resources/chains-and-contracts#addresses-by-chain).
+
+Example request, here a user selling 1.5 WETH for USDC (address casing is unspecified; normalize it on your side):
+
+```json
+{
+  "makerAsset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "takerAsset": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+  "takerAmount": "1500000000000000000",
+  "userAddress": "0x05182E579FDfCf69E4390c3411D8FeA1fb6467cf",
+  "takerAddress": "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57"
+}
+```
+
+The requested amount may be slightly larger than what the user can actually swap. This leaves room for routes where the RFQ leg is not the first hop and the previous hop delivers a little more or less than expected.
+
+The response has an `"order"` object:
+
+- `nonceAndMeta` (string) — a `uint256` encoding the user's address in the lower 160 bits, with the rest filled with random or unpredictable data. Convert the address to an integer and add a random integer below `2**96` shifted left by 160 bits: `(random.randint(0, 2**96 - 1) << 160) + int(address, 16)`.
+- `expiry` (number) — Unix timestamp in seconds after which the order is no longer executable. At least 2 minutes in the future.
+- `makerAsset` (string) — as passed in.
+- `takerAsset` (string) — as passed in.
+- `maker` (string) — the address holding your funds. It must approve the AugustusRFQ contract, not Augustus v6.2, to spend the maker token. It is the order's signer if it's an EOA; otherwise it's a smart contract implementing EIP-1271.
+- `taker` (string) — the contract that fills the order, taken from the request's `takerAddress`.
+- `makerAmount` (string) — as passed in, or computed from the taker amount.
+- `takerAmount` (string) — as passed in, or computed from the maker amount.
+- `signature` (string) — `0x` followed by lowercased hex bytes: the `bytes` signature AugustusRFQ expects. The order hash over all fields above is computed with EIP-712 and signed by an EOA or via an EIP-1271 contract signature.
+
+For EOA signing, the Velora SDK has working sample code; see [Order structure and signing](/resources/market-makers/order-structure) for the typed-data domain and [SDK → OTC](/sdk/products/otc) for the build → sign flow. With EIP-1271 the signing depends on your contract, so you will likely need custom code.
+
+```json
+{
+  "order": {
+    "nonceAndMeta": "77194726158210796949047323338180021686013833221005105572687668833110133598159",
+    "expiry": 1667344557,
+    "makerAsset": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    "takerAsset": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    "maker": "0x7777777777777777777777777777777777777777",
+    "taker": "0xDEF171Fe48CF0115B1d80b88dc8eAB59176FEe57",
+    "makerAmount": "2270000000",
+    "takerAmount": "1500000000000000000",
+    "signature": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbcc"
+  }
+}
+```
+
+If the request fails because `userAddress` is blacklisted, return a successful response without the `"order"` key. You may include a `"message"` explaining the blacklisting. Velora then caches the address as blacklisted, exactly as if it had come from the `/blacklist` endpoint.
+
+Use this response shape only for blacklisted users. Other failures should return an error response.
+
+<Note>
+  The generic RFQ harness currently validates direct `/firm` calls with an order-bearing response. For harness runs, rely on `/blacklist` to test blacklisted users and test this no-order `/firm` shortcut separately. See [Testing your integration](/resources/market-makers/testing#current-harness-notes).
+</Note>
+
+## GET /blacklist
+
+Lists the user addresses you currently blacklist. The response has a `"blacklist"` array with no duplicate addresses:
+
+```json
+{
+  "blacklist": [
+    "0x05182E579FDfCf69E4390c3411D8FeA1fb6467cf",
+    "0x0000000000000000000000000000000000000000"
+  ]
+}
+```
+
+## WebSocket connection (optional)
+
+You may additionally serve a WebSocket interface: a one-way channel from you to Velora that delivers cache updates more efficiently than polling.
+
+Each message is a JSON object that can carry any HTTP payload except `"order"`. After the first message, send only updates: created entries, changed entries, or price removals. Do not send deletions for tokens or pairs over the WebSocket.
+
+- `tokens` — newly supported tokens or corrections to existing ones.
+- `pairs` — newly added pairs or corrections. Updating `liquidityUSD` over WebSocket is pointless; it isn't read from this source and changes constantly anyway.
+- `prices` — pairs whose prices need updating, refreshing in the cache after going stale, or removal from the cache (bids, asks, or both).
+- `blacklist` — newly added addresses only.
+- `message` — anything you want logged on Velora's servers, at any time.
+
+The first message after connecting must contain the complete responses of `/tokens`, `/pairs`, `/prices`, and `/blacklist` in a single JSON object. That lets Velora start with a synchronized cache without making separate HTTP requests. `/blacklist` is still polled periodically afterwards, because blacklist status is only cached temporarily.
+
+To stop trading entirely, disconnect the WebSocket and refuse reconnections until you want to resume.
