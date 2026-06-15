@@ -1,8 +1,8 @@
 ---
 title: "Migrate from Delta V1 to V2"
 sidebarTitle: "Delta V1 to V2"
-description: "Endpoint-by-endpoint migration for direct HTTP integrators. Server-built orders, route-based pricing, paginated history, unified status model."
-keywords: ["migration", "delta", "delta v1", "delta v2", "api"]
+description: "Endpoint-by-endpoint migration for direct HTTP integrators moving to Delta V2's crosschain-first route model, server-built orders, /v2/quote, and limitAmount."
+keywords: ["migration", "delta", "delta v1", "delta v2", "api", "crosschain delta", "limit orders"]
 ---
 
 This page is for integrators calling the Velora Delta HTTP API directly. If you're on the [Velora SDK](/sdk/products/delta), the SDK-level migration walks the same path with TypeScript snippets; see [SDK → Migrate from V1 to V2](/sdk/products/delta#migrate-from-v1-to-v2).
@@ -13,10 +13,14 @@ Nothing. Delta V1 (`/delta/*`) remains fully supported and shares on-chain contr
 
 ## Why migrate
 
-V2 keeps the same on-chain settlement model but cleans up the protocol surface:
+V2 keeps the same on-chain settlement model. The main reason to migrate is that V2 is built crosschain-first: same-chain and crosschain intents share one route model, so you quote the source chain, optionally add `destChainId`, and pass the returned `route` into build unchanged.
 
+That crosschain-first model also cleans up the protocol surface:
+
+- Crosschain is native to pricing. `GET /v2/quote` or `GET /v2/delta/prices` returns a recommended `route` with `route.bridge` populated for crosschain, plus `alternatives` when other bridge routes are available.
 - Orders are built server-side. `POST /v2/delta/orders/build` returns EIP-712 typed data ready to sign, and you stop composing `domain`, `types`, and `value` on the client.
-- Pricing is route-based. `GET /v2/delta/prices` returns a recommended `route` plus `alternatives`, so users can pick a different bridge and you stop juggling the `bridge` / `bridgeInfo` / `availableBridges` triple V1 returns.
+- Pricing is route-based. The route replaces the `bridge` / `bridgeInfo` / `availableBridges` triple V1 returns.
+- Limit orders use the same build flow. Add `limitAmount` to `POST /v2/delta/orders/build`, then submit the signed order with `type: "LIMIT"`.
 - Order history is paginated. `GET /v2/delta/orders` returns `{ data, total, page, limit, hasMore }` where V1 returns a flat array with no total.
 - Status is a single field. Eleven values (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`) replace V1's `status` + `bridgeStatus` pair.
 - Partner fees resolve on the server. Pass `partner` / `partnerAddress` / `partnerFeeBps` directly on every call; the separate `GET /prices/partnerfee/{chainId}` round-trip goes away.
@@ -40,18 +44,27 @@ V2 keeps the same on-chain settlement model but cleans up the protocol surface:
 | `GET /delta/orders/hash/{hash}` | [`GET /v2/delta/orders/hash/{hash}`](/api-reference/delta/orders-get-by-hash) | Same as above |
 | `GET /delta/orders/fillablebalance/...` | [`GET /v2/delta/orders/fillablebalance/...`](/api-reference/delta/orders-fillable-balance) | Same shape |
 | `GET /delta/agents/list/{chainId}` | [`GET /v2/delta/agents/list/{chainId}`](/api-reference/delta/agents-list) | Same shape |
-| `GET /quote` (mode=ALL) | _No V2 equivalent_ | If you rely on the Delta-or-Market fallback, stay on V1 `/quote` |
+| `GET /quote` (`mode=ALL`) | [`GET /v2/quote`](/api-reference/delta/quote) | Delta-or-Market fallback still exists; branch on top-level `delta` or `market` |
 
 ## Steps
 
 ### 1. Pricing
 
-V1 returns a flat price object with a server-signed `hmac`. V2 returns a structured route plus alternatives.
+V1 returns a flat price object with a server-signed `hmac`. V2 returns a structured route plus alternatives. You can read that Delta route directly from `GET /v2/delta/prices`, or from the `delta` block of `GET /v2/quote?mode=DELTA`.
 
 ```diff
 - GET /delta/prices?chainId=1&srcToken=0x...&destToken=0x...&amount=...&partner=my-app-name
 + GET /v2/delta/prices?chainId=1&srcToken=0x...&destToken=0x...&amount=...&partner=my-app-name
 ```
+
+If your V1 integration used the unified quote path, migrate it to `/v2/quote`:
+
+```diff
+- GET /quote?chainId=1&srcToken=0x...&destToken=0x...&amount=...&mode=ALL&partner=my-app-name
++ GET /v2/quote?chainId=1&srcToken=0x...&destToken=0x...&amount=...&mode=ALL&partner=my-app-name
+```
+
+With `mode=ALL`, V2 returns one path for you to handle: a top-level `delta` block when Delta can price the trade, or a top-level `market` block when it falls back to Market. Do not expect both blocks in one response.
 
 V1 response:
 
@@ -75,11 +88,11 @@ V2 response:
   "id": "req_...",
   "side": "SELL",
   "inputToken": { "chainId": 1, "address": "0x..." },
-  "outputToken": { "chainId": 1, "address": "0x..." },
+  "outputToken": { "chainId": 8453, "address": "0x..." },
   "route": {
     "origin": { "input": { ... }, "output": { ... } },
     "destination": { "input": { ... }, "output": { ... } },
-    "bridge": null,
+    "bridge": { "...": "present for crosschain, null for same-chain" },
     "fees": { "gas": { ... }, "bridge": [] }
   },
   "alternatives": [],
@@ -96,7 +109,7 @@ Handle these in your client:
 
 ### 2. Build
 
-V1 takes the price object + hmac. V2 takes the route plus order params on top.
+V1 takes the price object + hmac. V2 takes the route plus order params on top. Pass the route from `GET /v2/delta/prices`, or `delta.route` from `GET /v2/quote`, without editing it.
 
 ```diff
   POST /delta/orders/build
@@ -114,6 +127,7 @@ V1 takes the price object + hmac. V2 takes the route plus order params on top.
 +   "route": { /* the route from /v2/delta/prices, verbatim */ },
 +   "side": "SELL",
 +   "slippage": 100,
++   "deadline": 1893456000,
 +   "partner": "my-app-name",
 +   "partnerFeeBps": 25
 + }
@@ -168,7 +182,38 @@ V1 took `{ order, signature, partner, ... }`. V2 is the same shape; only the sou
 
 V2 doesn't accept `referrerAddress` differently: same field, same semantics.
 
-### 5. Poll for status
+### 5. Limit orders
+
+V1 limit-order code often had a separate builder path. In V2, a limit order is a Delta order with a target-price constraint, so you use the same `POST /v2/delta/orders/build` endpoint and add `limitAmount`.
+
+```diff
++ POST /v2/delta/orders/build
++ {
++   "owner": "0x...",
++   "route": { /* the route from /v2/quote or /v2/delta/prices, verbatim */ },
++   "side": "SELL",
++   "deadline": 1893456000,
++   "limitAmount": "3000000000000000000",
++   "partner": "my-app-name"
++ }
+```
+
+For SELL orders, `limitAmount` is the minimum destination amount the user accepts. For BUY orders, it is the maximum source amount the user is willing to spend. The response is still `{ toSign, orderHash }`; after the user signs, submit `toSign.value` with `type: "LIMIT"`:
+
+```diff
++ POST /v2/delta/orders
++ {
++   "chainId": 1,
++   "order": /* V2 build response's `toSign.value` */,
++   "signature": "0x...",
++   "type": "LIMIT",
++   "partner": "my-app-name"
++ }
+```
+
+For the full flow, see [Limit order API integration](/integrate/api/limit-orders).
+
+### 6. Poll for status
 
 V1 status (`DeltaAuctionStatus`) splits into `status` + `bridgeStatus`. V2 collapses both into one `status` field.
 
@@ -195,7 +240,7 @@ Status mapping you'll need on the client when migrating queries:
 
 The V2 response also restructures order details: `input` and `output` each carry `{ chainId, token, amount }` (SELL: input has `amount`, output has `expectedAmount` + `executedAmount`; BUY: vice versa). V1 returned `order.srcToken` / `order.destToken` plus a separate `transactions[]` array. V2 keeps both, but the headline numbers move to `input` / `output`.
 
-### 6. List orders
+### 7. List orders
 
 ```diff
 - GET /delta/orders?userAddress=0x...&page=1&limit=100
@@ -217,7 +262,7 @@ V1 returns a plain array; V2 wraps it:
 
 You now know how many pages remain, which is useful for "load more" UIs without falling back to "fetch until you get fewer than `limit`".
 
-### 7. Cancel
+### 8. Cancel
 
 No semantic change: same path under `/v2`, same request body.
 
@@ -230,7 +275,7 @@ No semantic change: same path under `/v2`, same request body.
   }
 ```
 
-### 8. Partner fee
+### 9. Partner fee
 
 V1: integrators called `GET /prices/partnerfee/{chainId}?partner=...` to look up the registered config, then encoded it into the order locally.
 
@@ -251,6 +296,8 @@ V2: just pass `partner` on every call (`/v2/delta/prices`, `/v2/delta/orders/bui
 ## Breaking changes you might miss
 
 - `price.hmac` is gone in V2. Existing code that re-attaches `hmac` to the build payload will fail validation.
+- The replacement for V1 `GET /quote` is `GET /v2/quote`, not "no quote endpoint." With `mode=ALL`, branch on top-level `delta` or `market`.
+- Limit orders move onto the standard V2 build path. Add `limitAmount` to `POST /v2/delta/orders/build`, then submit with `type: "LIMIT"`.
 - The `bridge.destinationChainId !== 0` check breaks. V2 sets `route.bridge = null` for same-chain; the V1 sentinel is no longer present in V2 responses.
 - `bridge-info` changed shape, from a nested object to a flat `routes[]` array, and the replacement endpoint is named `bridge-routes`.
 - The status enum changed, so your status-handling code needs the mapping table above. Don't rely on `EXECUTED` alone: V2 reports `COMPLETED` for executed-and-finalized orders and `BRIDGING` while the destination leg is still pending.
@@ -258,13 +305,16 @@ V2: just pass `partner` on every call (`/v2/delta/prices`, `/v2/delta/orders/bui
 
 ## End-state check
 
-1. `GET /v2/delta/prices` returns a `route` and a non-empty `spender`.
+1. `GET /v2/quote?mode=DELTA` or `GET /v2/delta/prices` returns a `route` and a non-empty `spender`.
 2. `POST /v2/delta/orders/build` returns `{ toSign, orderHash }`.
 3. The signature your wallet produces over `toSign` is accepted by `POST /v2/delta/orders` (status `200`, response carries the new order shape with `id` and `status: "PENDING"`).
 4. `GET /v2/delta/orders/{id}` polls through `ACTIVE` → `COMPLETED` (or `BRIDGING` → `COMPLETED` for crosschain).
-5. `grep -r "partnerfee\|/delta/prices\b\|/delta/orders\b" your-codebase/`: every hit is intentional (e.g., `/prices/partnerfee` for UI lookup; `/delta/orders` only if you intentionally stayed on V1 for an order family that V2 doesn't cover for you yet).
+5. A limit-order build with `limitAmount` returns `{ toSign, orderHash }`, and the signed order submits with `type: "LIMIT"`.
+6. `grep -r "partnerfee\|/delta/prices\b\|/delta/orders\b" your-codebase/`: every hit is intentional (e.g., `/prices/partnerfee` for UI lookup; `/delta/orders` only if you intentionally stayed on V1).
 
 ## Related pages
 
 - [Delta V2 API overview](/api-reference/delta/overview) — the recommended surface.
 - [SDK → Migrate from V1 to V2](/sdk/products/delta#migrate-from-v1-to-v2) — same migration at the TypeScript SDK level.
+- [Crosschain Delta swaps](/delta/crosschain-delta) — how `destChainId`, bridge routes, and crosschain status work.
+- [Limit order API integration](/integrate/api/limit-orders) — build with `limitAmount`, then submit with `type: "LIMIT"`.
