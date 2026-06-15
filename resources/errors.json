@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Machine-readable mirror of the Velora API troubleshooting tables. Each row maps a documented symptom on a specific endpoint to its root cause, fix, and the human-readable docs anchor.",
     "source": "https://velora.xyz/docs/api-reference/troubleshooting",
-    "lastUpdated": "2026-05-27",
+    "lastUpdated": "2026-06-15",
     "note": "Documented examples — not an exhaustive enumeration of every possible error string. Updated from support tickets at each release."
   },
   "errors": [
@@ -237,6 +237,38 @@
       "cause": "Client treated empty response as success; gateway response was actually a 5xx.",
       "fix": "Always check status and presence of id; retry on 5xx with idempotent re-submission of the same signed payload.",
       "docs": "/api-reference/troubleshooting#post-delta-orders"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/cancel",
+      "status": 400,
+      "match": "Invalid signature",
+      "cause": "Cancellation EIP-712 typed data assembled wrong (wrong chainId or wrong domain).",
+      "fix": "Sign the relayer's cancel payload; the SDK's signCancelDeltaOrderRequest handles this for you.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/cancel",
+      "status": 400,
+      "match": "Order already settled",
+      "cause": "One or more orderIds are already post-settlement or terminal: COMPLETED, REFUNDING, REFUNDED, FAILED, EXPIRED, or CANCELLED.",
+      "fix": "Pre-filter orderIds to PENDING, AWAITING_SIGNATURE, ACTIVE, or SUSPENDED.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/cancel",
+      "status": 200,
+      "match": "OK but order doesn't move to CANCELLING",
+      "cause": "An auction had already started for that order; cancellation queues but won't kill an in-flight fill.",
+      "fix": "Wait one polling interval; the order moves to CANCELLED once the relayer confirms.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/cancel",
+      "status": 400,
+      "match": "orderIds.length > 100",
+      "cause": "Tried to batch-cancel too many orders in one call.",
+      "fix": "Chunk into batches of <= 100.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
     }
   ]
 }
