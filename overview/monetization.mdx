@@ -235,6 +235,77 @@ await withdrawAllFees(
 
 </CodeGroup>
 
+Not sure which tokens your fees accrued in? Each side has a fees endpoint that returns every token your address has earned fees in on a chain. The amounts are lifetime totals per token, claimed and unclaimed combined, so check the live on-chain balance (as the claim snippets above do) before withdrawing.
+
+<CodeGroup>
+
+```ts Check Delta fee tokens
+const PARTNER_ADDRESS = "0x..."; // your partnerAddress
+const CHAIN_ID = 1;
+
+const parameters = JSON.stringify([
+  {
+    type: "category",
+    value: PARTNER_ADDRESS,
+    target: ["variable", ["template-tag", "partner_address"]],
+  },
+  {
+    type: "category",
+    value: CHAIN_ID,
+    target: ["variable", ["template-tag", "chain_id"]],
+  },
+]);
+
+const res = await fetch(
+  `https://proxy.paraswap.io/fees/delta?parameters=${encodeURIComponent(
+    parameters
+  )}`
+);
+const { data } = await res.json();
+
+// Each row is [chain_id, fee_token, total_amount]
+for (const [, token, total] of data.rows) {
+  console.log(`${token}: ${total}`);
+}
+```
+
+```ts Check Market fee tokens
+const PARTNER_ADDRESS = "0x..."; // your partnerAddress
+const CHAIN_ID = 1;
+
+const parameters = JSON.stringify([
+  {
+    type: "category",
+    value: PARTNER_ADDRESS,
+    target: ["variable", ["template-tag", "partneraddress"]],
+  },
+  {
+    type: "category",
+    value: CHAIN_ID,
+    target: ["variable", ["template-tag", "chainId"]],
+  },
+  {
+    type: "category",
+    value: "partner",
+    target: ["variable", ["template-tag", "feeType"]],
+  },
+]);
+
+const res = await fetch(
+  `https://proxy.paraswap.io/fees/since-v6?parameters=${encodeURIComponent(
+    parameters
+  )}`
+);
+const { data } = await res.json();
+
+// Each row is [corrected_sum, partnerfeetoken, chainid]
+for (const [total, token] of data.rows) {
+  console.log(`${token}: ${total}`);
+}
+```
+
+</CodeGroup>
+
 ## Next steps
 
 <CardGroup cols={2}>
