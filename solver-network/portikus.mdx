@@ -96,16 +96,19 @@ stateDiagram-v2
   ACTIVE --> COMPLETED : settled
   ACTIVE --> BRIDGING : crosschain leg
   BRIDGING --> COMPLETED
-  BRIDGING --> REFUNDED
+  BRIDGING --> REFUNDING
+  REFUNDING --> REFUNDED
   ACTIVE --> SUSPENDED
   SUSPENDED --> ACTIVE
   ACTIVE --> CANCELLED
   ACTIVE --> EXPIRED
   ACTIVE --> FAILED
   COMPLETED --> [*]
+  REFUNDED --> [*]
 
   class ACTIVE live
   class COMPLETED done
+  class REFUNDED done
 ```
 
 An intent that doesn't fill in one [auction round](/solver-network/sealed-bid-auctions#how-delta-runs-the-auction) simply enters the next one, until a solver fills it or the deadline expires. If the user's balance or allowance drops below what the order needs, it is suspended rather than killed; it rejoins the auction as soon as funds are back. Users can cancel any time before execution, and a crosschain order that settles on the source chain shows `BRIDGING` until the destination leg lands; if the bridge fails, the source amount is refunded.

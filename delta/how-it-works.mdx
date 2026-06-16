@@ -72,7 +72,7 @@ You `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, 
 
 ### 5. Settle
 
-The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain). The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. If settlement fails, nothing is pulled from the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, or `CANCELLED`).
+The winning solver calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain). The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. If settlement fails, nothing is pulled from the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, or `REFUNDED`). Crosschain orders can report `REFUNDING` before `REFUNDED` while Velora verifies the bridge refund transaction.
 
 ## Why this design
 
