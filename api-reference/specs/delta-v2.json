@@ -503,7 +503,7 @@
           { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "minimum": 1, "maximum": 1000, "default": 100 } },
           { "name": "chainId", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated chain IDs. Omit for all chains." },
           { "name": "type", "in": "query", "required": false, "schema": { "type": "string", "enum": ["MARKET", "LIMIT"] } },
-          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated `OrderStatusV2` values." },
+          { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Comma-separated `OrderStatusV2` values: `PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `REFUNDING`, `CANCELLED`, `REFUNDED`." },
           { "name": "onChainOrderType", "in": "query", "required": false, "schema": { "type": "string", "enum": ["Order", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] } }
         ],
         "responses": {
@@ -805,10 +805,10 @@
       },
       "DeltaAuction": {
         "type": "object",
-        "description": "V2 order shape returned by every order endpoint (reads and posts). `input` and `output` carry the *expected* + *executed* amounts so you don't need to compute fill-percent yourself. `onChainOrderType` selects the family the `order` struct belongs to.",
+        "description": "V2 order shape returned by every order endpoint (reads and posts). `input` and `output` carry the *expected* + *executed* amounts so you don't need to compute fill-percent yourself. `onChainOrderType` selects the family the `order` struct belongs to. Crosschain refunds appear in `refunds` after Velora verifies the refund transaction receipt.",
         "properties": {
           "id": { "type": "string", "format": "uuid" },
-          "status": { "type": "string", "enum": ["PENDING", "AWAITING_SIGNATURE", "ACTIVE", "SUSPENDED", "CANCELLING", "BRIDGING", "COMPLETED", "FAILED", "EXPIRED", "CANCELLED", "REFUNDED"] },
+          "status": { "type": "string", "enum": ["PENDING", "AWAITING_SIGNATURE", "ACTIVE", "SUSPENDED", "CANCELLING", "BRIDGING", "COMPLETED", "FAILED", "EXPIRED", "REFUNDING", "CANCELLED", "REFUNDED"] },
           "side": { "type": "string", "enum": ["SELL", "BUY"] },
           "type": { "type": "string", "enum": ["MARKET", "LIMIT"] },
           "onChainOrderType": { "type": "string", "enum": ["Order", "FillableOrder", "ProductiveOrder", "ExternalOrder", "TWAPOrder", "TWAPBuyOrder"] },
@@ -849,6 +849,19 @@
                 "filledPercent": { "type": "number", "description": "0–100." },
                 "spentAmount": { "type": "string", "nullable": true },
                 "receivedAmount": { "type": "string", "nullable": true }
+              }
+            }
+          },
+          "refunds": {
+            "type": "array",
+            "description": "Verified bridge refund transactions for crosschain orders. Empty until Velora can match an on-chain refund receipt; some bridge providers may not emit source-chain token refund metadata.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "tx": { "type": "string", "description": "Refund transaction hash." },
+                "chainId": { "type": "integer", "description": "Chain where the refund transaction was observed." },
+                "token": { "type": "string", "description": "Refunded token address." },
+                "amount": { "type": "string", "description": "Refunded token amount in raw token units." }
               }
             }
           },
