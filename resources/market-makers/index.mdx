@@ -1,0 +1,80 @@
+---
+title: "Market maker integration"
+sidebarTitle: "Overview"
+description: "Market makers connect to Velora by exposing chain-scoped endpoints, publishing live liquidity, and returning signed AugustusRFQ orders when a user accepts a firm quote."
+keywords: ["market maker", "RFQ market making", "AugustusRFQ", "firm quote", "price grid", "DEX aggregator market maker", "PMM"]
+---
+
+Market makers can plug private liquidity into Velora without changing their trading stack around Velora's API. You expose chain-scoped endpoints, publish the pairs and size you are willing to trade, and Velora routes user swaps against that live inventory. When a user accepts your price, you return a signed [AugustusRFQ](/resources/chains-and-contracts#addresses-by-chain) order and the fill settles on-chain.
+
+The model is deliberately simple: your infrastructure owns pricing, Velora owns routing and execution, and AugustusRFQ verifies the signed order at settlement.
+
+<CardGroup cols={2}>
+  <Card title="Become a Velora market maker" icon="handshake" href="https://www.velora.xyz/contact">
+    Tell us the chains, pairs, expected liquidity, and chain-scoped endpoints you want to connect.
+  </Card>
+  <Card title="Test your RFQ API" icon="flask-conical" href="/resources/market-makers/testing">
+    Run Velora's generic RFQ harness before onboarding.
+  </Card>
+</CardGroup>
+
+## Integration flow
+
+1. Expose one chain-scoped API surface for each chain you trade on. This can be a separate base URL per chain, or one service with chain-specific paths such as `/mm/base/tokens` and `/mm/mainnet/tokens`.
+2. Publish your supported tokens, tradable pairs, and bid/ask grid for each pair.
+3. Keep Velora's cache fresh through polling or, preferably, a WebSocket stream.
+4. Receive `POST /firm` only when a user is ready to trade against your liquidity.
+5. Return a signed AugustusRFQ order for the requested amount, priced consistently with your published grid.
+6. Keep enough balance on the maker wallet, and approve AugustusRFQ as the spender for the maker tokens, so the order can settle.
+
+Velora does not call you for every indicative user quote. At production volume, that would add latency and put unnecessary load on market-maker infrastructure. The cached grid handles routing; the firm quote endpoint is reserved for trades that are ready to execute.
+
+Users who repeatedly request firm quotes without executing on-chain can be blacklisted on your side. Velora honors your blacklist by hiding your pricing from those users before transaction building.
+
+## What Velora expects from your service
+
+Your market-maker service needs to be deterministic enough for routing and strict enough for settlement:
+
+- `/tokens` lists every asset you trade on the chain.
+- `/pairs` lists the base/quote pairs Velora may route through.
+- `/prices` returns the current bid/ask grid Velora should cache.
+- `/firm` returns the signed order when a user commits.
+- `/blacklist` lets you block users who request firm quotes without executing.
+
+The full endpoint contract is in the [Market maker API specification](/resources/market-makers/api-specification). The order fields and EIP-712 signing details are in [Order structure and signing](/resources/market-makers/order-structure).
+
+## What you provide at onboarding
+
+Before the integration can go live, Velora's team needs:
+
+- A chain-scoped base URL for each chain you trade on, either as separate hosts or distinct paths on the same host.
+- An optional WebSocket URL for price and blacklist updates.
+- Authentication credentials, if you want Velora's requests signed: a Domain string, an Access Key, and a Secret Key, as described in the [authentication section](/resources/market-makers/api-specification#authentication-optional) of the spec.
+- A funded maker wallet, either an EOA or an EIP-1271 contract, with allowance to the AugustusRFQ contract on each chain. Approve AugustusRFQ, not Augustus v6.2. Per-chain addresses are on [Chains & contracts](/resources/chains-and-contracts#addresses-by-chain).
+- The latest output from the [generic RFQ test harness](/resources/market-makers/testing), or the commit and config you used to run it.
+
+There is no self-serve registration. [Contact Velora](https://www.velora.xyz/contact) to exchange credentials and schedule integration testing.
+
+## Reliability rules
+
+Velora keeps a market maker enabled only while quotes remain executable and consistent with the published grid.
+
+| Situation | Result |
+|---|---|
+| `/prices` fails or returns an error | Trading pauses until the endpoint recovers. |
+| `/firm` refuses an amount covered by the grid | Repeated refusals can disable the integration. |
+| Firm pricing drifts from the cached grid | Velora treats it as a bad quote. |
+| The signature fails EOA or EIP-1271 validation | The order cannot settle and counts against the integration. |
+| The maker wallet has not approved AugustusRFQ | The order cannot settle. |
+| The maker wallet lacks inventory | The order cannot settle. |
+
+You can also pause trading deliberately by serving an error from `/prices` or closing the WebSocket until you are ready to resume.
+
+## Related pages
+
+- [Market maker API specification](/resources/market-makers/api-specification) — every endpoint you need to implement, with payloads.
+- [Testing your integration](/resources/market-makers/testing) — validate your endpoints with the generic RFQ harness.
+- [Order structure and signing](/resources/market-makers/order-structure) — the AugustusRFQ order format and EIP-712 signing.
+- [Chains & contracts](/resources/chains-and-contracts#addresses-by-chain) — AugustusRFQ addresses per chain.
+- [OTC API overview](/api-reference/rfq/overview) — the taker-facing side of AugustusRFQ orders.
+- [AugustusRFQ security audit](/resources/security/audits/augustus-rfq) — the settlement contract's audit history.

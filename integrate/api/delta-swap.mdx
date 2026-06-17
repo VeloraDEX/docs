@@ -1,5 +1,6 @@
 ---
-title: "Delta swap"
+title: "Delta swap API integration"
+sidebarTitle: "Delta swap"
 description: "Integrate a gasless, MEV-protected Delta swap over the REST API: quote, build, sign, submit, and poll an intent end-to-end with simple HTTP requests."
 keywords: ["delta api", "gasless swap", "intent", "quote", "orders build", "orders submit", "dETH", "native eth"]
 ---
@@ -24,7 +25,7 @@ For the conceptual model behind the auction and settlement, see [Delta → How i
     The user signs `toSign` (ERC-2098 compact signature). `POST /v2/delta/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /v2/delta/orders`](/api-reference/delta/orders-submit).
   </Step>
   <Step title="Poll until settled">
-    `GET /v2/delta/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`). See [`GET /v2/delta/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
+    `GET /v2/delta/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, `REFUNDED`). Crosschain orders can also report `REFUNDING` while Velora waits to verify a bridge refund. See [`GET /v2/delta/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
   </Step>
 </Steps>
 
@@ -111,7 +112,7 @@ The relayer validates the signature, balance, and allowance, then enrolls the or
 curl 'https://api.velora.xyz/v2/delta/orders/{orderId}'
 ```
 
-Poll until the order reaches a terminal status. A market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine.
+Poll until the order reaches a terminal status. A same-chain market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine. Crosschain orders can spend longer in `BRIDGING`, or in `REFUNDING` if the bridge leg failed and a refund transaction is still being verified.
 
 For a human-readable view (status, fills, the settlement transaction), open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. It's handy for debugging and for linking users to their order.
 

@@ -1,6 +1,7 @@
 ---
-title: "Monetization"
-description: "How partners earn revenue from Velora swaps: partner fees, surplus sharing, and how the revenue split differs between Delta and Market."
+title: "Monetize swaps with partner fees"
+sidebarTitle: "Monetization"
+description: "Earn revenue from every swap routed through Velora using either partner fees or surplus sharing."
 keywords:
   - monetization
   - partner fees
@@ -19,29 +20,32 @@ keywords:
   - Market
 ---
 
-Velora gives partners two revenue levers on every swap they route: a **partner fee** (a fixed cut in basis points) or a **surplus share** (half of any positive slippage the routing engine or solver network captures). The two are mutually exclusive on a single swap, and the split between partner, user, and Velora differs between Delta and Market.
+## Monetization models
 
-## How partners earn
+- **Partner fee.**: Take a fixed percentage of every swap. Revenue is predictable, but the fee is reflected in the user's quote.
+- **Surplus share.**: Earn 50% of any positive slippage captured during execution. The quoted output remains unchanged, but revenue varies from trade to trade.
 
-- **Partner fee.** A fixed basis-point cut subtracted from the swap output. Predictable per-trade revenue, but it worsens the user-facing quote because the fee comes off the top.
-- **Surplus share.** When the route or solver overdelivers vs. the quoted output, that *positive slippage* is the surplus. Partners can claim 50% of it, leaving the user-facing quote untouched. Revenue is variable; it depends on routing edge.
+Choose the model that best fits your product. Partner fees maximize predictability, while surplus sharing maximizes quote competitiveness.
 
-A swap can carry one lever or the other, not both. If a request sets both, the partner fee takes precedence and the surplus flag is ignored.
+A swap can use one model or the other, not both. If both are provided, `partnerFeeBps` takes precedence.
 
-Requests without a partner identifier fall back to the `anon` partner, which charges a flat 1 bps fee. To unlock the levers above, attach your own `partner` identifier. See [Pro API accounts](/overview/pro-api-accounts).
+To activate monetization, include your own `partner` identifier. Requests without one use the default `anon` partner and a flat 1 bps fee. See [Pro API accounts](/overview/pro-api-accounts).
 
-## Revenue splits at a glance
+## Revenue split
 
-How each lever splits revenue between the partner and Velora:
+The amount you earn depends on the monetization model and execution path.
 
 | Lever | Delta | Market |
 |---|---|---|
 | Partner fee* | 100% partner | 85% partner / 15% Velora |
 | Surplus share | 50% partner / 50% Velora | 50% partner / 50% Velora |
 
-Delta returns 100% of the partner fee to the partner because the protocol funds itself from surplus on the Delta side, not from per-swap fees. On Market, Velora takes a 15% cut of the partner fee to fund routing infrastructure.
+Why the difference?
+- **Delta** funds itself through surplus capture, so partner fees are passed through entirely.
+- **Market** retains 15% of partner fees to fund routing infrastructure.
+- **Surplus sharing** is always split evenly between the partner and Velora.
 
-The partner's half of the surplus can be redirected to the end user instead by setting `isSurplusToUser: true`. And if neither lever is active, any surplus the route captures stays with Velora.
+You can also redirect your share of the surplus to the end user with `isSurplusToUser: true`.
 
 <sub>* Tailored arrangements available on request.</sub>
 
@@ -64,7 +68,7 @@ Delta (`GET /v2/quote`) and Market (`GET /prices`, `POST /transactions`) accept 
 
 Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /v2/quote`) so the fee is reflected in the displayed quote.
 
-## Fee delivery
+## How payouts work
 
 On Market, partner fees accrue inside the Fee Claimer contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true`. There's nothing to claim, but each swap carries an extra fee-transfer, and the user pays that gas on every trade, including very low-value ones where it can eat a meaningful share of the output.
 
@@ -227,6 +231,77 @@ await withdrawAllFees(
   "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC
   account.address
 );
+```
+
+</CodeGroup>
+
+Not sure which tokens your fees accrued in? Each side has a fees endpoint that returns every token your address has earned fees in on a chain. The amounts are lifetime totals per token, claimed and unclaimed combined, so check the live on-chain balance (as the claim snippets above do) before withdrawing.
+
+<CodeGroup>
+
+```ts Check Delta fee tokens
+const PARTNER_ADDRESS = "0x..."; // your partnerAddress
+const CHAIN_ID = 1;
+
+const parameters = JSON.stringify([
+  {
+    type: "category",
+    value: PARTNER_ADDRESS,
+    target: ["variable", ["template-tag", "partner_address"]],
+  },
+  {
+    type: "category",
+    value: CHAIN_ID,
+    target: ["variable", ["template-tag", "chain_id"]],
+  },
+]);
+
+const res = await fetch(
+  `https://proxy.paraswap.io/fees/delta?parameters=${encodeURIComponent(
+    parameters
+  )}`
+);
+const { data } = await res.json();
+
+// Each row is [chain_id, fee_token, total_amount]
+for (const [, token, total] of data.rows) {
+  console.log(`${token}: ${total}`);
+}
+```
+
+```ts Check Market fee tokens
+const PARTNER_ADDRESS = "0x..."; // your partnerAddress
+const CHAIN_ID = 1;
+
+const parameters = JSON.stringify([
+  {
+    type: "category",
+    value: PARTNER_ADDRESS,
+    target: ["variable", ["template-tag", "partneraddress"]],
+  },
+  {
+    type: "category",
+    value: CHAIN_ID,
+    target: ["variable", ["template-tag", "chainId"]],
+  },
+  {
+    type: "category",
+    value: "partner",
+    target: ["variable", ["template-tag", "feeType"]],
+  },
+]);
+
+const res = await fetch(
+  `https://proxy.paraswap.io/fees/since-v6?parameters=${encodeURIComponent(
+    parameters
+  )}`
+);
+const { data } = await res.json();
+
+// Each row is [corrected_sum, partnerfeetoken, chainid]
+for (const [total, token] of data.rows) {
+  console.log(`${token}: ${total}`);
+}
 ```
 
 </CodeGroup>

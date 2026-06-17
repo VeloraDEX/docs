@@ -1,7 +1,8 @@
 ---
-title: "Swaps"
+title: "Crypto swaps with Velora"
+sidebarTitle: "Swaps"
 description: "A crypto swap exchanges one token for another. Velora maps swaps to gasless Delta intents or atomic Market routing."
-keywords: ["crypto swaps", "token swap", "DEX aggregator", "swap API", "gasless swap", "MEV protection"]
+keywords: ["crypto swaps", "token swap", "DEX aggregator", "swap API", "gasless swap", "MEV protection", "revert protection"]
 ---
 
 A **swap** exchanges one token for another. In DeFi, the transfer itself is the easy part. The work is in finding liquidity, quoting a fair output, limiting slippage, and settling the trade without exposing the user to unnecessary execution risk.
@@ -22,6 +23,7 @@ For small trades, this often looks simple. For large trades, thin pairs, volatil
 - **Price impact:** the trade's expected effect on the market price because of available liquidity depth.
 - **Intent:** an off-chain signed instruction describing the outcome the user wants, not the exact transaction path.
 - **Settlement:** the final on-chain state change that delivers the destination token.
+- **Revert protection:** a failed trade costs the user nothing. A Delta order that can't settle simply expires or is rejected; on Market the user pays gas even when the swap reverts.
 
 ## Build it
 

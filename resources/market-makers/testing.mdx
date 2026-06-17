@@ -1,0 +1,165 @@
+---
+title: "Test a market maker integration"
+sidebarTitle: "Testing"
+description: "How to test a market maker API with Velora's generic RFQ harness before onboarding: schema checks, live endpoint checks, and route-level E2E tests."
+keywords: ["market maker testing", "generic RFQ", "RFQ test harness", "market maker API validation", "paraswap dex lib", "AugustusRFQ E2E"]
+---
+
+Before onboarding, test your market maker API with Velora's generic RFQ harness in [`paraswap-dex-lib`](https://github.com/VeloraDEX/paraswap-dex-lib/tree/master/src/dex/generic-rfq). The harness is the same adapter shape Velora uses internally: it fetches your token, pair, price, blacklist, and firm quote endpoints, validates the responses, and can run route-level E2E swaps against your quoted liquidity.
+
+This is not a replacement for Velora's onboarding tests, but it catches most integration mistakes before credentials are exchanged.
+
+## What the harness checks
+
+The generic RFQ folder contains the files you need most:
+
+| File | Use |
+|---|---|
+| [`validators.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/validators.ts) | Validates `/tokens`, `/pairs`, `/prices`, `/blacklist`, and `/firm` response shapes. |
+| [`fetch-mm-api.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/fetch-mm-api.ts) | Calls a live market maker API with HMAC authentication and prints validation results. |
+| [`generic-rfq-e2e.test.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/generic-rfq-e2e.test.ts) | Adds your RFQ endpoint to a local dex-lib config and runs route-level E2E swaps. |
+| [`example-api.test.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/example-api.test.ts) | Starts a dummy RFQ server that shows the expected endpoint behavior. |
+
+Use the schema tests first, then the live endpoint fetcher, then route-level E2E tests. If the first layer fails, the later layers will be noisy.
+
+## Prerequisites
+
+Clone the repo and install dependencies:
+
+```bash
+git clone https://github.com/VeloraDEX/paraswap-dex-lib.git
+cd paraswap-dex-lib
+pnpm install
+```
+
+The current package requires Node.js `>=22` and pnpm `>=11`.
+
+Your API needs a chain-scoped base URL. For example, if Velora should call `https://mm.example.com/mainnet/tokens`, set:
+
+```bash
+export GENERIC_RFQ_URL="https://mm.example.com/mainnet"
+```
+
+If your HMAC signature should be computed over `/tokens` rather than `/mainnet/tokens`, also set:
+
+```bash
+export GENERIC_RFQ_PATH_TO_OVERRIDE="mainnet"
+```
+
+Leave `GENERIC_RFQ_PATH_TO_OVERRIDE` unset if the chain prefix is part of the signed path.
+
+## Smoke-test response schemas
+
+Run the local validator tests before pointing the harness at your service:
+
+```bash
+pnpm test src/dex/generic-rfq/validators.test.ts --runInBand
+```
+
+These tests are small, but they document what the adapter accepts. They also catch details that are easy to miss:
+
+- Token entries must include an `address` string. The schema does not checksum or EVM-validate token addresses at this layer, so catch bad token addresses in your own tests too.
+- `decimals` must be present.
+- Price levels must be string numbers.
+- Empty price objects are allowed for disabled pairs.
+- Crossed books are rejected: the highest bid must be lower than the lowest ask.
+- Firm quotes must return an `order` with a valid `maker`, `taker`, token addresses, amounts, `nonceAndMeta`, and `signature`.
+
+## Test your live endpoints
+
+Set the live endpoint credentials:
+
+```bash
+export GENERIC_RFQ_URL="https://mm.example.com/mainnet"
+export GENERIC_RFQ_ACCESS_KEY="<access-key>"
+export GENERIC_RFQ_SECRET_KEY="<base64-secret-key>"
+export HTTP_PROVIDER_1="<mainnet-rpc-url>"
+```
+
+`GENERIC_RFQ_SECRET_KEY` is base64 encoded. The fetcher decodes it before signing requests. The live fetcher uses `paraswap` as the auth domain; use that Domain value for this test unless you edit the script.
+
+The current `fetch-mm-api.ts` script is hardcoded to `network = 1`, so it reads `HTTP_PROVIDER_1` and validates firm quotes against the mainnet taker address declared in the script. Edit those constants if you want to use it against another chain.
+
+Then run the live fetcher:
+
+```bash
+pnpm exec ts-node src/dex/generic-rfq/fetch-mm-api.ts
+```
+
+By default, the fetcher checks:
+
+- `GET /tokens`
+- `GET /pairs`
+- `GET /prices`
+- `GET /blacklist`
+
+The same file also includes a `mainFirm()` helper for `POST /firm`, but it is disabled and its payload uses placeholders. Fill `makerAsset`, `takerAsset`, either `makerAmount` or `takerAmount`, and `userAddress`. Then add the required `takerAddress` field to the payload, and call `mainFirm()` at the bottom of the file.
+
+For `takerAddress`, use the Velora execution contract that will fill the order on that chain. During onboarding, Velora will confirm the exact value to test. The harness validates that your returned order uses the expected `taker`.
+
+## Run route-level E2E tests
+
+After the endpoint checks pass, test whether dex-lib can route through your RFQ liquidity.
+
+Edit [`e2e-test-config.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/e2e-test-config.ts) with the token pairs, side, and amounts you want to test:
+
+```typescript
+export const testConfig = {
+  [Network.MAINNET]: [
+    {
+      srcToken: 'USDC',
+      destToken: 'USDT',
+      amount: '10000',
+      swapSide: SwapSide.SELL,
+    },
+  ],
+};
+```
+
+Then edit `dexKey` in [`generic-rfq-e2e.test.ts`](https://github.com/VeloraDEX/paraswap-dex-lib/blob/master/src/dex/generic-rfq/generic-rfq-e2e.test.ts):
+
+```typescript
+const dexKey = 'YOUR_NAME';
+```
+
+Set the E2E environment:
+
+```bash
+export GENERIC_RFQ_URL="https://mm.example.com/mainnet"
+export GENERIC_RFQ_ACCESS_KEY="<access-key>"
+export GENERIC_RFQ_SECRET_KEY="<base64-secret-key>"
+export GENERIC_RFQ_MAKER_ADDRESS="0x..."
+export HTTP_PROVIDER_1="<mainnet-rpc-url>"
+```
+
+The E2E config also uses `paraswap` as the auth domain.
+
+Run the E2E test:
+
+```bash
+pnpm test src/dex/generic-rfq/generic-rfq-e2e.test.ts --runInBand
+```
+
+A useful passing run proves three things: dex-lib can ingest your cached grid, route through it for the configured token pair, and request a firm quote that produces a signed AugustusRFQ order.
+
+## What to send Velora
+
+When you [contact Velora](https://www.velora.xyz/contact) to become a market maker, include:
+
+- Chain-scoped base URLs for each chain.
+- The chains, token pairs, and expected liquidity you want to start with.
+- Whether you use HMAC authentication, IP allowlisting, or both.
+- Maker wallet addresses and whether they are EOAs or EIP-1271 contracts.
+- The `paraswap-dex-lib` commit you tested against.
+- The endpoint fetcher output and E2E test output.
+
+Do not send private keys or raw Secret Keys. Share credentials through the onboarding channel Velora gives you.
+
+## Current harness notes
+
+The harness is useful because it is strict. Two details matter:
+
+- It rejects crossed books. Keep the highest bid below the lowest ask.
+- Its direct `/firm` validator expects an `order`. If you support the production blacklist shortcut, where `/firm` returns success without `order` for a blacklisted `userAddress`, test that behavior separately and rely on `/blacklist` for the harness run.
+
+Velora's onboarding tests may exercise additional chain-specific takers, maker allowance to AugustusRFQ, and settlement paths.

@@ -1,5 +1,6 @@
 ---
-title: "Overview"
+title: "Delta API reference"
+sidebarTitle: "Overview"
 description: "Delta V2 cuts client-side work out of Delta integrations: the server builds EIP-712 orders ready to sign, prices come back as a route with alternatives, order history is paginated, and one status field follows an order end to end."
 keywords: ["delta", "delta v2", "api-reference"]
 ---
@@ -9,7 +10,8 @@ Build new Delta integrations on V2. The server carries most of the protocol work
 - Orders come back from `POST /v2/delta/orders/build` as EIP-712 typed data ready to sign. You never compose `domain`, `types`, and `value` yourself.
 - `GET /v2/delta/prices` recommends a `route` and lists `alternatives`, so users can pick a different bridge or path.
 - Order history is paginated: `GET /v2/delta/orders` returns `{ data, total, page, limit, hasMore }`.
-- A single `status` field covers the whole lifecycle (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`), replacing the V1 split between `status` and `bridgeStatus`.
+- A single `status` field covers the whole lifecycle (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `REFUNDING`, `CANCELLED`, `REFUNDED`), replacing the V1 split between `status` and `bridgeStatus`.
+- Crosschain bridge refunds include a top-level `refunds[]` array once Velora verifies the refund transaction receipt. Each item carries `tx`, `chainId`, `token`, and raw-unit `amount`.
 - Partner fees are resolved server-side. Pass `partner` / `partnerAddress` / `partnerFeeBps` raw; the server validates and encodes them, and the `getPartnerFee` round-trip disappears.
 
 ## Lifecycle
@@ -31,7 +33,7 @@ Build new Delta integrations on V2. The server carries most of the protocol work
     `POST /v2/delta/orders` — passes `order: toSign.value` and `signature` to the relayer.
   </Step>
   <Step title="Poll">
-    `GET /v2/delta/orders/{orderId}` until `status === "COMPLETED"` (or a terminal failure).
+    `GET /v2/delta/orders/{orderId}` until `status === "COMPLETED"` or a terminal status such as `FAILED`, `EXPIRED`, `CANCELLED`, or `REFUNDED`.
   </Step>
 </Steps>
 

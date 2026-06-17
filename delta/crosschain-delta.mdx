@@ -1,5 +1,6 @@
 ---
-title: "Crosschain Delta"
+title: "Crosschain Delta swaps"
+sidebarTitle: "Crosschain Delta"
 description: "Issue Delta orders that move value between chains in a single user signature."
 keywords: ["delta","crosschain","bridge"]
 ---
@@ -48,9 +49,16 @@ sequenceDiagram
   Delta->>Bridge: Initiate selected bridge leg
   API-->>DApp: status = BRIDGING
 
-  Bridge->>Dest: Finalize destination leg
-  Dest-->>User: output token delivered
-  API-->>DApp: status = COMPLETED
+  alt bridge leg completes
+    Bridge->>Dest: Finalize destination leg
+    Dest-->>User: output token delivered
+    API-->>DApp: status = COMPLETED
+  else bridge leg refunds
+    Bridge-->>API: refund pending
+    API-->>DApp: status = REFUNDING
+    Bridge-->>User: source-chain refund
+    API-->>DApp: status = REFUNDED<br/>(refunds[] populated when verified)
+  end
 ```
 
 ## When to use this
@@ -127,14 +135,18 @@ For USDC routes, CCTP support is USDC-specific. Delta can still quote arbitrary 
 
 ## Status model
 
-Crosschain orders have one extra visible phase after source-chain execution:
+Crosschain orders can have extra visible phases after source-chain execution:
 
 - `PENDING` — the signed order is waiting for auction or settlement.
 - `BRIDGING` — source-chain settlement succeeded and the bridge leg is being finalized.
 - `COMPLETED` — the destination leg was observed as filled.
-- `REFUNDED`, `EXPIRED`, or `FAILED` — the order did not complete as intended.
+- `REFUNDING` — the bridge leg failed or expired, and Velora is polling until the actual refund transaction can be verified.
+- `REFUNDED` — the refund is complete. When refund metadata is available, the order response includes `refunds[]` entries with `tx`, `chainId`, `token`, and raw-unit `amount`.
+- `EXPIRED` or `FAILED` — the order did not complete as intended.
 
 Source-chain bridge initiation is not the same as destination-chain completion. Only mark the user flow complete once the order status reaches `COMPLETED`.
+
+For refund flows, keep the user in an in-progress state while status is `REFUNDING`. Move the flow to a final refund state only after `REFUNDED`; use `refunds[]` for the verified refund transaction when it is present.
 
 ## Implementation notes
 

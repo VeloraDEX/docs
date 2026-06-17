@@ -6,5 +6,7 @@
 | 400 `InsufficientBalance`                                         | Source-token balance dropped between price and submit                               | Re-quote and rebuild; show the user a fresh balance before signing |
 | 200 OK then stuck at `PENDING`                                    | No agent bid the auction (size, pair, or chain) within the window                | Poll [GET /v2/delta/orders/{orderId}](/api-reference/delta/orders-get-by-id); cancel via [POST /v2/delta/orders/cancel](/api-reference/delta/orders-cancel) and re-quote if past your SLA |
 | Order transitions to `SUSPENDED`                                  | Allowance was revoked or balance moved post-submission                          | Re-approve and the relayer will pick the order back up |
+| 400 `deadline must allow enough time for all slices to execute`   | TWAP `deadline` is less than `numSlices × interval` seconds away                | Push the deadline past `now + numSlices × interval`, or use fewer slices / a shorter interval |
+| 400 `totalSrcAmount must be >= numSlices` (also `totalDestAmount`, `maxSrcAmount`) | TWAP total is smaller than the slice count, so a slice would round down to 0 wei | Raise the total or lower `numSlices` so every slice carries at least 1 wei |
 
-<Note>Updated from support tickets at each release. Last updated: 2026-05-27.</Note>
+<Note>Updated from support tickets at each release. Last updated: 2026-06-12.</Note>

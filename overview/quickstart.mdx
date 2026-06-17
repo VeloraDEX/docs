@@ -1,5 +1,6 @@
 ---
-title: "Quickstart"
+title: "Velora quickstart: quote your first swap"
+sidebarTitle: "Quickstart"
 description: "Get a quote for 1 ETH → USDC in 60 seconds with cURL, the SDK, or the Widget. Then choose how to integrate."
 keywords: ["quickstart","quote","swap","getting started"]
 ---
@@ -18,36 +19,6 @@ curl -s "https://api.velora.xyz/v2/quote" \
   --data-urlencode "side=SELL" \
   --data-urlencode "chainId=1" \
   --data-urlencode "mode=ALL" \
-  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-  --data-urlencode "partner=my-app-name" \
-  -G | jq
-```
-
-```bash Force Delta (cURL)
-curl -s "https://api.velora.xyz/v2/quote" \
-  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
-  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
-  --data-urlencode "amount=1000000000000000000" \
-  --data-urlencode "srcDecimals=18" \
-  --data-urlencode "destDecimals=6" \
-  --data-urlencode "side=SELL" \
-  --data-urlencode "chainId=1" \
-  --data-urlencode "mode=DELTA" \
-  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
-  --data-urlencode "partner=my-app-name" \
-  -G | jq
-```
-
-```bash Force Market (cURL)
-curl -s "https://api.velora.xyz/v2/quote" \
-  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
-  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
-  --data-urlencode "amount=1000000000000000000" \
-  --data-urlencode "srcDecimals=18" \
-  --data-urlencode "destDecimals=6" \
-  --data-urlencode "side=SELL" \
-  --data-urlencode "chainId=1" \
-  --data-urlencode "mode=MARKET" \
   --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
   --data-urlencode "partner=my-app-name" \
   -G | jq
