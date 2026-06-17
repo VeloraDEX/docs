@@ -5,13 +5,13 @@ description: "Delta is Velora's intent protocol: gasless, MEV-protected, Crossch
 keywords: ["delta", "intent swap", "gasless swap", "MEV protection", "revert protection", "crosschain swap"]
 ---
 
-Delta is Velora's intent protocol. Instead of building, signing, and submitting an on-chain transaction yourself, you sign an off-chain **order** describing what you want, and a competitive network of solvers (the [Portikus Network](/solver-network/portikus)) fills it on your behalf.
+Delta is Velora's intent protocol. Instead of building, signing, and submitting an on-chain transaction yourself, you sign an off-chain **order** describing what you want. A competitive network of solvers (the [Portikus Network](/solver-network/portikus)) submits fill calldata, and Delta settles the winning fill for you.
 
 ## What you get
 
 <CardGroup cols={2}>
   <Card title="Gasless" icon="gas-pump">
-    The user never pays gas. Solvers cover execution cost out of their margin.
+    The user never pays gas. Execution cost is handled inside the Delta settlement flow.
   </Card>
   <Card title="MEV-protected" icon="shield" href="/solver-network/sealed-bid-auctions">
     Orders are filled via sealed-bid auction. No public mempool. No sandwich risk.

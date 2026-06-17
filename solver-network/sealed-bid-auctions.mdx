@@ -5,7 +5,7 @@ description: "How sealed-bid auctions work, why they suit DeFi trading, and how 
 keywords: ["sealed-bid auction", "solver auction", "MEV protection", "private auction", "delta auction"]
 ---
 
-Sealed-bid auctions are a Portikus feature: they're how the [Portikus Network](/solver-network/portikus) fills intents for any app built on it, Delta included. In a sealed-bid auction, every bidder submits one private bid without seeing what anyone else offered. Every Delta order is filled through one: solvers bid blind, the bid with the best simulated outcome wins, and the settlement contract enforces the minimum the user signed. The result is a market where the only way for a solver to win is to quote its true best price.
+Sealed-bid auctions are a Portikus feature: they're how the [Portikus Network](/solver-network/portikus) fills intents for any app built on it, Delta included. In a sealed-bid auction, every bidder submits one private bid without seeing what anyone else offered. Every Delta order is filled through one: solvers bid blind with executable calldata, the best simulated outcome wins, and protocol settlement executes the winning calldata while enforcing the minimum the user signed. The result is a market where the only way for a solver to win is to quote its true best price.
 
 ## How a sealed-bid auction works
 
@@ -39,7 +39,7 @@ flowchart TB
   C --> D[Validate and simulate every bid]
   D --> F{Viable bid?}
   F -- "yes" --> G[Best simulated outcome wins]
-  G --> H[Winner settles on-chain]
+  G --> H[Protocol executes winning calldata]
   H --> I{Settled?}
   I -- "yes" --> J([Completed])
   I -. "no" .-> A
@@ -54,11 +54,11 @@ flowchart TB
 
 Three details do most of the work:
 
-1. **A bid is a commitment, not a quote.** Solvers don't reply with a number; they reply with the exact calldata that executes the fill and the amount it delivers. There's no second look and no renegotiation after seeing the field.
+1. **A bid is a commitment, not a quote.** Solvers don't reply with a number; they reply with the exact calldata the protocol can execute and the amount that calldata should deliver. There's no second look and no renegotiation after seeing the field.
 2. **Bids are ranked by simulation, not by claim.** Before picking a winner, the order server simulates every bid against current chain state and ranks bids by what they actually produce. A solver that promises a great price but whose calldata reverts or underdelivers doesn't win.
 3. **Surplus flows back.** When the winning fill beats the quoted price, the user receives the improvement; a portion is split between the integrator and the protocol. Solvers compete on execution quality, and users capture it.
 
-If no viable bid arrives, or the winner's settlement fails on-chain, the order isn't stuck: it enters the next round and gets auctioned again, until it fills or its deadline expires.
+If no viable bid arrives, or the winning calldata fails during on-chain settlement, the order isn't stuck: it enters the next round and gets auctioned again, until it fills or its deadline expires.
 
 ## What stops a malicious solver
 
@@ -68,14 +68,14 @@ Each layer of the auction closes a different attack:
 |---|---|
 | Watch rivals' bids and undercut by a tick | Bids are sealed. Solvers see only the order, never each other's offers. |
 | Claim a great price, deliver a bad fill | Every bid is simulated before the award. The ranking uses the simulated result, not the solver's claim. |
-| Win the auction, then settle below the quote | The user's signed minimum is enforced by the settlement contract. A fill below it reverts on-chain. |
-| Settle orders without participating honestly | Only solvers registered in the Portikus registry contract can settle. A misbehaving solver can be removed, and removal is enforced on-chain. |
-| Win, then refuse to settle (griefing) | The order re-enters the next auction round. The user's funds never moved, so the failed solver wasted only its own auction slot. |
+| Submit calldata that would deliver below the quote | The user's signed minimum is enforced by the settlement contract. A fill below it reverts on-chain. |
+| Submit fill calldata without participating honestly | Only solvers registered in the Portikus registry contract can provide executable bids. A misbehaving solver can be removed, and removal is enforced on-chain. |
+| Win with calldata that later reverts or becomes stale | The order re-enters the next auction round. The user's funds never moved, so the failed solver wasted only its own auction slot. |
 
 The pattern across all five: the auction never has to trust what a solver says. Bids are verified by simulation before the award, and the user's floor is verified by the contract after it.
 
 ## Related pages
 
-- [Portikus Network](/solver-network/portikus) — the intent infrastructure that runs and settles these auctions.
+- [Portikus Network](/solver-network/portikus) — the intent infrastructure behind these auctions.
 - [How it works](/delta/how-it-works) — where the auction sits in the full Delta flow.
 - [Why Delta](/delta/overview) — what the auction buys you as an integrator: gasless, MEV-protected swaps.

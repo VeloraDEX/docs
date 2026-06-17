@@ -1,11 +1,11 @@
 ---
 title: "TWAP orders with the SDK"
 sidebarTitle: "TWAP"
-description: "Split a large trade into scheduled slices from the SDK. In Velora, a TWAP is a Delta order the user signs once and solvers settle slice-by-slice over time."
+description: "Split a large trade into scheduled slices from the SDK. In Velora, a TWAP is a Delta order the user signs once and Delta settles slice-by-slice over time."
 keywords: ["sdk", "twap", "delta", "scheduled", "slices", "gasless"]
 ---
 
-A **TWAP** (time-weighted average price) splits a larger trade into smaller slices executed over time. In Velora, a TWAP is a **Delta order**: the user signs one scheduled order, and the [Portikus](/delta/overview) solver network settles each eligible slice gaslessly until the order completes or expires.
+A **TWAP** (time-weighted average price) splits a larger trade into smaller slices executed over time. In Velora, a TWAP is a **Delta order**: the user signs one scheduled order, and Delta settles each eligible slice gaslessly through the [Portikus](/delta/overview) solver network until the order completes or expires.
 
 You build TWAPs through the same `sdk.delta` module as market Delta orders, using `submitTWAPDeltaOrder` (or the `buildTWAPDeltaOrder` split flow). The defining inputs are the **total amount**, the **number of slices**, and the **interval** between them.
 

@@ -12,7 +12,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | User intent | Prefer | Agent action | Why |
 |---|---|---|---|
 | "Swap token A to token B" | `mode=ALL` | Call [`GET /v2/quote`](/api-reference/market/quote) with `mode=ALL`, `chainId`, token addresses, amount, slippage, and the app or project `partner` value. | Velora can choose the best available path. |
-| "Gasless swap" or "I have no gas" | Delta | Call `GET /v2/quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | Delta uses an EIP-712 signature and solver settlement. |
+| "Gasless swap" or "I have no gas" | Delta | Call `GET /v2/quote` with `mode=DELTA`. Continue only if the response includes a `delta` block. | Delta uses an EIP-712 signature, a solver auction, and protocol settlement. |
 | "Place a limit order" or "trade only if price reaches X" | Delta `LIMIT` order | Collect the target price, side, token pair, chain, amount, expiry, recipient, and partially-fillable preference before building the order. | New limit orders are Delta orders over the Delta API, not AugustusRFQ. |
 | "TWAP this trade" or "split this order over time" | Delta TWAP | Collect side, total amount, number of slices, cadence/interval, chain, token pair, slippage/price constraints, deadline/expiry, recipient, and max source spend for buy TWAPs. | TWAP is one scheduled Delta order, not repeated independent swaps. Preserve sell-vs-buy amount semantics. |
 | "Best price" | `mode=ALL` | Quote with `mode=ALL`, then branch on `delta` vs `market`. | Velora can choose the best available path. |
@@ -99,7 +99,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | HMAC or quote validation error | The quote payload is stale or mismatched. | Requote and rebuild from the same fresh response. |
 | Approval transaction succeeds but swap still fails allowance check | Approval went to the wrong spender or wrong chain. | Check the spender for the selected mode and ask for a new approval if needed. |
 | User rejects transaction or signature | User declined the action. | Stop. Do not retry automatically. |
-| Delta order remains pending | Solver settlement is still in progress or the order may expire. | Poll status with backoff and show the latest order state. Do not resubmit blindly. |
+| Delta order remains pending | The auction or protocol settlement is still in progress, or the order may expire. | Poll status with backoff and show the latest order state. Do not resubmit blindly. |
 | Transaction reverts | Market transaction failed on-chain. | Surface the revert, suggest requoting, and avoid replaying the same calldata. |
 
 ## Guardrails for agents

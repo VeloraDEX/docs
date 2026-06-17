@@ -1,11 +1,11 @@
 ---
 title: "Delta swaps with the SDK"
 sidebarTitle: "Delta swaps"
-description: "Submit, sign, and track gasless Delta intents from sdk.delta, where solvers execute swaps on the user's behalf."
+description: "Submit, sign, and track gasless Delta intents from sdk.delta, where solvers compete to provide executable fills."
 keywords: ["sdk", "delta", "intents", "gasless", "submitDeltaOrder"]
 ---
 
-A **swap** in Velora settles through one of two execution paths: **Delta** (this page) or [**Market**](/sdk/products/swap). Delta wraps the [Delta API](/delta/overview): gasless, MEV-protected swaps where the user signs an off-chain order, and a network of solvers (Portikus) competes to fill it. The user pays no gas, and the solver covers execution cost out of their margin.
+A **swap** in Velora settles through one of two execution paths: **Delta** (this page) or [**Market**](/sdk/products/swap). Delta wraps the [Delta API](/delta/overview): gasless, MEV-protected swaps where the user signs an off-chain order, and a network of solvers (Portikus) competes to provide the best fill. The user pays no gas; settlement happens through the Delta flow.
 
 Delta is also the engine behind two other products in the SDK: [Limit orders](/sdk/products/limit-orders) (a Delta order with a target price) and [TWAP](/sdk/products/twap) (a Delta order split into scheduled slices). This page covers the **market** Delta order, and those pages build on the same flow.
 
@@ -17,7 +17,7 @@ Delta orders are **server-built**: you don't compose EIP-712 typed data locally.
 
 - The user shouldn't pay gas, or doesn't have gas on the source chain.
 - You want MEV protection. Orders fill via private auction, not the public mempool.
-- You want a single signature to settle crosschain. See [Crosschain Delta](/delta/crosschain-delta).
+- You want one signed intent to settle crosschain. See [Crosschain Delta](/delta/crosschain-delta).
 
 For swaps where the user submits the transaction themselves, see [Market](/sdk/products/swap).
 

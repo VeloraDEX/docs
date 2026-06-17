@@ -7,7 +7,7 @@ keywords: ["market api", "swap", "dex aggregator api", "price route", "build tra
 
 A **Market swap** routes through DEX liquidity and settles in a single on-chain transaction that **your user signs and broadcasts**. This page walks the whole integration request by request: get a price route, build the calldata, approve the router, and send the transaction. Every example targets `https://api.velora.xyz`; no SDK required.
 
-Market is the right path when the user has gas and wants synchronous, atomic settlement. For gasless, MEV-protected swaps the solver network settles on the user's behalf, use a [Delta swap](/integrate/api/delta-swap) instead. For the conceptual model, see [Market → How it works](/market/how-it-works); for a typed wrapper, see [SDK → Market](/sdk/products/swap).
+Market is the right path when the user has gas and wants synchronous, atomic settlement. For gasless, MEV-protected swaps that Delta settles from a signed intent, use a [Delta swap](/integrate/api/delta-swap) instead. For the conceptual model, see [Market → How it works](/market/how-it-works); for a typed wrapper, see [SDK → Market](/sdk/products/swap).
 
 ## The flow
 

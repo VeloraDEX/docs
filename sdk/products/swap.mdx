@@ -5,7 +5,7 @@ description: "Build, approve, and execute Market Swaps through sdk.swap. The use
 keywords: ["sdk", "swap", "market", "buildTx", "getRate"]
 ---
 
-A **swap** in Velora settles through one of two execution paths: [**Delta**](/sdk/products/delta) or **Market** (this page). Market is the atomic on-chain path. It wraps the [Market API](/market/overview) for rates, allowances, and transaction-building, and the **user** signs and submits the transaction themselves. For gasless swaps where solvers settle on the user's behalf, see [Delta](/sdk/products/delta).
+A **swap** in Velora settles through one of two execution paths: [**Delta**](/sdk/products/delta) or **Market** (this page). Market is the atomic on-chain path. It wraps the [Market API](/market/overview) for rates, allowances, and transaction-building, and the **user** signs and submits the transaction themselves. For gasless swaps that settle from a signed intent, see [Delta](/sdk/products/delta).
 
 <Note>
 This path is exposed as `sdk.swap` in code (the namespace predates the Delta/Market naming). `sdk.swap` is the Market execution path for swaps.
