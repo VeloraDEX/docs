@@ -49,12 +49,8 @@ function loadStylesheet(href) {
 
 function syncConsentMode() {
   const accepted = CookieConsent.acceptedCategory('analytics');
-  const state = accepted ? 'granted' : 'denied';
   gtag('consent', 'update', {
-    analytics_storage: state,
-    ad_storage: state,
-    ad_user_data: state,
-    ad_personalization: state,
+    analytics_storage: accepted ? 'granted' : 'denied',
   });
   if (accepted) enableAnalytics();
 }
