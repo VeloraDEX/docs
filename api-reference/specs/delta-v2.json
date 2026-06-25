@@ -469,6 +469,32 @@
         }
       }
     },
+    "/v2/delta/orders/build/cancellation": {
+      "post": {
+        "summary": "Build signable Delta V2 cancellation data",
+        "description": "Returns EIP-712 typed data for cancelling one or more Delta V2 orders. Sign the returned `toSign` payload, then send the same `orderIds` and the signature to `POST /v2/delta/orders/cancel`.",
+        "operationId": "deltaV2OrdersBuildCancellation",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BuildOrderCancellationRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cancellation EIP-712 typed data ready to sign.",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BuiltOrderCancellation" }
+              }
+            }
+          },
+          "400": { "description": "Unknown order, mismatched user/chain, finalized orders, or too many order IDs" }
+        }
+      }
+    },
     "/v2/delta/orders": {
       "post": {
         "summary": "Submit a signed Delta V2 order",
@@ -530,7 +556,7 @@
     "/v2/delta/orders/cancel": {
       "post": {
         "summary": "Cancel one or more Delta V2 orders",
-        "description": "Sign-and-post cancellation. Only succeeds for orders still open in the auction (`PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`).",
+        "description": "Sign-and-post cancellation. Build the payload with `POST /v2/delta/orders/build/cancellation`, sign the returned `toSign`, then send the same `orderIds` here with the signature.",
         "operationId": "deltaV2OrdersCancel",
         "requestBody": {
           "required": true,
@@ -541,7 +567,7 @@
                 "required": ["orderIds", "signature"],
                 "properties": {
                   "orderIds": { "type": "array", "items": { "type": "string", "format": "uuid" }, "minItems": 1, "maxItems": 100 },
-                  "signature": { "type": "string", "description": "EIP-712 signature over the cancellation payload." }
+                  "signature": { "type": "string", "description": "EIP-712 signature over the `toSign` payload returned by `POST /v2/delta/orders/build/cancellation`." }
                 }
               }
             }
@@ -786,6 +812,53 @@
             }
           },
           "orderHash": { "type": "string", "description": "EIP-712 hash. Use for status lookup before the order id is assigned." }
+        }
+      },
+      "BuildOrderCancellationRequest": {
+        "type": "object",
+        "required": ["orderIds"],
+        "properties": {
+          "orderIds": {
+            "type": "array",
+            "items": { "type": "string", "format": "uuid" },
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Delta order IDs to cancel. All orders must belong to the same user and source chain."
+          }
+        }
+      },
+      "BuiltOrderCancellation": {
+        "type": "object",
+        "properties": {
+          "toSign": {
+            "type": "object",
+            "description": "EIP-712 typed data to sign before calling `POST /v2/delta/orders/cancel`.",
+            "properties": {
+              "domain": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "version": { "type": "string" },
+                  "chainId": { "type": "integer" },
+                  "verifyingContract": { "type": "string" }
+                }
+              },
+              "types": {
+                "type": "object",
+                "description": "EIP-712 type definitions for `OrderCancellations`."
+              },
+              "value": {
+                "type": "object",
+                "properties": {
+                  "orderIds": {
+                    "type": "array",
+                    "items": { "type": "string", "format": "uuid" }
+                  }
+                }
+              }
+            }
+          },
+          "hash": { "type": "string", "description": "EIP-712 hash of the cancellation payload." }
         }
       },
       "SubmitOrderV2Request": {

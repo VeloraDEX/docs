@@ -263,6 +263,7 @@
               "api-reference/delta/strategies",
               "api-reference/delta/is-token-supported",
               "api-reference/delta/orders-build",
+              "api-reference/delta/orders-build-cancellation",
               "api-reference/delta/orders-submit",
               "api-reference/delta/orders-cancel",
               "api-reference/delta/orders-list",

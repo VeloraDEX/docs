@@ -191,6 +191,46 @@
       "docs": "/api-reference/troubleshooting#post-delta-orders-build"
     },
     {
+      "endpoint": "POST /v2/delta/orders/build/cancellation",
+      "status": 400,
+      "match": "Orders are not found",
+      "cause": "At least one orderIds value is unknown or does not belong to a Delta V2 order.",
+      "fix": "Refresh the user's order list with GET /v2/delta/orders and build from returned id values only.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build-cancellation"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/build/cancellation",
+      "status": 400,
+      "match": "All orders must belong to the same user and chain",
+      "cause": "The batch mixes orders from different owners or source chains.",
+      "fix": "Group orders by owner and source chain; call this endpoint once per group.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build-cancellation"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/build/cancellation",
+      "status": 400,
+      "match": "All orders are already finalized",
+      "cause": "Every requested order is terminal or already resolving cancellation.",
+      "fix": "Skip orders that are COMPLETED, FAILED, EXPIRED, CANCELLED, REFUNDED, or already CANCELLING.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build-cancellation"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/build/cancellation",
+      "status": null,
+      "match": "Signature later rejected by POST /v2/delta/orders/cancel",
+      "cause": "The client signed a reconstructed payload instead of the returned toSign object.",
+      "fix": "Sign toSign.domain, toSign.types, and toSign.value exactly, then send the same orderIds to cancel.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build-cancellation"
+    },
+    {
+      "endpoint": "POST /v2/delta/orders/build/cancellation",
+      "status": 400,
+      "match": "orderIds.length > 100",
+      "cause": "Tried to build one cancellation payload for too many orders.",
+      "fix": "Chunk into batches of 100 or fewer.",
+      "docs": "/api-reference/troubleshooting#post-delta-orders-build-cancellation"
+    },
+    {
       "endpoint": "POST /v2/delta/orders",
       "status": 400,
       "match": "Invalid signature",
@@ -243,7 +283,7 @@
       "status": 400,
       "match": "Invalid signature",
       "cause": "Cancellation EIP-712 typed data assembled wrong (wrong chainId or wrong domain).",
-      "fix": "Sign the relayer's cancel payload; the SDK's signCancelDeltaOrderRequest handles this for you.",
+      "fix": "Sign the toSign payload from POST /v2/delta/orders/build/cancellation; the SDK's signCancelDeltaOrderRequest handles this for you.",
       "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
     },
     {
@@ -251,7 +291,7 @@
       "status": 400,
       "match": "Order already settled",
       "cause": "One or more orderIds are already post-settlement or terminal: COMPLETED, REFUNDING, REFUNDED, FAILED, EXPIRED, or CANCELLED.",
-      "fix": "Pre-filter orderIds to PENDING, AWAITING_SIGNATURE, ACTIVE, or SUSPENDED.",
+      "fix": "Pre-filter orderIds to PENDING, AWAITING_SIGNATURE, ACTIVE, SUSPENDED, or EXECUTING.",
       "docs": "/api-reference/troubleshooting#post-delta-orders-cancel"
     },
     {

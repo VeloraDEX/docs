@@ -82,7 +82,13 @@ curl -G 'https://api.velora.xyz/v2/delta/orders' \
 
 To check one order, `GET /v2/delta/orders/{orderId}`, or open it in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}` for a human-readable status view. That's useful for a resting limit order that may sit `ACTIVE` for a while.
 
-Cancelling is gasless: the user signs a cancellation payload and you post the order IDs. It only succeeds while the order is still open.
+Cancelling is gasless. Build the cancellation payload, have the user sign the returned `toSign` object, then post the same order IDs with the signature. It only succeeds while the order is still open or executing.
+
+```bash
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build/cancellation' \
+  -H 'Content-Type: application/json' \
+  -d '{ "orderIds": ["..."] }'
+```
 
 ```bash
 curl -X POST 'https://api.velora.xyz/v2/delta/orders/cancel' \
@@ -90,7 +96,7 @@ curl -X POST 'https://api.velora.xyz/v2/delta/orders/cancel' \
   -d '{ "orderIds": ["..."], "signature": "0x..." }'
 ```
 
-See [`GET /v2/delta/orders`](/api-reference/delta/orders-list) and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
+See [`GET /v2/delta/orders`](/api-reference/delta/orders-list), [`POST /v2/delta/orders/build/cancellation`](/api-reference/delta/orders-build-cancellation), and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
 
 ## Partner fee
 

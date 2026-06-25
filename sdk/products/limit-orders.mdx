@@ -144,7 +144,7 @@ const { data, total } = await sdk.delta.getDeltaOrders({
 await sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] });
 ```
 
-This signs and posts a cancellation. It only succeeds while the order is still open in the auction.
+This builds the cancellation payload, signs it, and posts the cancellation. It only succeeds while the order is still open or executing in the auction.
 
 ## Partner fee
 
