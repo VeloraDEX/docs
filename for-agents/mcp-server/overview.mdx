@@ -48,6 +48,7 @@ Every tool response also carries `agentHints` (the next safe step) and `docs` (l
 | Category | Tools |
 |---|---|
 | Quoting and building | `velora_get_quote` (Delta, Market, or ALL), `velora_build_transaction` (unsigned, Market only) |
+| Delta order lifecycle | `velora_build_delta_order`, `velora_build_twap_delta_order`, `velora_submit_delta_order`, `velora_submit_twap_order`, `velora_get_delta_orders`, `velora_get_delta_order`, `velora_build_cancel_delta_order`, `velora_submit_cancel_delta_order`, `velora_get_bridge_routes` (all unsigned build → sign externally → submit) |
 | Agent guidance | `velora_decide_execution_route`, `velora_explain_quote`, `velora_validate_agent_plan` |
 | Market data | `velora_get_supported_chains`, `velora_get_tokens` |
 | Documentation | `velora_search_docs`, `velora_get_docs_page` |
