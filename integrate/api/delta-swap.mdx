@@ -24,8 +24,8 @@ For the conceptual model behind the auction and settlement, see [Delta → How i
   <Step title="Sign and submit">
     The user signs `toSign` (ERC-2098 compact signature). `POST /v2/delta/orders` with the `order`, `signature`, `chainId`, and `partner`. See [`POST /v2/delta/orders`](/api-reference/delta/orders-submit).
   </Step>
-  <Step title="Poll until settled">
-    `GET /v2/delta/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, `REFUNDED`). Crosschain orders can also report `REFUNDING` while Velora waits to verify a bridge refund. See [`GET /v2/delta/orders/{orderId}`](/api-reference/delta/orders-get-by-id).
+  <Step title="Poll, or cancel before settlement">
+    `GET /v2/delta/orders/{orderId}` until the status is terminal (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, `REFUNDED`). If the user cancels first, build a cancellation payload, have them sign it, then post it. See [`POST /v2/delta/orders/build/cancellation`](/api-reference/delta/orders-build-cancellation).
   </Step>
 </Steps>
 
@@ -115,6 +115,24 @@ curl 'https://api.velora.xyz/v2/delta/orders/{orderId}'
 Poll until the order reaches a terminal status. A same-chain market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine. Crosschain orders can spend longer in `BRIDGING`, or in `REFUNDING` if the bridge leg failed and a refund transaction is still being verified.
 
 For a human-readable view (status, fills, the settlement transaction), open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. It's handy for debugging and for linking users to their order.
+
+## 6. Cancel before settlement
+
+Cancellation is gasless. Build the EIP-712 cancellation payload for one or more open orders, have the user sign the returned `toSign` object, then post the same `orderIds` with the signature.
+
+```bash
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build/cancellation' \
+  -H 'Content-Type: application/json' \
+  -d '{ "orderIds": ["..."] }'
+```
+
+```bash
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/cancel' \
+  -H 'Content-Type: application/json' \
+  -d '{ "orderIds": ["..."], "signature": "0x..." }'
+```
+
+Cancellation only succeeds while the order is still open or executing. See [`POST /v2/delta/orders/build/cancellation`](/api-reference/delta/orders-build-cancellation) and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
 
 ## Partner fee
 

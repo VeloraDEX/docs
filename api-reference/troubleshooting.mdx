@@ -17,6 +17,7 @@ import MarketPricesFailureModes from "/snippets/failure-modes/market-prices.mdx"
 import MarketTransactionsFailureModes from "/snippets/failure-modes/market-transactions.mdx";
 import DeltaV2PricesFailureModes from "/snippets/failure-modes/delta-v2-prices.mdx";
 import DeltaV2OrdersBuildFailureModes from "/snippets/failure-modes/delta-v2-orders-build.mdx";
+import DeltaV2OrdersBuildCancellationFailureModes from "/snippets/failure-modes/delta-v2-orders-build-cancellation.mdx";
 import DeltaV2OrdersSubmitFailureModes from "/snippets/failure-modes/delta-v2-orders-submit.mdx";
 import DeltaV2OrdersCancelFailureModes from "/snippets/failure-modes/delta-v2-orders-cancel.mdx";
 
@@ -35,6 +36,10 @@ Each table covers a single endpoint and is updated from support tickets at each 
 ### POST /v2/delta/orders/build
 
 <DeltaV2OrdersBuildFailureModes />
+
+### POST /v2/delta/orders/build/cancellation
+
+<DeltaV2OrdersBuildCancellationFailureModes />
 
 ### POST /v2/delta/orders
 

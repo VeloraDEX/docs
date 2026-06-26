@@ -38,7 +38,7 @@ That crosschain-first model also cleans up the protocol surface:
 | `GET /prices/partnerfee/{chainId}` | _Not needed_ | Pass `partner` / `partnerAddress` / `partnerFeeBps` raw on every V2 call |
 | `POST /delta/orders/build` | [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build) | Different body — pass `route` (not `price` + `hmac`); response wraps typed data in `toSign` |
 | `POST /delta/orders` | [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) | Submit `order: built.toSign.value` instead of `data` from V1 build |
-| `POST /delta/orders/cancel` | [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel) | Same shape |
+| `POST /delta/orders/cancel` | [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel) | Same submit body; build the signable payload with [`POST /v2/delta/orders/build/cancellation`](/api-reference/delta/orders-build-cancellation) |
 | `GET /delta/orders` | [`GET /v2/delta/orders`](/api-reference/delta/orders-list) | Wraps array in `{ data, total, page, limit, hasMore }` |
 | `GET /delta/orders/{orderId}` | [`GET /v2/delta/orders/{orderId}`](/api-reference/delta/orders-get-by-id) | New response shape — `input` / `output` carry expected + executed amounts |
 | `GET /delta/orders/hash/{hash}` | [`GET /v2/delta/orders/hash/{hash}`](/api-reference/delta/orders-get-by-hash) | Same as above |
@@ -280,7 +280,7 @@ You now know how many pages remain, which is useful for "load more" UIs without 
 
 ### 8. Cancel
 
-No semantic change: same path under `/v2`, same request body.
+Posting the signed cancellation keeps the same request body under `/v2`. Build the typed data server-side first, then have the user sign the returned `toSign` object.
 
 ```diff
 - POST /delta/orders/cancel
@@ -289,6 +289,12 @@ No semantic change: same path under `/v2`, same request body.
     "orderIds":  ["..."],
     "signature": "0x..."
   }
+```
+
+```bash
+curl -X POST 'https://api.velora.xyz/v2/delta/orders/build/cancellation' \
+  -H 'Content-Type: application/json' \
+  -d '{ "orderIds": ["..."] }'
 ```
 
 ### 9. Partner fee

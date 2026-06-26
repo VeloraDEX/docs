@@ -138,7 +138,7 @@ if (OrderHelpers.checks.isExecutedAuction(updated)) {
 }
 ```
 
-List a user's orders with `sdk.delta.getDeltaOrders` and narrow on `onChainOrderType` (`"TWAPOrder"` / `"TWAPBuyOrder"`) to surface their TWAPs. Cancel the remaining (unsettled) slices with `sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] })`.
+List a user's orders with `sdk.delta.getDeltaOrders` and narrow on `onChainOrderType` (`"TWAPOrder"` / `"TWAPBuyOrder"`) to surface their TWAPs. Cancel the remaining (unsettled) slices with `sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] })`; the SDK builds the cancellation payload, signs it, and posts the request.
 
 ## Partner fee
 

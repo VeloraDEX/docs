@@ -165,7 +165,7 @@ See [Monetize](/sdk/monetize) for the full field reference and fee-vs-surplus tr
 await sdk.delta.cancelDeltaOrders({ orderIds: [auction.id] });
 ```
 
-This signs and posts a cancellation request. It only succeeds for orders that are still open in the auction.
+This builds the cancellation payload, signs it, and posts the request. It only succeeds for orders that are still open or executing in the auction. REST integrations do the same sequence through [`POST /v2/delta/orders/build/cancellation`](/api-reference/delta/orders-build-cancellation) and [`POST /v2/delta/orders/cancel`](/api-reference/delta/orders-cancel).
 
 ## Crosschain Delta
 
