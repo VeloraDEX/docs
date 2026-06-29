@@ -1,0 +1,9 @@
+| Symptom | Root cause | Fix |
+|---|---|---|
+| 400 `Orders are not found` | At least one `orderIds` value is unknown or does not belong to a Delta V2 order | Refresh the user's order list with [GET /v2/delta/orders](/api-reference/delta/orders-list) and build from returned `id` values only |
+| 400 `All orders must belong to the same user and chain` | The batch mixes orders from different owners or source chains | Group orders by owner and source chain; call this endpoint once per group |
+| 400 `All orders are already finalized` | Every requested order is terminal or already resolving cancellation | Skip orders that are `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`, or already `CANCELLING` |
+| Signature later rejected by `POST /v2/delta/orders/cancel` | The client signed a reconstructed payload instead of the returned `toSign` object | Sign `toSign.domain`, `toSign.types`, and `toSign.value` exactly, then send the same `orderIds` to cancel |
+| 400 `orderIds.length > 100` | Tried to build one cancellation payload for too many orders | Chunk into batches of 100 or fewer |
+
+<Note>Updated from support tickets at each release. Last updated: 2026-06-25.</Note>

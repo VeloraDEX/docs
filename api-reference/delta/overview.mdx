@@ -47,6 +47,7 @@ Build new Delta integrations on V2. The server carries most of the protocol work
 | `GET` | `/v2/delta/prices/strategies/{chainId}` | Delta yield strategies with APR |
 | `GET` | `/v2/delta/prices/is-token-supported` | Quick token-support check |
 | `POST` | `/v2/delta/orders/build` | Server-built EIP-712 typed data ready to sign |
+| `POST` | `/v2/delta/orders/build/cancellation` | EIP-712 typed data for cancelling orders |
 | `POST` | `/v2/delta/orders` | Submit a signed order |
 | `POST` | `/v2/delta/orders/cancel` | Sign-and-post cancellation |
 | `GET` | `/v2/delta/orders` | List a user's orders (paginated) |
