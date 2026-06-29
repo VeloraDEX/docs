@@ -106,7 +106,9 @@ Build a Delta order from a Delta quote's route, returning unsigned EIP-712 typed
 
 Returns `result.raw` with `{ toSign, orderHash }`, where `toSign` is the unsigned EIP-712 typed data. Sign it externally, then call `velora_submit_delta_order`.
 
-Before the order can settle, the source token must be authorized to the Delta contract: either grant an on-chain ERC-20 `approve` to it, or pass a Permit/Permit2 signature in the `permit` field of this build call. See [Token approvals for agents](/for-agents/token-approvals) for the spender and Permit decision rules.
+<Note>
+  Before the order can settle, the source token must be authorized to the Delta contract: either grant an on-chain ERC-20 `approve` to it, or pass a Permit/Permit2 signature in the `permit` field of this build call. See [Token approvals for agents](/for-agents/token-approvals) for the spender and Permit decision rules.
+</Note>
 
 ### velora_build_twap_delta_order
 
