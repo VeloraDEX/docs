@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(rmdir api-reference *)",
-      "Bash(mkdir -p learn/introduction learn/protocols learn/trading-concepts learn/security build/quickstart build/integration-guides build/sdk build/widget build/smart-contracts build/operations build/ai-agents api-reference/market api-reference/delta api-reference/rfq api-reference/tokens help)"
-    ]
-  }
-}
