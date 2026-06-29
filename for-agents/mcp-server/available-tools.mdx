@@ -1,11 +1,11 @@
 ---
 title: "Velora MCP server tools"
 sidebarTitle: "Available tools"
-description: "Reference for all 9 Velora MCP server tools and 5 resources — parameters, return shapes, and the agent rules each tool enforces."
-keywords: ["Velora MCP server", "MCP tools", "velora_get_quote", "velora_build_transaction", "MCP resources", "DEX quote tool", "Model Context Protocol"]
+description: "Reference for all 18 Velora MCP server tools and 5 resources — parameters, return shapes, and the agent rules each tool enforces."
+keywords: ["Velora MCP server", "MCP tools", "velora_get_quote", "velora_build_transaction", "velora_build_delta_order", "MCP resources", "DEX quote tool", "Model Context Protocol"]
 ---
 
-The Velora MCP server exposes 9 tools and 5 read-only resources. Tool and parameter names below are verbatim from the server's public contract; the contract is stable, so agents can hardcode against it.
+The Velora MCP server exposes 18 tools and 5 read-only resources. Tool and parameter names below are verbatim from the server's public contract; the contract is stable, so agents can hardcode against it.
 
 ## Response envelope
 
@@ -75,6 +75,130 @@ Returns `result.raw` with the unsigned transaction fields: `from`, `to` (the Aug
 Agent rules:
 - The transaction is never signed here. Every response carries the warning "Review and sign externally with the user's wallet."
 - Delta-shaped input (anything containing `delta`, `orderType`, or `alternatives` keys) is rejected with an error pointing to the Delta build → sign → submit path.
+
+## Delta order lifecycle
+
+A Delta quote completes through these tools, not through `velora_build_transaction`. The path is always build → sign externally → submit: a build tool returns **unsigned** EIP-712 typed data, you sign it with the user's wallet, and a submit tool forwards your signature. The server never signs and never holds a key. Pass every `route` and `order` payload verbatim — never normalize, reconstruct, or mutate it (including any `hmac`).
+
+### velora_build_delta_order
+
+Build a Delta order from a Delta quote's route, returning unsigned EIP-712 typed data. Get a Delta quote first (`velora_get_quote` with `mode=DELTA`).
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | |
+| `route` | object | Yes | `result.raw.delta.route` (or one of its `alternatives`) from the Delta quote, copied **verbatim**. |
+| `side` | `"SELL"` \| `"BUY"` | Yes | |
+| `owner` | string | Yes | The order owner's address. |
+| `beneficiary` | string | No | Defaults to `owner`. |
+| `deadline` | number | No | Unix seconds. |
+| `nonce` | string | No | |
+| `permit` | string | No | |
+| `slippage` | number | No | Basis points. |
+| `limitAmount` | string | No | For a target-price (Limit Order) constraint. |
+| `metadata` | string | No | |
+| `partiallyFillable` | boolean | No | |
+| `partner` | string | No | Your partner key. |
+| `partnerAddress` | string | No | |
+| `partnerFeeBps` | number | No | |
+| `partnerTakesSurplus` | boolean | No | |
+| `capSurplus` | boolean | No | |
+
+Returns `result.raw` with `{ toSign, orderHash }`, where `toSign` is the unsigned EIP-712 typed data. Sign it externally, then call `velora_submit_delta_order`.
+
+<Note>
+  Before the order can settle, the source token must be authorized to the Delta contract: either grant an on-chain ERC-20 `approve` to it, or pass a Permit/Permit2 signature in the `permit` field of this build call. See [Token approvals for agents](/for-agents/token-approvals) for the spender and Permit decision rules.
+</Note>
+
+### velora_build_twap_delta_order
+
+Build a TWAP Delta order — one scheduled order executed slice-by-slice, not repeated swaps — returning unsigned EIP-712 typed data. The order family is selected by `onChainOrderType`.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | |
+| `route` | object | Yes | Copied **verbatim** from the Delta quote. |
+| `owner` | string | Yes | |
+| `interval` | number | Yes | Seconds between slices, minimum 60. |
+| `numSlices` | number | Yes | Minimum 2. |
+| `onChainOrderType` | `"TWAPOrder"` \| `"TWAPBuyOrder"` | Yes | `TWAPOrder` = sell, `TWAPBuyOrder` = buy. |
+| `totalSrcAmount` | string | Conditional | Required when `onChainOrderType=TWAPOrder` (sell). Fixes the total source amount. |
+| `totalDestAmount` | string | Conditional | Required when `onChainOrderType=TWAPBuyOrder` (buy). Fixes the total destination amount. |
+| `maxSrcAmount` | string | Conditional | Required when `onChainOrderType=TWAPBuyOrder` (buy). Caps source spend. |
+
+Also accepts the optional fields shared with `velora_build_delta_order` (`beneficiary`, `deadline`, `nonce`, `permit`, `slippage`, `metadata`, `partiallyFillable`, and the `partner*` fields). Returns the same `{ toSign, orderHash }` shape. Sign externally, then call `velora_submit_twap_order`.
+
+### velora_submit_delta_order
+
+Submit a signed single Delta order (the family built by `velora_build_delta_order`). The server forwards your signature; it never signs.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | |
+| `order` | object | Yes | The `toSign.value` struct, passed **verbatim**. |
+| `signature` | string | Yes | Produced externally. EOA signatures in ERC-2098 compact form. |
+| `partner` | string | No | |
+| `referrerAddress` | string | No | |
+| `partiallyFillable` | boolean | No | |
+| `type` | `"MARKET"` \| `"LIMIT"` | No | |
+
+Returns `result.raw` with the created Delta auction (status, transactions). For TWAP orders use `velora_submit_twap_order` instead.
+
+### velora_submit_twap_order
+
+Submit a signed TWAP Delta order (the order built by `velora_build_twap_delta_order`). Same parameters as `velora_submit_delta_order`, except `order` is the TWAP struct (`TWAPOrder` or `TWAPBuyOrder`) from the build step, passed **verbatim**. Returns the created Delta auction.
+
+### velora_get_delta_orders
+
+List a user's Delta orders, paginated. Read-only.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `userAddress` | string | Yes | The order owner. |
+| `page` | number | No | |
+| `limit` | number | No | |
+| `chainId` | number[] | No | Array; omit for all chains. |
+| `status` | string[] | No | Any of `PENDING`, `AWAITING_SIGNATURE`, `ACTIVE`, `SUSPENDED`, `CANCELLING`, `BRIDGING`, `COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`, `REFUNDING`. |
+| `type` | `"MARKET"` \| `"LIMIT"` | No | |
+| `onChainOrderType` | string | No | One of `Order`, `FillableOrder`, `ExternalOrder`, `TWAPOrder`, `TWAPBuyOrder`, `ProductiveOrder`. |
+
+### velora_get_delta_order
+
+Fetch a single Delta order by id or hash. Poll it until a terminal status (`COMPLETED`, `FAILED`, `EXPIRED`, `CANCELLED`, `REFUNDED`). Read-only.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `orderId` | string | Conditional | A UUID. Pass exactly one of `orderId` or `orderHash`. |
+| `orderHash` | string | Conditional | Pass exactly one of `orderId` or `orderHash`. |
+
+### velora_build_cancel_delta_order
+
+Build the unsigned EIP-712 typed data to cancel one or more Delta orders.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `chainId` | number | Yes | |
+| `orderIds` | string[] | Yes | UUIDs, at least one. |
+
+Returns `{ toSign }` — the `OrderCancellations` typed data, with the resolved VeloraDelta contract as `verifyingContract`. Sign it externally with the order owner's wallet, then call `velora_submit_cancel_delta_order`.
+
+### velora_submit_cancel_delta_order
+
+Submit a signed cancellation. The server forwards your signature; it never signs.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `orderIds` | string[] | Yes | UUIDs, at least one. |
+| `signature` | string | Yes | Produced externally from `velora_build_cancel_delta_order`. |
+
+### velora_get_bridge_routes
+
+List Velora's supported Crosschain bridge routes — source→destination chain pairs and the destination-chain output tokens each supports. Use it to confirm a Crosschain pair is bridgeable before quoting or building a Delta order. Read-only.
+
+| Parameter | Type | Required | Notes |
+|---|---|---|---|
+| `allowBridgeAndSwap` | boolean | No | Include tokens swappable on the destination chain after bridging. Default `true`. |
+| `bridges` | string[] | No | Restrict to specific bridge protocols. |
 
 ## Agent guidance
 

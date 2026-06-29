@@ -85,9 +85,9 @@ The endpoint speaks Streamable HTTP, the current MCP transport. Clients that onl
 
 ## Verify the connection
 
-A correctly connected client lists **9 tools** (all prefixed `velora_`) and **5 resources** (all prefixed `velora://docs/`).
+A correctly connected client lists **18 tools** (all prefixed `velora_`) and **5 resources** (all prefixed `velora://docs/`).
 
-1. List the server's tools (`tools/list`, or your client's MCP panel). Expect 9 tools, from `velora_search_docs` to `velora_validate_agent_plan`.
+1. List the server's tools (`tools/list`, or your client's MCP panel). Expect 18 tools, from `velora_search_docs` to `velora_get_bridge_routes`.
 2. Call `velora_get_supported_chains` with no arguments. Expect a chain list that includes Ethereum (1), Base (8453), and Arbitrum (42161).
 
 You can also smoke-test from the command line without any MCP client:
