@@ -1,0 +1,65 @@
+---
+title: "Velora CLI"
+sidebarTitle: "Overview"
+description: "Fetch Velora swap quotes from your terminal with @velora-dex/cli, a thin command-line wrapper over the Velora SDK."
+keywords: ["cli", "command line", "terminal", "quote", "swap price"]
+---
+
+`@velora-dex/cli` is a command-line tool for Velora. It wraps the [Velora SDK](/sdk/overview) so you can pull a swap quote straight from your terminal, without writing any code. Today it ships one command, [`quote`](/cli/quote), which prices a swap against the live Velora API and prints either a readable summary or the raw JSON.
+
+Reach for the CLI when you want to check a price quickly, script a quote into a shell pipeline, or sanity-check the API while you build a larger integration. For anything that signs or submits an order, use the [SDK](/sdk/overview) or the [API](/integrate/api) directly.
+
+## What you get
+
+<CardGroup cols={3}>
+  <Card title="Symbols or addresses" icon="coins">
+    Pass tokens by symbol (`DAI`, `USDC`) or address. Decimals resolve from the
+    bundled token lists, so you rarely set them by hand.
+  </Card>
+  <Card title="Delta and Market" icon="bolt">
+    One command prices both. With `--mode ALL` the API returns a Delta intent or
+    a Market route, and notes which path came back.
+  </Card>
+  <Card title="Pipe-friendly" icon="terminal">
+    `--json` prints the raw response to stdout, so you can redirect it to a file
+    or pipe it into `jq`.
+  </Card>
+</CardGroup>
+
+## Quick example
+
+Quote 1,000 DAI to USDC on Ethereum:
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+```
+Quote — Ethereum (chainId 1)  path: DELTA (gasless intent)
+  You pay:     1000.0 ($1000.00)  0x6b175474e89094c44da98b954eedeac495271d0f
+  You receive: 999.82 ($999.82)   0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+  Gas fee:     n/a
+```
+
+Add `--json` to get the full API response instead of the summary.
+
+## How it works
+
+The CLI resolves your tokens and amount, calls the same `getQuote` method the SDK exposes, and renders the result:
+
+- `--amount` is given in **human units** (e.g. `1.5`), not wei. The CLI converts it using the resolved token's decimals.
+- Tokens accept a symbol or an address, including the native placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` or the chain's native currency symbol (`ETH`, `MATIC`).
+- Token lists are fetched once and cached on disk for 24 hours, so symbol lookups are instant after the first run.
+
+It supports nine chains: Ethereum, Polygon, BSC, Avalanche, Arbitrum, Optimism, Base, Gnosis, and Unichain. Source chain defaults to Ethereum (`1`).
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Install" icon="download" href="/cli/install">
+    Add `@velora-dex/cli` and run your first quote.
+  </Card>
+  <Card title="Get Quote" icon="terminal" href="/cli/quote">
+    Every flag, the `--payload` file, and the JSON output.
+  </Card>
+</CardGroup>

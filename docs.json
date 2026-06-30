@@ -151,6 +151,14 @@
                 ]
               }
             ]
+          },
+          {
+            "group": "CLI",
+            "pages": [
+              "cli/overview",
+              "cli/install",
+              "cli/quote"
+            ]
           }
         ]
       },
