@@ -15,7 +15,7 @@ Short answers to the questions support and integrators hit most often. Each sect
 
 ### Do I need an API key?
 
-No. Every Velora REST endpoint is public: pass `&partner=<your-app-name>` to identify your traffic and you're in. The free tier gives 1 RPS and 3,000 requests/day, which is plenty to prototype and ship a real integration. When you outgrow it, [Pro API accounts](/overview/pro-api-accounts) lift the limits and add a dashboard, early features, and SLA.
+No. Every Velora REST endpoint is public: pass `&partner=<your-app-name>` to identify your traffic and you're in. The free tier gives 1 RPS and 5,000 requests/day, which is plenty to prototype and ship a real integration. When you outgrow it, [Pro API accounts](/overview/pro-api-accounts) lift the limits and add a dashboard, early features, and SLA.
 
 ### Should I use Delta (gasless) or Market?
 
@@ -88,7 +88,7 @@ Pass a `partner` identifier with each request and you can attach one of two reve
 
 ### What's the difference between a free partner ID and a Pro API account?
 
-A **free partner ID** is just a string you pass as `&partner=<your-app-name>`; there's nothing to sign up for and no key to manage. It identifies your traffic, gets you 1 RPS / 3,000 req/day, and *if* you also attach `partnerAddress` + `partnerFeeBps` or `takeSurplus`, it unlocks the partner-fee economics from [Monetization](/overview/monetization). A **Pro API account** is a paid plan layered on top: higher sustained and burst RPS, larger daily quotas, an analytics dashboard, early-feature access, and SLA-backed support. Full plan comparison: [Pro API accounts](/overview/pro-api-accounts).
+A **free partner ID** is just a string you pass as `&partner=<your-app-name>`; there's nothing to sign up for and no key to manage. It identifies your traffic, gets you 1 RPS / 5,000 req/day, and *if* you also attach `partnerAddress` + `partnerFeeBps` or `takeSurplus`, it unlocks the partner-fee economics from [Monetization](/overview/monetization). A **Pro API account** is a paid plan layered on top: higher sustained and burst RPS, larger daily quotas, an analytics dashboard, early-feature access, and SLA-backed support. Full plan comparison: [Pro API accounts](/overview/pro-api-accounts).
 
 ## Troubleshooting
 

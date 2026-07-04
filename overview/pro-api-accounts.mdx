@@ -1,8 +1,10 @@
 ---
-title: "Pro API accounts and rate limits"
+title: "Pro API plans, pricing, and rate limits"
 sidebarTitle: "Pro API accounts"
-description: "Free partner IDs vs. Pro API accounts: how to identify your integration, lift rate limits, and unlock dashboards, early features, and SLA-backed support."
+description: "Velora Pro API pricing and plans: per-tier rate limits, daily quotas, and what each plan costs. Velora bills for throughput, never for the swap, so you set your own partner fee and keep it."
 keywords:
+  - pricing
+  - plans
   - pro
   - api
   - accounts
@@ -16,11 +18,13 @@ keywords:
   - dashboard
 ---
 
-Any caller can get a partner ID for free just by passing `&partner=<string>` on `/v2/quote` or `/prices`, without signing up for anything. **Pro API accounts** layer on top: higher RPS, larger daily quotas, an analytics dashboard, early feature access, and SLA-backed support for production workloads.
+Velora API plans price throughput, not trades. You pay for the request rate and daily volume you need, and the swap fee is yours to set, from zero to whatever your product charges.
+
+Start free with a partner ID. When your traffic outgrows the free limits, a [Pro plan](#plan-comparison) lifts them and adds a dashboard and SLA-backed support.
 
 ## Free tier
 
-Pass `&partner=<your-app-name>` on any Velora REST endpoint: that string *is* your partner ID. For example:
+Pass `&partner=<your-app-name>` on any Velora REST endpoint: that string *is* your partner ID, no signup required. For example:
 
 ```bash
 curl -s "https://api.velora.xyz/v2/quote" \
@@ -37,52 +41,53 @@ curl -s "https://api.velora.xyz/v2/quote" \
   -G | jq
 ```
 
-Default [rate limits](/integrate/rate-limits) apply: 1 RPS and 3,000 requests/day, which leaves plenty of headroom to prototype and run real integrations. When your traffic starts to bump against those limits, a [Pro plan](#pro-plans) lifts them; for anything bespoke, [reach out](https://www.velora.xyz/contact) and we'll size it with you.
+Default [rate limits](/integrate/rate-limits) apply: 1 RPS and 5,000 requests/day, enough to prototype and run a real integration. When traffic starts to bump against those limits, a [Pro plan](#plan-comparison) lifts them; for anything bespoke, [reach out](https://www.velora.xyz/contact) and we'll size it with you.
 
 <Note>
-A free partner ID identifies your traffic but does **not** unlock partner-fee economics. To collect partner fees or share of surplus on swaps, see [Monetization](/overview/monetization).
+A free partner ID identifies your traffic but does **not** unlock partner-fee economics. To collect partner fees or a share of surplus on swaps, see [Monetization](/overview/monetization).
 </Note>
 
 ## Pro plans
 
-Subscribing to a Pro plan lifts your rate limits and adds:
+A Pro plan lifts your rate limits and quota and adds an analytics dashboard, early access to new features, and SLA-backed technical support.
 
-- Higher sustained RPS and burst RPS
-- Larger daily request quota
-- Analytics dashboard (Pro and above)
-- Early access to new features (Pro and above)
-- Standard SLA + technical support (Custom SLA on Enterprise)
+<Tip>
+You pay Velora for API throughput, not a fixed cut of every swap. Set your own partner fee, fixed or dynamic. See [Monetization](/overview/monetization) for how fees and surplus sharing work.
+</Tip>
 
 ### Plan comparison
 
-| Plan                 | Rate limit | Burst   | Daily quota | Dashboard | Early features | SLA      |
-|----------------------|------------|---------|-------------|-----------|----------------|----------|
-| Basic                | 10 RPS     | 20 RPS  | 50,000      | —         | —              | Standard |
-| Pro                  | 20 RPS     | 40 RPS  | 120,000     | ✓         | ✓              | Standard |
-| Enterprise           | 40 RPS     | 80 RPS  | 250,000     | ✓         | ✓              | Custom   |
-| Extended Basic       | 15 RPS     | 25 RPS  | 1,000,000   | ✓         | —              | Standard |
-| Extended Pro         | 25 RPS     | 50 RPS  | 2,000,000   | ✓         | ✓              | Standard |
-| Extended Enterprise  | Custom     | Custom  | Custom      | ✓         | —              | Custom   |
+| Plan | Price / mo | Max RPS | Burst | Requests / day | Requests / month | Dashboard | SLA |
+|---|---|---|---|---|---|---|---|
+| Free | $0 | 1 | 2 | 5,000 | 150,000 | — | — |
+| Basic | $500 | 10 | 20 | 50,000 | 1,500,000 | — | Standard |
+| Pro | $700 | 20 | 40 | 120,000 | 3,600,000 | Standard | Standard |
+| Enterprise | $2,000 | 40 | 80 | 250,000 | 7,500,000 | Custom | Custom |
+| Basic – Extended | $1,815 | 15 | 25 | 1,000,000 | 30,000,000 | — | Standard |
+| Pro – Extended | $2,750 | 25 | 50 | 2,000,000 | 60,000,000 | Standard | Standard |
+| Enterprise – Extended | $5,000 | 50 | 100 | 4,000,000 | 120,000,000 | Custom | Custom |
+| Custom | [Contact us](https://www.velora.xyz/contact) | 50+ | 200+ | Custom | Custom | Custom | Custom |
 
-All tiers include technical support. Annual billing is offered at a discount. For exact pricing and to subscribe, see [velora.xyz/pro](https://velora.xyz/pro).
+Every paid tier includes technical support: email on Basic and Basic – Extended, chat on Pro and above. Pro and above also include access to other Velora products. Annual billing saves 20%. For current pricing and to subscribe, see [velora.xyz/pro](https://velora.xyz/pro).
 
 ### Which plan fits
 
-- **Basic / Pro / Enterprise** — workloads bound by sustained RPS, like real-time quoting and frontend integrations.
-- **Extended Basic / Extended Pro** — high daily volume at moderate RPS, like background indexing, analytics pipelines, and batch quoting.
-- **Enterprise / Extended Enterprise** — custom SLA, tailored quotas, and bespoke commercial terms.
+- **Basic, Pro, Enterprise** suit workloads bound by sustained request rate, like real-time quoting and frontend integrations.
+- **Basic – Extended and Pro – Extended** suit high daily volume at a moderate rate, like background indexing, analytics pipelines, and batch quoting.
+- **Enterprise, Enterprise – Extended, and Custom** add a custom SLA, tailored quotas, and bespoke commercial terms.
 
 ## Get started
 
-<CardGroup cols={2}>
-  <Card title="Subscribe to a Pro plan" icon="credit-card" href="https://velora.xyz/pro">
-    Self-serve Basic, Pro, and Extended tiers. Monthly or annual billing.
-  </Card>
+<Card title="Subscribe to a Pro plan" icon="credit-card" href="https://velora.xyz/pro" horizontal>
+  Self-serve Basic, Pro, and Extended tiers. Monthly or annual billing, 20% off when billed annually.
+</Card>
+
+<CardGroup cols={3}>
   <Card title="Contact us for Enterprise" icon="envelope" href="https://www.velora.xyz/contact">
     Custom SLA, dedicated support, bespoke quotas.
   </Card>
   <Card title="Free-tier rate limits" icon="gauge" href="/integrate/rate-limits">
-    Limits that apply before you subscribe.
+    The limits that apply before you subscribe.
   </Card>
   <Card title="Monetization" icon="coins" href="/overview/monetization">
     Partner fees, surplus sharing, and revenue splits.
