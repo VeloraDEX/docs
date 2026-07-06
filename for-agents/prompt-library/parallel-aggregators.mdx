@@ -22,7 +22,7 @@ Requirements:
 - Compare on `destUSD` (or `destAmount` normalized to a common token) net of `gasCostUSD` and `partnerFee`.
 - Fan out in parallel; respect a hard 800ms budget per quote source; fall back gracefully if one source times out.
 - For the Velora native-ETH placeholder use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case).
-- If Velora wins via Delta, return both the `delta` block and `hmac` to the caller so they can sign and submit. If via Market, return the `market` block (same shape as `/prices`'s `priceRoute`).
+- If Velora wins via Delta, return the `delta` block to the caller so they can build, sign, and submit. If via Market, return the `market` block (same shape as `/prices`'s `priceRoute`).
 
 Reference these docs and follow them exactly:
 - https://velora.xyz/docs/overview/why-velora
@@ -45,4 +45,4 @@ Do NOT race-update shared state across the two aggregators' callbacks. Do NOT fa
 ## End-state check
 
 - A side-by-side comparison log shows both aggregators quoting the same trade within the 800ms budget.
-- When Velora's Delta path wins on a large trade, the response carries the `delta` block + `hmac` ready to sign.
+- When Velora's Delta path wins on a large trade, the response carries the `delta` block ready to build and sign.

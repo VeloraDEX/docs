@@ -46,7 +46,7 @@ The response has `responseType: "delta"` and the raw quote under `result.raw`, w
    - Have the user's wallet sign that typed data. The MCP server never signs.
    - Submit the signed order via [`POST /v2/delta/orders`](/api-reference/delta/orders-submit) and track it by order ID.
 
-Preserve the `delta` payload and its `hmac` exactly between steps. Any mutation invalidates the order.
+Preserve the `delta` payload exactly between steps. Any mutation invalidates the order.
 
 ## Market swap with an unsigned transaction
 

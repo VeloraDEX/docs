@@ -148,7 +148,7 @@ Agent rules:
 | Missing required field | Ask the user for the missing field. |
 | No route | Ask for a different amount, token, chain, or execution mode. |
 | Quote expired | Requote and rebuild. |
-| HMAC or quote validation error | Requote and keep the new response object paired with its new validation data. |
+| Quote validation error | Requote and rebuild from the fresh response object. |
 | User rejects signature or transaction | Stop. Do not retry automatically. |
 | Transaction reverts | Surface the revert and suggest requoting. |
 | Delta order remains pending | Poll with backoff and show the latest order status. |

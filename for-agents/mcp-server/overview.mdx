@@ -27,7 +27,7 @@ This is the property that makes the server safe to wire into an autonomous agent
 
 - `velora_build_transaction` returns an **unsigned** Market transaction. Your client signs it with the user's wallet.
 - Delta quotes hand back the documented build → sign → submit path. The EIP-712 typed data is signed externally, never by the server.
-- Raw quote payloads, including the `delta` object and its `hmac`, are preserved byte-for-byte. The server never mutates what the API returned.
+- Raw quote payloads, including the `delta` object, are preserved byte-for-byte. The server never mutates what the API returned.
 
 An agent connected to this server can research, quote, and prepare trades. It cannot move funds.
 

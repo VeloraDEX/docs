@@ -52,7 +52,7 @@ Returns `{ modeRequested, responseType, raw }` where `responseType` is `"delta"`
 Agent rules:
 - Branch on `responseType`, never on what you requested. `mode=ALL` returns either a Delta or a Market response, never both.
 - A Delta quote is completed through the Delta path (`POST /v2/delta/orders/build`, sign externally, `POST /v2/delta/orders`) — not through `velora_build_transaction`. The quote's `agentHints` repeat these steps.
-- Preserve the `delta` payload and its `hmac` exactly. Never normalize, reconstruct, or mutate it.
+- Preserve the `delta` payload exactly. Never normalize, reconstruct, or mutate it.
 - Under `mode=ALL`, a Delta pricing failure falls back to Market and surfaces a structured `fallbackReason` in `warnings`.
 
 ### velora_build_transaction
@@ -78,7 +78,7 @@ Agent rules:
 
 ## Delta order lifecycle
 
-A Delta quote completes through these tools, not through `velora_build_transaction`. The path is always build → sign externally → submit: a build tool returns **unsigned** EIP-712 typed data, you sign it with the user's wallet, and a submit tool forwards your signature. The server never signs and never holds a key. Pass every `route` and `order` payload verbatim — never normalize, reconstruct, or mutate it (including any `hmac`).
+A Delta quote completes through these tools, not through `velora_build_transaction`. The path is always build → sign externally → submit: a build tool returns **unsigned** EIP-712 typed data, you sign it with the user's wallet, and a submit tool forwards your signature. The server never signs and never holds a key. Pass every `route` and `order` payload verbatim — never normalize, reconstruct, or mutate it.
 
 ### velora_build_delta_order
 
