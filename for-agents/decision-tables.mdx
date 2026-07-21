@@ -31,10 +31,10 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | API result | Next action | Preserve | Do not |
 |---|---|---|---|
-| Top-level response field is `delta` | Continue the Delta order flow with [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object and matching `hmac` from the same quote response. | Do not normalize, sort, round, or reconstruct the `delta` object. |
+| Top-level response field is `delta` | Continue the Delta order flow with [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build). | Pass the `delta` object from the quote response verbatim. | Do not normalize, sort, round, or reconstruct the `delta` object. |
 | Top-level response field is `market` | Continue the Market transaction flow with [`POST /transactions/:chainId`](/api-reference/market/transactions). | Pass the returned `market` object into the transaction build step. | Do not try to submit it as a Delta order. |
 | Response has neither `delta` nor `market` | Stop the flow and surface the no-route result. | Keep the user's original tokens, chain, amount, and mode for retry suggestions. | Do not fabricate a quote, route, gas estimate, or output amount. |
-| Quote expired, HMAC invalid, or build rejected | Requote, then rebuild from the fresh response. | Use the newest `delta`, `hmac`, or `market` object. | Do not reuse stale quote payloads. |
+| Quote expired or build rejected | Requote, then rebuild from the fresh response. | Use the newest `delta` or `market` object. | Do not reuse stale quote payloads. |
 | Chain or token unsupported | Ask the user to choose a supported chain/token pair. | Link to [chains and contracts](/resources/chains-and-contracts) when useful. | Do not guess a token address from symbol alone. |
 
 ## Wallet state → approval or signature
@@ -96,7 +96,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 |---|---|---|
 | `400` for missing slippage | Quote request is incomplete. | Add slippage in basis points and retry. |
 | Pricing error or no route | No route for the requested pair, size, chain, or mode. | Retry with `mode=ALL`, reduce size, change token, or ask the user for another route. |
-| HMAC or quote validation error | The quote payload is stale or mismatched. | Requote and rebuild from the same fresh response. |
+| Quote validation error | The quote payload is stale or mismatched. | Requote and rebuild from the same fresh response. |
 | Approval transaction succeeds but swap still fails allowance check | Approval went to the wrong spender or wrong chain. | Check the spender for the selected mode and ask for a new approval if needed. |
 | User rejects transaction or signature | User declined the action. | Stop. Do not retry automatically. |
 | Delta order remains pending | The auction or protocol settlement is still in progress, or the order may expire. | Poll status with backoff and show the latest order state. Do not resubmit blindly. |
@@ -107,8 +107,8 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 - Never invent token addresses, chain IDs, quotes, transaction hashes, or order IDs.
 - Always set `partner` to the integrator's app or project partner key. Treat `my-app-name` as a placeholder, not a literal value.
 - Branch on the response shape: `delta` means Delta order flow; `market` means Market transaction flow.
-- Keep the `delta` block and its `hmac` together. Treat them as an opaque pair.
-- Requote after expiration, HMAC errors, material balance changes, or route failures.
+- Keep the `delta` block intact and pass it verbatim. Treat it as an opaque object.
+- Requote after expiration, validation errors, material balance changes, or route failures.
 - Ask before changing execution mode, recipient, chain, or spend direction.
 - Ask for user confirmation before submitting a signed order or sending an on-chain transaction.
 
