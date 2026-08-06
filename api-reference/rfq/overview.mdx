@@ -57,10 +57,10 @@ Once the maker has posted an order, the named taker can fill it programmatically
 - From the Velora app: every order has a shareable fill link keyed on its `orderHash`. Hand it to the counterparty and they approve and fill from the web app:
 
   ```text
-  https://app.velora.xyz/#/FT/OTC/{orderHash}
+  https://www.velora.xyz/app/FT/OTC/{orderHash}
   ```
 
-- Inside the [Velora Widget](/widget/overview): the same OTC fill flow runs embedded, so partners can offer it in-app without sending users to `app.velora.xyz`.
+- Inside the [Velora Widget](/widget/overview): the same OTC fill flow runs embedded, so partners can offer it in-app without sending users to `www.velora.xyz/app`.
 
 Whichever path the taker uses, the same on-chain checks apply: expired, already-filled, or wrong-taker fills revert.
 
