@@ -1,0 +1,122 @@
+---
+title: "velora quote"
+sidebarTitle: "Get Quote"
+description: "Reference for the velora quote command: fetch a Delta or Market swap price from the terminal, with every flag and the reusable --payload file."
+keywords: ["cli", "quote", "swap price", "command reference", "payload"]
+---
+
+`velora quote` fetches a swap price from the Velora API and prints a readable summary, or the raw JSON with `--json`. It prices both [Delta](/delta/overview) and [Market](/market/overview); with the default `--mode ALL` the API returns whichever applies.
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+## Tokens and amounts
+
+Each token flag accepts a **symbol** or an **address**:
+
+- A symbol (`DAI`, `USDC`) resolves against the bundled token lists for the chain, and its decimals fill in automatically.
+- An address is used as-is. This includes the native placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` and the chain's native currency symbol (`ETH`, `MATIC`), both of which map to the native token.
+
+`--amount` is in **human units** (e.g. `1.5`), not wei. For a `SELL` it is the source amount; for a `BUY` it is the destination amount. The CLI converts it using the relevant token's decimals.
+
+When a token isn't in the lists, set its decimals explicitly with `--src-decimals` / `--dest-decimals`; otherwise the command errors rather than guessing.
+
+```bash
+# By address, on a specific chain
+velora quote --chain 1 \
+  --src-token 0x6b175474e89094c44da98b954eedeac495271d0f \
+  --dest-token 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48 \
+  --amount 1000
+```
+
+## Options
+
+Multi-word flags also accept a **camelCase alias** (e.g. `--srcToken` for `--src-token`), matching the `--payload` key names.
+
+| Flag                          | Required | Description                                                             |
+| ----------------------------- | -------- | ----------------------------------------------------------------------- |
+| `--amount <amount>`           | yes      | Amount in human units — source amount for `SELL`, dest amount for `BUY` |
+| `--src-token <token>`         | yes      | Source token symbol or address (or native placeholder)                  |
+| `--dest-token <token>`        | yes      | Destination token symbol or address                                     |
+| `--src-decimals <n>`          | no       | Source token decimals (resolved from the token lists if omitted)        |
+| `--dest-decimals <n>`         | no       | Destination token decimals (resolved from the token lists if omitted)   |
+| `--chain <id>`                | no       | Source chain id (default `1`, Ethereum)                                 |
+| `--side <SELL\|BUY>`          | no       | Trade side (default `SELL`)                                             |
+| `--mode <DELTA\|MARKET\|ALL>` | no       | Pricing mode (default `ALL`)                                            |
+| `--user-address <address>`    | no       | End-user wallet address                                                 |
+| `--partner <name>`            | no       | Partner identifier (default `velora-cli`)                               |
+| `--partner-fee-bps <bps>`     | no       | Partner fee in basis points (0–200, e.g. `50` = 0.5%)                   |
+| `--max-impact <pct>`          | no       | Max acceptable price impact, in percent                                 |
+| `--max-usd-impact <usd>`      | no       | Max acceptable price impact, in USD                                     |
+| `--dest-chain <id>`           | no       | Destination chain id for a crosschain quote (Delta-only)                |
+| `--api-url <url>`             | no       | Override the Velora API base URL                                        |
+| `--api-key <key>`             | no       | API key (defaults to the `VELORA_API_KEY` env var)                      |
+| `--payload <file>`            | no       | JSON file of params; flags override its values                          |
+| `--json`                      | no       | Print the raw API response instead of a summary                         |
+
+<Note>
+`--side` is matched case-insensitively and the documented forms are uppercase (`SELL`, `BUY`); the same goes for `--mode` (`DELTA`, `MARKET`, `ALL`).
+</Note>
+
+## Pricing modes
+
+With `--mode ALL` (the default) the API returns **one** shape: a Delta intent when one is available, or a Market route otherwise. The summary's `path:` line tells you which came back, and notes when Delta was unavailable and the quote fell back to Market.
+
+Force a single mode when you need it:
+
+```bash
+# Gasless Delta intent only
+velora quote --src-token DAI --dest-token USDC --amount 1000 --mode DELTA
+
+# On-chain Market route only
+velora quote --src-token DAI --dest-token USDC --amount 1000 --mode MARKET
+```
+
+## Crosschain quotes
+
+Pass `--dest-chain` (differing from `--chain`) for a crosschain quote. These are Delta-only, so the command rejects `--mode MARKET` for them.
+
+```bash
+# 1,000 USDC on Ethereum → USDC on Arbitrum
+velora quote --chain 1 --dest-chain 42161 \
+  --src-token USDC --dest-token USDC --amount 1000 --mode DELTA
+```
+
+## Reusable params with `--payload`
+
+`--payload <file>` reads a JSON object whose **camelCase** keys mirror the flags, so you can pin the params that rarely change (like `userAddress`, `apiKey`, `partner`) in a file and pass only the trade specifics on the command line. A flag, when given, overrides the matching payload value; the payload fills in for any omitted flag.
+
+```json trade.json
+{
+  "partner": "my-app-name",
+  "userAddress": "0x1111111111111111111111111111111111111111",
+  "apiKey": "<your-api-key>",
+  "srcToken": "DAI",
+  "destToken": "USDC"
+}
+```
+
+```bash
+velora quote --payload trade.json --amount 1000
+```
+
+Allowed keys: `amount`, `srcToken`, `destToken`, `srcDecimals`, `destDecimals`, `chain`, `destChain`, `side`, `mode`, `userAddress`, `partner`, `partnerFeeBps`, `maxImpact`, `maxUsdImpact`, `apiUrl`, `apiKey`. Values may be strings, numbers, or booleans; unknown keys are rejected so typos surface early. (`maxUsdImpact` maps to the API's `maxUSDImpact`.)
+
+## JSON output
+
+`--json` prints the raw API response to stdout, so you can redirect it or pipe it on:
+
+```bash
+# Save to a file
+velora quote --src-token DAI --dest-token USDC --amount 1000 --json > quote.json
+
+# Pipe into jq
+velora quote --src-token DAI --dest-token USDC --amount 1000 --json | jq '.delta.destAmount'
+```
+
+## Related pages
+
+- [Install](/cli/install): set up the `velora` binary and an API key.
+- [SDK](/sdk/overview): the library the CLI wraps, for building and submitting orders.
+- [Delta API quote](/api-reference/delta/quote): the underlying endpoint and its full response shape.

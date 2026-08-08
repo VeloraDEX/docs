@@ -1,0 +1,90 @@
+---
+title: "Install the Velora CLI"
+sidebarTitle: "Install"
+description: "Install @velora-dex/cli and run your first swap quote from the terminal in under a minute."
+keywords: ["cli", "install", "npm", "npx", "quickstart"]
+---
+
+The Velora CLI is published as [`@velora-dex/cli`](https://www.npmjs.com/package/@velora-dex/cli) and installs a `velora` binary. It needs **Node 22 or newer**.
+
+## Run it without installing
+
+Use `npx` (or your package manager's equivalent) to run the latest version on demand:
+
+```bash
+npx @velora-dex/cli quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+This is the fastest way to try the CLI or use it in a one-off script.
+
+## Install globally
+
+For repeated use, install it once and call `velora` directly:
+
+<CodeGroup>
+
+```bash pnpm
+pnpm add -g @velora-dex/cli
+```
+
+```bash npm
+npm install -g @velora-dex/cli
+```
+
+```bash yarn
+yarn global add @velora-dex/cli
+```
+
+</CodeGroup>
+
+Then:
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+## Your first quote
+
+Price 1,000 DAI to USDC on Ethereum and print a summary:
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+By default the CLI requests `--mode ALL`, so the API returns a [Delta](/delta/overview) intent when one is available and falls back to a [Market](/market/overview) route otherwise. The summary's `path:` line tells you which one came back.
+
+To get the full response for scripting, add `--json`:
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000 --json | jq
+```
+
+## Set a partner identifier
+
+Every quote carries a `partner` string for attribution. The CLI defaults to `velora-cli`; pass your own app or project name with `--partner`:
+
+```bash
+velora quote --src-token DAI --dest-token USDC --amount 1000 --partner my-app-name
+```
+
+Replace `my-app-name` with your own identifier. `partner` is a free, no-signup attribution string, not a secret API key.
+
+## Add an API key
+
+For higher [rate limits](/integrate/rate-limits), pass a [Pro API key](/overview/pro-api-accounts) with `--api-key`, or set the `VELORA_API_KEY` environment variable and the CLI picks it up automatically:
+
+```bash
+export VELORA_API_KEY="<your-api-key>"
+velora quote --src-token DAI --dest-token USDC --amount 1000
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Get Quote" icon="terminal" href="/cli/quote">
+    Every flag, the `--payload` file, and crosschain quotes.
+  </Card>
+  <Card title="SDK" icon="cube" href="/sdk/overview">
+    Build and submit orders programmatically with `@velora-dex/sdk`.
+  </Card>
+</CardGroup>
