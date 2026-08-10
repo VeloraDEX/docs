@@ -13,7 +13,7 @@ This page is the single source of truth for contract addresses across Velora's s
 
 ## Supported chains
 
-Velora supports the following EVM networks. Each chain has Augustus v6.2 (Market routing) deployed; Delta availability is a subset.
+Velora supports the following EVM networks. Most chains run both Delta and Augustus v6.2 (Market routing); the [table below](#addresses-by-chain) shows which modes each chain supports.
 
 - Ethereum (1)
 - Optimism (10)
@@ -21,6 +21,7 @@ Velora supports the following EVM networks. Each chain has Augustus v6.2 (Market
 - Gnosis (100)
 - Unichain (130)
 - Polygon (137)
+- Robinhood Chain (4663)
 - Base (8453)
 - Arbitrum One (42161)
 - Avalanche (43114)
@@ -31,25 +32,26 @@ The authoritative supported-chain list is queryable at runtime via `GET /chains`
 
 Each contract is also the ERC-20 spender for its execution mode — approve Augustus v6.2 for Market swaps, the Delta contract for Delta orders (Swap, Limit, TWAP), and AugustusRFQ for OTC/RFQ fills. A `—` means the contract isn't deployed on that chain and the corresponding mode is unavailable there. See [Token approvals for agents](/for-agents/token-approvals) for the spender-by-mode decision rules.
 
-**Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every supported chain. **Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` and **Delta Wrapped Native (dETH)** at `0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742`, both at the same address on every Delta-enabled chain. **Fee Claimer** is deployed at `0x00700052c0608F670705380a4900e0a8080010CC` on every supported chain. AugustusRFQ addresses vary per chain and are listed below.
+**Delta** is deployed at `0x0000000000bbf5c5fd284e657f01bd000933c96d` and **Delta Wrapped Native (dETH)** at `0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742`, both at the same address on every Delta-enabled chain. **Augustus v6.2** is deployed at `0x6a000f20005980200259b80c5102003040001068` on every Market-enabled chain. **Fee Claimer** is deployed at `0x00700052c0608F670705380a4900e0a8080010CC` on every Market-enabled chain. AugustusRFQ addresses vary per chain and are listed below.
 
-| Chain (ID) | Delta | AugustusRFQ |
-|---|---|---|
-| Ethereum (1) | ✓ | `0xe92b586627ccA7a83dC919cc7127196d70f55a06` |
-| Optimism (10) | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
-| BNB Chain (56) | ✓ | `0x8DcDfe88EF0351f27437284D0710cD65b20288bb` |
-| Gnosis (100) | — | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
-| Unichain (130) | ✓ | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
-| Polygon (137) | ✓ | `0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043` |
-| Base (8453) | ✓ | `0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd` |
-| Arbitrum One (42161) | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
-| Avalanche (43114) | — | `0x34302c4267d0dA0A8c65510282Cc22E9e39df51f` |
+| Chain (ID) | Delta | Market (Augustus v6.2) | AugustusRFQ |
+|---|---|---|---|
+| Ethereum (1) | ✓ | ✓ | `0xe92b586627ccA7a83dC919cc7127196d70f55a06` |
+| Optimism (10) | ✓ | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| BNB Chain (56) | ✓ | ✓ | `0x8DcDfe88EF0351f27437284D0710cD65b20288bb` |
+| Gnosis (100) | — | ✓ | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
+| Unichain (130) | ✓ | ✓ | `0x92EaD5bACf6F0E995FA46Ad8215A9b11f67ca241` |
+| Polygon (137) | ✓ | ✓ | `0xF3CD476C3C4D3Ac5cA2724767f269070CA09A043` |
+| Robinhood Chain (4663) | ✓ | — | — |
+| Base (8453) | ✓ | ✓ | `0xa003dFBA51C9e1e56C67ae445b852bdEd7aC5EEd` |
+| Arbitrum One (42161) | ✓ | ✓ | `0x0927FD43a7a87E3E8b81Df2c44B03C4756849F6D` |
+| Avalanche (43114) | — | ✓ | `0x34302c4267d0dA0A8c65510282Cc22E9e39df51f` |
 
 ## Contracts
 
 ### Augustus v6.2
 
-The Market router. All Market [`POST /transactions/:chainId`](/api-reference/market/transactions) calldata targets the Augustus v6.2 contract on the requested chain. Deployed at the same address across every supported chain.
+The Market router. All Market [`POST /transactions/:chainId`](/api-reference/market/transactions) calldata targets the Augustus v6.2 contract on the requested chain. Deployed at the same address across every Market-enabled chain.
 
 ### Augustus v6.1, v5
 
@@ -73,7 +75,7 @@ On-chain OTC and RFQ settlement contract. Supports partial fills and bilateral s
 
 ### Fee Claimer
 
-Holds partner fees accrued from Market swaps until the partner claims them. Fees taken via `partnerAddress` accumulate in this contract per chain, and partners withdraw them through the [Fee Claimer app](https://velora.xyz/fee_claimer). Delta fees never pass through it; they accrue in the Delta contract itself. Deployed at the same address on every supported chain. See [Monetization](/overview/monetization) for fee parameters and the claim flow.
+Holds partner fees accrued from Market swaps until the partner claims them. Fees taken via `partnerAddress` accumulate in this contract per chain, and partners withdraw them through the [Fee Claimer app](https://velora.xyz/fee_claimer). Delta fees never pass through it; they accrue in the Delta contract itself. Deployed at the same address on every Market-enabled chain. See [Monetization](/overview/monetization) for fee parameters and the claim flow.
 
 ## Related
 

@@ -169,7 +169,7 @@
       },
       "ChainId": {
         "type": "integer",
-        "description": "EVM chain ID. AugustusRFQ is deployed on 1 (Mainnet), 10 (Optimism), 56 (BSC), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), 43114 (Avalanche), and 100 (Gnosis). See /resources/chains-and-contracts for per-chain addresses.",
+        "description": "EVM chain ID. AugustusRFQ is deployed on 1 (Mainnet), 10 (Optimism), 56 (BSC), 100 (Gnosis), 130 (Unichain), 137 (Polygon), 8453 (Base), 42161 (Arbitrum), and 43114 (Avalanche). See /resources/chains-and-contracts for per-chain addresses.",
         "example": 1
       },
       "TokenAmount": {

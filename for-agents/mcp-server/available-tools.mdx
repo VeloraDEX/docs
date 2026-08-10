@@ -251,7 +251,7 @@ Checks include: a `network` key anywhere in the plan (must be `chainId`), MEV in
 
 List the EVM chains Velora supports. No parameters.
 
-Returns `result.raw.chains` as `{ chainId, name }` pairs with `source: "server-known"`: Ethereum (1), Optimism (10), BNB Chain (56), Gnosis (100), Unichain (130), Polygon (137), Sonic (146), Base (8453), Arbitrum (42161), Avalanche (43114).
+Returns `result.raw.chains` as `{ chainId, name }` pairs with `source: "server-known"`: Ethereum (1), Optimism (10), BNB Chain (56), Gnosis (100), Unichain (130), Polygon (137), Robinhood Chain (4663), Base (8453), Arbitrum (42161), Avalanche (43114).
 
 This is a server-known list, not a live API response, and may lag actual support. Confirm a specific chain with `velora_get_tokens`; do not assume every EVM chain is supported.
 
