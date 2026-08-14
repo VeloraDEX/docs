@@ -27,7 +27,7 @@ A permit skips the separate approval transaction, which is the reason to use it.
 
 ## Native ETH
 
-Native ETH is never approved. For a Market swap, the native `value` is sent with the transaction. For Delta, the ETH is represented as `dETH`, which the Delta contract can move without an approval; see [Native ETH (dETH)](/delta/native-eth).
+Native ETH is never approved. For a Market swap, the native `value` is sent with the transaction. For Delta, the approval is replaced by a deposit: the user sends one `depositNativeAndPreSign` transaction that escrows the ETH in the Delta contract as `dETH` and authorizes the order on-chain, so no approval or off-chain signature is needed. See [Native ETH (dETH)](/delta/native-eth) for the full flow.
 
 ## Limit Orders and TWAP use on-chain approval
 

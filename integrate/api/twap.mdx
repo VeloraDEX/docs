@@ -23,7 +23,7 @@ A TWAP is either a sell or a buy, and the field that fixes the total differs:
     `GET /v2/quote?mode=DELTA` for the **per-slice** amount, `floor(total / numSlices)`. The route's amount must match that slice; the server applies it across the schedule.
   </Step>
   <Step title="Approve the total">
-    Approve the **total** source on-chain (`totalSrcAmount` for sell, `maxSrcAmount` for buy), not one slice. A TWAP uses approval, not a permit; see [Approvals and permit](/resources/approvals). Native source skips this.
+    Approve the **total** source on-chain (`totalSrcAmount` for sell, `maxSrcAmount` for buy), not one slice. A TWAP uses approval, not a permit; see [Approvals and permit](/resources/approvals). A native source instead deposits the **total** upfront via [deposit-and-pre-sign](/delta/native-eth); a native TWAP that expires is not auto-refunded — the unspent remainder stays as withdrawable dETH.
   </Step>
   <Step title="Build the schedule">
     `POST /v2/delta/orders/build` with the `orderType`, `interval`, `numSlices`, a `deadline`, and the totals. See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).

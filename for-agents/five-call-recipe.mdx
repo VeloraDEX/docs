@@ -49,6 +49,7 @@ Agent rules:
 - Include a `partner` value on quote requests. Use the app or project partner key; examples use `my-app-name` only as a placeholder.
 - Pass the `delta.route` from the quote response into `/v2/delta/orders/build` unchanged, and submit `toSign.value` unchanged as `order`.
 - Do not grant approval to Augustus for a Delta order; approve the Delta contract (the `spender` from the quote response).
+- Native ETH source: there is no approval and nothing to sign off-chain. Submit with `signature: "0x"`, then have the user send `depositNativeAndPreSign(orderHash)` to the Delta contract with `value` equal to the order's `srcAmount`. The order waits in `AWAITING_SIGNATURE` until that transaction lands. See [Native ETH (dETH)](/delta/native-eth).
 - Track by Delta order ID, not by transaction hash.
 
 ## Market Swap

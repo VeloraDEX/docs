@@ -41,7 +41,7 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 
 | Wallet state | Agent action | Rule |
 |---|---|---|
-| Source token is native ETH | Skip ERC-20 approval. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` as the native token placeholder. |
+| Source token is native ETH | Skip ERC-20 approval. For a Delta order, submit with `signature: "0x"`, then have the user send the one-transaction [deposit-and-pre-sign](/delta/native-eth). | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` as the native token placeholder. |
 | ERC-20 allowance is insufficient for Market | Ask the user to approve the Market spender, then rebuild or send the swap transaction. | Market execution uses Augustus v6.2 calldata. |
 | ERC-20 allowance is insufficient for Delta | Ask the user to approve the Delta spender before submitting the order. | Do not approve Augustus for a Delta order. |
 | Wallet can sign EIP-712 | Use Delta when the quote response includes `delta`. | The user signs typed data, not an on-chain transaction. |
@@ -58,6 +58,8 @@ Use these tables when an agent needs to choose the next Velora action. Prefer ex
 | Delta `LIMIT` order | EIP-712 typed data from `POST /v2/delta/orders/build` | No at order creation | `POST /v2/delta/orders` with `order=toSign.value`, `signature`, `type=LIMIT`, `chainId`, and `partner` | Order ID and fill status |
 | Delta TWAP | EIP-712 typed data from `POST /v2/delta/orders/build` | No at order creation | `POST /v2/delta/orders` after signing the built `TWAPOrder` or `TWAPBuyOrder` payload | Slice execution and order status |
 | AugustusRFQ OTC flow | RFQ order or fill transaction, depending on the integration | Depends on fill path | AugustusRFQ flow | RFQ order/fill state |
+
+Exception: a Delta order selling **native ETH** signs nothing off-chain — submit with `signature: "0x"`, then the user sends one gas-paying [deposit-and-pre-sign transaction](/delta/native-eth) that funds and authorizes the order.
 
 ## Order type → required details
 

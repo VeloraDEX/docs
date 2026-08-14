@@ -13,7 +13,7 @@ Approvals are the single most common place agents get a Velora flow wrong. The m
 - You're deciding whether to ask the user for a separate `approve` transaction, or whether to bundle a `permit` / `permit2` payload into the build call instead.
 - An earlier swap or order failed with an allowance error and you need to figure out which spender actually needed the approval.
 
-If the user's source token is the chain's native asset, there is no approval step. Use the canonical placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) for `srcToken`; Delta moves native ETH as dETH without an approval. See [Native ETH (dETH)](/delta/native-eth).
+If the user's source token is the chain's native asset, there is no approval step. Use the placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` for `srcToken`. For a **Delta** order the approval is replaced by a different required step: submit the order with `signature: "0x"`, then have the user send one `depositNativeAndPreSign(orderHash)` transaction to the Delta contract with `value = srcAmount` — it escrows the ETH as dETH and authorizes the order. See [Native ETH (dETH)](/delta/native-eth).
 
 ## The rule (read this first)
 
@@ -61,7 +61,8 @@ Agent rule: never request an approval before the quote response is final and you
 |---|---|---|
 | Approval transaction confirms but the next swap/order still reverts with `insufficient allowance` | Approval was granted to the wrong spender (e.g., Augustus instead of the Delta contract, or vice versa). | Re-read the quote response, identify the correct spender from the spender matrix above, and request a fresh approval to that contract. See the [Delta orders/build failure modes](/api-reference/troubleshooting) row for "Approval reverts before signing". |
 | Approval confirms on chain A but the swap is on chain B | Wallet was on a different network when the approve was signed. | Ask the user to switch to the quote's chain and re-approve there. Allowances are per-chain. |
-| `400 Invalid srcToken` on quote or build for native ETH | Sent `0x0` or lowercase `0xeee...e` instead of the canonical placeholder. | Use `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` (mixed case) and requote. |
+| `400 Invalid srcToken` on quote or build for native ETH | Sent `0x0`, the zero address, or a truncated placeholder. Casing doesn't matter — the placeholder is accepted in any casing. | Use the full 20-byte placeholder `0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE` and requote. |
+| Native Delta order stuck in `AWAITING_SIGNATURE` | Order was submitted with `signature: "0x"` but the `depositNativeAndPreSign` transaction was never sent (or deposited less than `srcAmount`). | Have the user send `depositNativeAndPreSign(orderHash)` to the Delta contract with `value` equal to the order's `srcAmount`. See [Native ETH (dETH)](/delta/native-eth). |
 | `400 Permit / Permit2 required` from `POST /v2/delta/orders/build` | Token requires Permit/Permit2 and no payload was attached. | Collect the signed Permit or Permit2 payload up front and include it in the build request. Falling back to a separate `approve` transaction is not supported for these tokens. |
 | User approved infinite (`MaxUint256`) to one mode's spender, now wants the other mode | Each mode has its own spender. The first allowance is fine but does not authorize the second mode. | Read allowance against the new mode's spender and request a separate approval. Do not treat the existing infinite allowance as universal. |
 | User rejects the approve transaction or the Permit/Permit2 signature | Explicit user refusal. | Stop. Do not retry automatically. Surface the rejection and ask how to proceed: a different source token, a different mode, or abort. |
@@ -79,7 +80,9 @@ Agent rule: never request an approval before the quote response is final and you
 4. Else:
    - Stop. No route. Do not request an approval.
 5. If srcToken is native placeholder:
-   - Skip approval. Proceed to build.
+   - Skip approval. Build as usual.
+   - Delta only: submit with signature "0x", then have the user send
+     depositNativeAndPreSign(orderHash) with value = srcAmount.
 6. Else:
    - Read allowance(srcToken, owner=user, spender)
    - If allowance < amount:
@@ -102,7 +105,7 @@ If the user accepts a quote, the approval lands on the matching spender, then th
 
 - Take the spender from the **quote response shape**, not from natural language.
 - Never approve Augustus for a Delta order. Never approve the Delta contract for a Market swap.
-- Skip ERC-20 approval entirely for native source tokens; use the canonical mixed-case placeholder.
+- Skip ERC-20 approval entirely for native source tokens; for native Delta orders, replace it with the one-transaction deposit-and-pre-sign step.
 - Detect Permit/Permit2 capability before requesting a separate `approve` transaction.
 - Use an on-chain approval, never a permit, for Delta `LIMIT` orders and TWAP.
 - Re-check allowance against the new spender any time the execution mode changes.
