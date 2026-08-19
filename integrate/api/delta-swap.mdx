@@ -16,7 +16,7 @@ For the conceptual model behind the auction and settlement, see [Delta → How i
     `GET /v2/quote?mode=DELTA` returns a `delta` block with the recommended `route`, the `spender` to approve, and the resolved partner fee. See [`GET /v2/quote`](/api-reference/delta/quote).
   </Step>
   <Step title="Approve the spender">
-    Authorize the `spender` (the Delta contract) to pull the source token, by on-chain approval or a permit. Native source skips this. See [Approvals and permit](/resources/approvals).
+    Authorize the `spender` (the Delta contract) to pull the source token, by on-chain approval or a permit. A native ETH source has no approval; it's authorized by a deposit transaction after submit — see [Native ETH (dETH)](/delta/native-eth). For ERC-20s, see [Approvals and permit](/resources/approvals).
   </Step>
   <Step title="Build the order">
     `POST /v2/delta/orders/build` with the `delta.route` passed **verbatim**, `owner` set to the user, and a `deadline`. You get back `{ toSign, orderHash }`. See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).
@@ -61,7 +61,9 @@ The response carries a `delta` block:
 
 ## 2. Approve the spender
 
-Authorize the Delta contract (the `spender` from the quote) to pull the source token at settlement, with either an on-chain approval or a signed permit. See [Approvals and permit](/resources/approvals) for both methods and when each applies. Selling native ETH skips this step; see [Native ETH (dETH)](/delta/native-eth).
+Authorize the Delta contract (the `spender` from the quote) to pull the source token at settlement, with either an on-chain approval or a signed permit. See [Approvals and permit](/resources/approvals) for both methods and when each applies.
+
+Selling **native ETH** replaces this step (and the signature in step 4) with a different mechanic: you submit the order with `signature: "0x"`, then the user sends one `depositNativeAndPreSign` transaction that escrows the ETH in the Delta contract and authorizes the order on-chain. Follow [Native ETH (dETH)](/delta/native-eth) for that flow; the quote, build, and poll steps on this page apply unchanged.
 
 ## 3. Build
 
@@ -106,13 +108,17 @@ curl -X POST 'https://api.velora.xyz/v2/delta/orders' \
 
 The relayer validates the signature, balance, and allowance, then enrolls the order in the [sealed-bid auction](/solver-network/sealed-bid-auctions). The response is the stored order with its `id`.
 
+<Note>
+  Native ETH source: submit with `signature: "0x"` instead of a signed payload. The order is stored as `AWAITING_SIGNATURE` and activates once the user's [deposit transaction](/delta/native-eth) lands.
+</Note>
+
 ## 5. Poll for settlement
 
 ```bash
 curl 'https://api.velora.xyz/v2/delta/orders/{orderId}'
 ```
 
-Poll until the order reaches a terminal status. A same-chain market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine. Crosschain orders can spend longer in `BRIDGING`, or in `REFUNDING` if the bridge leg failed and a refund transaction is still being verified.
+Poll until the order reaches a terminal status. A same-chain market Delta order usually settles in seconds once the auction has a winning fill, so a short interval is fine. Crosschain orders can spend longer in `BRIDGING`, or in `REFUNDING` if the bridge leg failed and a refund transaction is still being verified. A [native ETH source](/delta/native-eth) order that expires unfilled also ends in `REFUNDED` — that's the deposited ETH being returned to the owner, not an error.
 
 For a human-readable view (status, fills, the settlement transaction), open the order in the Velora explorer at `https://explorer.velora.xyz/order/{orderId}`. It's handy for debugging and for linking users to their order.
 

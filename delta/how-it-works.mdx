@@ -68,13 +68,15 @@ You `POST /v2/delta/orders/build` with the unmodified `delta.route` from step 1 
 
 The user signs the returned `toSign` typed data with their wallet. The build response carries the exact domain, types, and struct layout. Delta uses **ERC-2098 compact signatures** (64 bytes, not 65). Most modern libraries (viem, ethers v6, wagmi) produce or accept compact sigs natively. The user pays **no gas** for this step; it's a pure off-chain message.
 
+A [native ETH source](/delta/native-eth) replaces the off-chain signature with an on-chain pre-signature: the order is submitted with `signature: "0x"` and authorized by the user's one deposit transaction, which also escrows the ETH the order sells.
+
 ### 4. Auction
 
 You `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. The order server persists it and runs a [sealed-bid auction](/solver-network/sealed-bid-auctions) across the **Portikus Network**: solvers bid in parallel without seeing each other's offers, and the best simulated outcome wins. The winning solver commits fill calldata and the capital needed to deliver it; they take on inventory and pricing risk in exchange for the spread.
 
 ### 5. Settle
 
-The protocol settlement layer calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every Delta-enabled chain) with the signed order and the winning solver's fill calldata. The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself), runs the fill, and delivers `destToken` to the user. If settlement fails, nothing is pulled from the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, or `REFUNDED`). Crosschain orders can report `REFUNDING` before `REFUNDED` while Velora verifies the bridge refund transaction.
+The protocol settlement layer calls `settle(...)` on the Delta contract (`0x0000000000bbF5c5Fd284e657F01Bd000933C96D`, same address on every supported chain) with the signed order and the winning solver's fill calldata. The contract verifies the signature, pulls `srcToken` from the user via the approved spender (the Delta contract itself; a [native ETH source](/delta/native-eth) settles from the user's deposited `dETH` balance instead), runs the fill, and delivers `destToken` to the user — actual ETH when `destToken` is native. If settlement fails, nothing is pulled from the user. You track progress via `GET /v2/delta/orders/{orderId}` until the order reaches a terminal status (`COMPLETED`, `EXPIRED`, `FAILED`, `CANCELLED`, or `REFUNDED`). Crosschain orders can report `REFUNDING` before `REFUNDED` while Velora verifies the bridge refund transaction, and an expired native-source order ends in `REFUNDED` when its deposit is returned to the owner.
 
 ## Why this design
 

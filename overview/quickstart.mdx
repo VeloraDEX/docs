@@ -76,6 +76,8 @@ export default function SwapPage() {
 
 `GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/v2/delta/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
 
+One wrinkle in this example: it sells **native ETH**, and a Delta order with a native source isn't signed off-chain — it's submitted with `signature: "0x"` and authorized by a one-transaction deposit. See [Native ETH (dETH)](/delta/native-eth).
+
 ## Pick your integration path
 
 <Card title="Continue to Integrate →" icon="arrow-right" href="/integrate/api">

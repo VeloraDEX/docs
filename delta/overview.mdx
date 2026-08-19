@@ -63,6 +63,10 @@ curl -X POST "https://api.velora.xyz/v2/delta/orders" \
 curl "https://api.velora.xyz/v2/delta/orders/{orderId}"
 ```
 
+<Note>
+  This example sells **native ETH**, which swaps steps 3–4 for a deposit: submit the order with `signature: "0x"`, then send one `depositNativeAndPreSign` transaction that escrows the ETH and authorizes the order on-chain. An ERC-20 source signs off-chain exactly as shown. See [Native ETH (dETH)](/delta/native-eth).
+</Note>
+
 Walk through the full flow in the **[Quickstart →](/overview/quickstart)**
 
 For a side-by-side breakdown of when to pick `mode=DELTA`, `mode=MARKET`, or `mode=ALL`, see [Trading modes](/integrate/trading-modes).

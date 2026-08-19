@@ -35,7 +35,7 @@ Delta lives at two layers in the SDK:
     Call `sdk.delta.getDeltaPrice` with source/destination tokens, amount, decimals, and partner. The response includes the recommended `route` plus `alternatives` and the contract `spender` to approve.
   </Step>
   <Step title="Approve the source token (or sign a Permit)">
-    Call `sdk.delta.approveTokenForDelta(amount, srcToken)`, or sign a Permit / Permit2 message with the Delta contract (returned in `price.spender`) as the verifying contract. Native tokens skip this step.
+    Call `sdk.delta.approveTokenForDelta(amount, srcToken)`, or sign a Permit / Permit2 message with the Delta contract (returned in `price.spender`) as the verifying contract. A native token source has no approval — it's authorized by a deposit transaction instead; see [Selling native ETH](#selling-native-eth) below.
   </Step>
   <Step title="Build, sign, and post the order">
     Either call the one-shot orchestrator `sdk.delta.submitDeltaOrder`, or run the three steps yourself (`buildDeltaOrder` → `signDeltaOrder` → `postDeltaOrder`) when you need control over signing.
@@ -103,6 +103,41 @@ const auction = await sdk.delta.postDeltaOrder({
 `buildDeltaOrder` returns `{ toSign, orderHash }`. The server has already composed the EIP-712 typed data, and `signDeltaOrder` wraps your contract caller's `signTypedData` to produce the signature. It's generic across order families, so the market, limit, and TWAP flows all sign through the same call.
 
 If your signer is a smart contract (e.g., a multisig or 4337 wallet) that can't produce an off-chain EIP-712 signature, use `sdk.delta.preSignDeltaOrder` to register the order hash on-chain instead.
+
+## Selling native ETH
+
+A native ETH source (`srcToken: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE`) changes two things: there is **no** `approveTokenForDelta` call, and there is **no off-chain signature**. Instead, the user sends one transaction that deposits the ETH into the Delta contract and authorizes the order on-chain. Use the split flow:
+
+```ts
+const built = await sdk.delta.buildDeltaOrder({
+  route: price.route, // price quoted with the native placeholder as srcToken
+  side: price.side,
+  owner: account,
+  partner: "my-app-name",
+  slippage: 50,
+  deadline: Math.floor(Date.now() / 1000) + 60 * 60,
+});
+
+// post the order unsigned — it waits in AWAITING_SIGNATURE
+const auction = await sdk.delta.postDeltaOrder({
+  order: built.toSign.value,
+  signature: "0x",
+  partner: "my-app-name",
+});
+
+// one on-chain tx: wraps the ETH into dETH and pre-signs the order
+const DELTA_CONTRACT = "0x0000000000bbF5c5Fd284e657F01Bd000933C96D"; // same on every Delta chain
+
+await walletClient.writeContract({
+  address: DELTA_CONTRACT,
+  abi: parseAbi(["function depositNativeAndPreSign(bytes32 orderHash) payable"]),
+  functionName: "depositNativeAndPreSign",
+  args: [built.orderHash],
+  value: BigInt(built.toSign.value.srcAmount),
+});
+```
+
+Once the deposit transaction mines, the order activates and runs through the auction as usual. If the user already holds enough `dETH` from an earlier deposit, skip the deposit and use the ordinary sign-and-post flow. The full mechanics — dETH, refunds on expiry, unwrapping — are on [Native ETH (dETH)](/delta/native-eth).
 
 ## Poll for execution
 

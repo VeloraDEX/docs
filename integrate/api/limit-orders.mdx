@@ -16,7 +16,7 @@ For the conceptual model (maker, expiry, how a limit order differs from a swap o
     `GET /v2/quote?mode=DELTA` gives the current route and the `spender` to approve. The market quote is your reference point for setting the limit. See [`GET /v2/quote`](/api-reference/delta/quote).
   </Step>
   <Step title="Approve the spender">
-    Approve the Delta contract `spender` on-chain for the source token. Limit orders use approval, not a permit; see [Approvals and permit](/resources/approvals). Native source skips this; see [Native ETH (dETH)](/delta/native-eth).
+    Approve the Delta contract `spender` on-chain for the source token. Limit orders use approval, not a permit; see [Approvals and permit](/resources/approvals). A native source instead escrows the ETH via [deposit-and-pre-sign](/delta/native-eth) — the deposit sits in the Delta contract for as long as the order rests.
   </Step>
   <Step title="Build with a limit price">
     `POST /v2/delta/orders/build` with the `route` verbatim, `owner`, a `deadline`, and `limitAmount` (your target output for SELL, or max input for BUY). See [`POST /v2/delta/orders/build`](/api-reference/delta/orders-build).
@@ -31,7 +31,7 @@ For the conceptual model (maker, expiry, how a limit order differs from a swap o
 
 ## 1. Quote and approve
 
-Quote exactly as for a [Delta swap](/integrate/api/delta-swap#1-quote) (`mode=DELTA`), then approve the returned `spender` for the source token. Use the quote's expected output as the baseline for the limit price you'll pin in the next step. Approve on-chain rather than with a permit, which a resting order can't rely on (see [Approvals and permit](/resources/approvals)). Selling native ETH skips the approval; see [Native ETH (dETH)](/delta/native-eth).
+Quote exactly as for a [Delta swap](/integrate/api/delta-swap#1-quote) (`mode=DELTA`), then approve the returned `spender` for the source token. Use the quote's expected output as the baseline for the limit price you'll pin in the next step. Approve on-chain rather than with a permit, which a resting order can't rely on (see [Approvals and permit](/resources/approvals)). Selling native ETH replaces the approval with the one-transaction deposit-and-pre-sign, which escrows the ETH for the life of the resting order and refunds it automatically if the order expires; see [Native ETH (dETH)](/delta/native-eth).
 
 ## 2. Build with a limit price
 

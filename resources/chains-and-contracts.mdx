@@ -63,7 +63,7 @@ On-chain entry point that validates signed Delta orders and executes the winning
 
 ### Delta Wrapped Native (dETH)
 
-The wrapped-native token Delta uses to represent native ETH (and other native gas tokens) as an ERC-20, at a 1:1 rate. When a user sells native ETH through Delta, their ETH is represented as dETH, which is why a native source needs no ERC-20 approval. Deployed alongside the Delta contract at the same address on every Delta-enabled chain, so native ETH works as a source wherever Delta does. See [Native ETH (dETH)](/delta/native-eth) for the integration detail.
+The wrapped-native token Delta uses to represent native ETH (and other native gas tokens) as an ERC-20, at a 1:1 rate. When a user sells native ETH through Delta, they deposit the ETH into the Delta contract, where it's held as dETH until the order fills — that deposit is why a native source needs no ERC-20 approval. Deployed alongside the Delta contract at the same address on every Delta-enabled chain, so native ETH works as a source wherever Delta does. See [Native ETH (dETH)](/delta/native-eth) for the integration detail.
 
 ### Portikus settlement
 

@@ -78,7 +78,7 @@ console.log('spender:        ', delta.spender);
 pnpm tsx src/quote.ts
 ```
 
-You should see the recommended route's expected output (USDC, 6 decimals) and the `spender` address to approve before building the order.
+You should see the recommended route's expected output (USDC, 6 decimals) and the `spender` address. An ERC-20 source approves the `spender` before building the order; this example sells native ETH, which needs no approval — it's funded by a deposit transaction after submit instead (see [Native ETH (dETH)](/delta/native-eth)).
 
 ## Recommended route vs alternatives
 
@@ -93,7 +93,7 @@ const others = delta.alternatives;         // crosschain only
 
 ## Next: build, sign, submit
 
-Pass the unmodified `delta.route` into `POST /v2/delta/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }`. Sign `toSign` with an ERC-2098 compact signature, then `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. Poll `GET /v2/delta/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
+Pass the unmodified `delta.route` into `POST /v2/delta/orders/build` (with `owner` set to the user address) to get EIP-712 typed data back as `{ toSign, orderHash }`. For an ERC-20 source, sign `toSign` with an ERC-2098 compact signature, then `POST /v2/delta/orders` with `order` (the `toSign.value`), the `signature`, `chainId`, and your `partner`. For a native ETH source (like this example), submit with `signature: "0x"` and have the user send one `depositNativeAndPreSign(orderHash)` transaction instead — see [Native ETH (dETH)](/delta/native-eth). Poll `GET /v2/delta/orders/{orderId}` for status. See [Delta → How it works](/delta/how-it-works).
 
 <Warning>
   Pass `delta.route` **verbatim** to `/v2/delta/orders/build`. Reordering or re-encoding it will cause the build call to reject.

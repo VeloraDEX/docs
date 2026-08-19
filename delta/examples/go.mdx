@@ -85,7 +85,7 @@ func main() {
 go run .
 ```
 
-You should see the recommended route's expected output (USDC, 6 decimals) and the `spender` address to approve before building the order.
+You should see the recommended route's expected output (USDC, 6 decimals) and the `spender` address. An ERC-20 source approves the `spender` before building the order; this example sells native ETH, which needs no approval — it's funded by a deposit transaction after submit instead (see [Native ETH (dETH)](/delta/native-eth)).
 
 ## Next: build, sign, submit
 
