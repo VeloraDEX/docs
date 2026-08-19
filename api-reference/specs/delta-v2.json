@@ -23,7 +23,7 @@
               "type": "integer",
               "example": 1
             },
-            "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 8453, 42161, 43114."
+            "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 4663, 8453, 42161, 43114."
           },
           {
             "name": "srcToken",
@@ -271,7 +271,7 @@
         "description": "Returns a recommended `route` plus `alternatives` (up to a few bridge options for crosschain). Pass the returned `route` and `side` verbatim to `POST /v2/delta/orders/build`.",
         "operationId": "deltaV2Prices",
         "parameters": [
-          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 }, "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 8453, 42161, 43114." },
+          { "name": "chainId", "in": "query", "required": true, "schema": { "type": "integer", "example": 1 }, "description": "Source chain ID. Supported: 1, 10, 56, 100, 130, 137, 4663, 8453, 42161, 43114." },
           { "name": "srcToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0x6B175474E89094C44Da98b954EedeAC495271d0F" } },
           { "name": "destToken", "in": "query", "required": true, "schema": { "type": "string", "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" }, "description": "Destination token. For crosschain quotes, the destination token on `destChainId`." },
           { "name": "amount", "in": "query", "required": true, "schema": { "type": "string", "example": "1000000000000000000" }, "description": "Source amount (SELL) or destination amount (BUY), in raw token units." },

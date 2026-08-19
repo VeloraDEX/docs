@@ -23,7 +23,7 @@ If the user's source token is the chain's native asset, there is no approval ste
 | Market Swap | **Augustus v6.2** |
 | AugustusRFQ (OTC/RFQ) | **AugustusRFQ** contract on the target chain |
 
-Deployed addresses for each spender, per chain: [Chains & contracts → Addresses by chain](/resources/chains-and-contracts#addresses-by-chain). Delta and AugustusRFQ are not deployed everywhere; code should read availability at runtime via [`/resources/contracts.json`](/resources/contracts.json) keyed by `chainId`.
+Deployed addresses for each spender, per chain: [Chains & contracts → Addresses by chain](/resources/chains-and-contracts#addresses-by-chain). Delta, Augustus v6.2, and AugustusRFQ are each missing on some chains; code should read availability at runtime via [`/resources/contracts.json`](/resources/contracts.json) keyed by `chainId`.
 
 <Warning>
   Spenders are mode-specific and **never interchangeable**. An approval to Augustus does not authorize a Delta order. An approval to the Delta contract does not authorize a Market swap. Re-quoting under a different mode changes the spender; re-check the allowance before signing.
