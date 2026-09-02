@@ -26,8 +26,6 @@ keywords: ["widget","compatibility","ssr","server-side rendering","nextjs","astr
 | TanStack Start | ✅ Works, server-rendered | Resolve in a route loader, including React Server Components. |
 | Create React App | ✅ Works | No special setup. |
 
-Astro, Next.js (app router) and TanStack Start are covered by an automated suite that server-renders the widget and hydrates it in a browser on every commit, across blocking, deferred and static mounts.
-
 ## Server-side rendering
 
 The widget server-renders. Render `<Widget />` from a server-rendered route and the HTML contains a working widget, painted with its **default state**: the default pair for the configured chain, empty amounts, the default trade mode. The client resolves the tokens your `input` names shortly after mount, which shows up as a brief flash.
