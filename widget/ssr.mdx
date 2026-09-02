@@ -1,0 +1,288 @@
+---
+title: "Server-side rendering the Velora Widget"
+sidebarTitle: "Server-side rendering"
+description: "Render the Velora Widget on the server so the first paint already shows the requested tokens, with no default-token flash and no hydration mismatch."
+keywords: ["widget","ssr","server-side rendering","nextjs","astro","hydration","first paint"]
+---
+
+`@velora-dex/widget` server-renders, and the `@velora-dex/widget/ssr` entry makes that render **correct on the first paint**: the tokens the request asks for, optionally their rates too, with no flash and no hydration mismatch.
+
+All of it is optional. `<Widget />` already renders on the server with no setup at all, painting its default state: the default pair for the configured chain, empty amounts, the default trade mode. The client then resolves the tokens your `input` names shortly after mount, which the visitor sees as a brief flash. Reach for the SSR entry when you want that first paint to be right.
+
+## What you get for what you do
+
+Each step builds on the one above it. Stop when you have enough.
+
+| You want | Do this | It costs |
+|---|---|---|
+| The widget to render server-side at all | Nothing. It already does. | — |
+| First paint to show the **requested tokens** | `resolveWidgetInitState` | One token-list fetch per server process, cached after |
+| Rates and quotes on that first paint too | add `resolveWidgetSSRQueries` | A few API calls per request, and a much larger document |
+| The page not to block on either | [defer the widget](#deferred-rendering) | A placeholder to build, and no widget in the initial HTML |
+
+## Resolve the tokens
+
+The widget resolves token addresses by looking them up in token lists, which are normally fetched in the browser after mount. `resolveWidgetInitState` does that lookup on the server instead, and hands you a serializable result to pass back in through `ssrState`.
+
+Export the config once. `resolveWidgetInitState` has to run with the same `config` you render with, since it decides which token lists and trade modes are enabled.
+
+```ts widget-config.ts
+import type { WidgetProps } from "@velora-dex/widget";
+
+export const widgetConfig = {
+  theme: "light",
+  partnerConfig: { partner: "my-app-name" },
+} satisfies WidgetProps["config"];
+```
+
+```ts server-only module
+import { FileCache, resolveWidgetInitState } from "@velora-dex/widget/ssr";
+import { widgetConfig } from "./widget-config";
+
+// One cache per server process, shared across requests.
+const tokenLists = new FileCache();
+
+export async function resolveWidgetState(request: Request) {
+  // Turn the request into widget input however your app decides: the widget
+  // prescribes no URL scheme.
+  const input = deriveInputFromRequest(request);
+
+  const { initState, confirmed, listsComplete } = await resolveWidgetInitState(
+    { config: widgetConfig, input },
+    { cache: tokenLists }
+  );
+
+  return { input, ssrState: { initState }, confirmed, listsComplete };
+}
+```
+
+```tsx rendered on both server and client
+import { Widget } from "@velora-dex/widget";
+import { widgetConfig } from "./widget-config";
+
+function WidgetIsland({ input, ssrState }) {
+  return <Widget config={widgetConfig} input={input} ssrState={ssrState} />;
+}
+```
+
+Serialize `ssrState` into the page and hand the **same object** to the client component when it hydrates. How you carry it across is your framework's business: props from a Server Component, an Astro island prop, a `__DATA__` script tag. Because both sides seed from one `initState`, the first client render matches the server markup even before token lists finish loading in the browser.
+
+`resolveWidgetInitState` never throws. On any failure it returns an empty init state and the widget falls back to its defaults.
+
+<Warning>
+Import values from `@velora-dex/widget/ssr` in server-only modules. `FileCache` pulls in `node:fs`, so a browser-bundled module that imports it breaks the client build. Type imports are erased at compile time and are safe anywhere.
+</Warning>
+
+For a working Next.js version of this, see the [Next.js example](/widget/examples/nextjs#first-paint-with-the-right-tokens).
+
+## Add rates and quotes
+
+`initState` fixes the tokens. It does not fetch prices. `resolveWidgetSSRQueries` prefetches the request-independent queries (Delta prices, Market rates, bridge routes, token support) into a dehydrated query cache, so the first paint carries live numbers:
+
+```ts
+const { queryState } = await resolveWidgetSSRQueries(
+  { config: widgetConfig, input },
+  initState,
+  { cache: tokenLists, timeoutMs: 1500 }
+);
+
+// <Widget config={widgetConfig} input={input} ssrState={{ initState, queryState }} />
+```
+
+Budget for the payload before you enable it. That serialized cache is usually the largest thing on the page by a wide margin: a blocking render of a typical trade route runs to several hundred KB, most of it query state rather than markup. If your documents are too big, prefetch fewer queries before reaching for anything else.
+
+## Caching token lists
+
+Each list is fetched through three layers, cheapest first. The widget's module-level query client holds lists with `staleTime: Infinity`, so within one server process a list is fetched at most once. A persistent `cache` serves non-expired entries from disk, so even the first render after a restart usually skips the network. Only a miss on both reaches the network, and the result is written back to both.
+
+The `cache` option is yours to choose:
+
+`new FileCache()` stores under `$XDG_CACHE_HOME/velora`, falling back to `~/.cache/velora`. Pass `new FileCache({ basePath })` where `$HOME` is read-only but a temp directory is writable.
+
+`new Cache()` is the same thing without the disk tier, for runtimes with no usable filesystem. Still worth passing: the in-process query cache garbage-collects after five minutes with nothing observing it, while these entries live out their full TTL. Importing it instead of `FileCache` also keeps every `node:*` import out of your build.
+
+Any object implementing `ICache` works too, which is the escape hatch for a shared Redis- or KV-backed cache:
+
+```ts
+import type { ICache } from "@velora-dex/widget/ssr";
+
+const redisCache: ICache = {
+  get: (key) => readJSON(key),
+  set: (key, value, expiresInSeconds) => writeJSON(key, value, expiresInSeconds),
+  // optional, and worth implementing
+  getEntry: (key) => readJSONWithExpiry(key),
+};
+```
+
+`getEntry` returns `{ value, expiresAt }`. Without it, an entry promoted into the in-process cache is assumed to be as fresh as the read that found it, so one lifted a minute before it expires gets a second full lifetime and the effective TTL can be up to double what it says. A cache without `getEntry` is still correct, just coarser.
+
+Omitting `cache` entirely is fine. Every server process then fetches lists from the network on first use.
+
+### Warm the cache at startup
+
+```ts
+// once per server process — await it
+await warmTokenListsCache({ config: widgetConfig, cache: tokenLists });
+```
+
+This downloads every enabled list up front, so no request pays for the first one. It also warms bridge-info, which the resolver needs to tell apart tokens that share a symbol. Pass `bridgeInfo: false` to skip that if your input only ever names tokens by address.
+
+Await it rather than firing and forgetting. Many serverless runtimes freeze or kill the process once the response is sent, so anything left in flight may never finish.
+
+## Deployment
+
+The widget's route must render on demand: the resolved state depends on the request, so it cannot be statically prerendered. In Next.js that means a dynamic or server-rendered route; in Astro, a server adapter plus `prerender = false`.
+
+"Serverless" is not one thing, and the right cache backend differs:
+
+| Runtime | Filesystem | Use |
+|---|---|---|
+| Long-lived Node server | full | `new FileCache()`, which survives restarts and deploys |
+| Node-based serverless (AWS Lambda, Vercel and Netlify functions) | ephemeral `/tmp` | `new FileCache({ basePath: "/tmp/velora" })` |
+| Cloudflare Workers, Deno Deploy | virtual, per-request | `new Cache()` or an external `ICache` |
+| Runtimes with no Node built-ins | none | `new Cache()` or an external `ICache` |
+| Any of the above, shared across instances | — | An external `ICache` (Redis, KV) |
+
+On Lambda-style runtimes you must set `basePath` explicitly. The default resolves to `$XDG_CACHE_HOME` or `~/.cache/velora`, and a read-only `$HOME` yields a path that cannot be created. Every cache operation then degrades to a miss, silently and correctly, and you get no caching at all.
+
+Calibrate the gain there, though: `/tmp` lives and dies with the execution environment, exactly like the in-process query cache that is always on. Both survive warm invocations and both are empty on a cold start, so a file cache buys little on Lambda. An external cache is what helps across instances.
+
+Workers and Deno Deploy do have `node:fs` now, but their filesystem is virtual and scoped to one request, so a `FileCache` there writes files nothing later reads. Use `Cache`: not because the import fails, but because the disk tier buys nothing.
+
+## Knowing what did not resolve
+
+`resolveWidgetInitState` always comes back with tokens. One it could not find is replaced by the widget's own default, which is right for rendering and invisible in the result: a URL asking for a token the lists don't have produces a complete, plausible render of a trade nobody asked for.
+
+So the resolution reports which sides it stands behind.
+
+```ts
+const { initState, confirmed, listsComplete } = await resolveWidgetInitState(
+  { config: widgetConfig, input },
+  { cache: tokenLists }
+);
+
+// confirmed:     { tokenFrom: boolean; tokenTo: boolean }
+// listsComplete: boolean
+```
+
+A side is confirmed when the resolved token is the one `input` named. A side `input` never named is confirmed too, since there is no request to contradict. `confirmed` sits beside `initState` rather than inside it because only one of them is state: `initState` goes to the client, `confirmed` describes the render you are about to do and stays on the server.
+
+`listsComplete` is what makes `confirmed` meaningful. A token the lists don't contain and a token whose list never downloaded come back the same way, and `listsComplete` is false when any enabled list failed to arrive. Gate on it before treating "unconfirmed" as "no such token":
+
+```ts
+if (listsComplete && !confirmed.tokenFrom) {
+  // now "unconfirmed" really does mean the token isn't listed
+}
+```
+
+Skip that gate and a list host that times out quietly rewrites a perfectly good trade URL to the widget's default pair, on a request that was never the visitor's fault.
+
+An unconfirmed `tokenFrom` is worth acting on: redirect to the trade that did resolve, which is where the widget rewrites the address bar to on mount anyway. An unconfirmed `tokenTo` needs nothing, because the widget renders a **Select Token** control, which claims nothing.
+
+## Tokens named by symbol
+
+`input.tokenFrom` and `input.tokenTo` accept `{ symbol }` as well as `{ address }`; an address given alongside a symbol wins. Symbols are not unique, and telling apart two tokens that share one needs bridge-info.
+
+| On the server | Result |
+|---|---|
+| Symbol matches one token | Resolved from the token lists alone |
+| Several matches, bridge-info cached | Resolved to the variant bridge-info knows |
+| Several matches, no bridge-info | Left unresolved; the client resolves it after mount |
+
+`resolveWidgetInitState` reads bridge-info from cache and never fetches it, so resolving init state never grows a blocking API call. `warmTokenListsCache` warms it by default, which is how you get the middle row.
+
+Guessing would be worse than waiting. A seeded token outranks the client's own bridge-info-aware match, so a wrong guess sticks for the whole session instead of being corrected on mount.
+
+## Deferred rendering
+
+Everything above describes blocking SSR: the response waits for the widget's server state, so the widget is complete in the initial HTML. That is the simple choice and the right default.
+
+The alternative is to defer it, sending the page immediately with a placeholder and rendering the widget separately. Every modern framework has a primitive for this, and the widget doesn't care which: React Suspense with streaming, Astro server islands, Next.js streaming or partial prerendering.
+
+|  | Blocking | Deferred |
+|---|---|---|
+| Widget in initial HTML | yes | no, a placeholder stands in |
+| Time to first paint | waits on token lists and prefetches | shell only |
+| Crawlers without JavaScript | see the widget | see the placeholder |
+| Complexity | none beyond this page | a placeholder, its geometry, its inertness |
+
+Choose blocking when trade pages need to be indexable, or when the widget is essentially the whole page, since deferring it defers everything the visitor came for. Choose deferred when the widget is one element among others, or when the shell should be cacheable independently of it.
+
+### Resolving without blocking
+
+A deferred shell wants to show something truthful and cannot wait on the network to find out what. `cacheOnly` resolves from the cache layers alone:
+
+```ts
+const { initState, confirmed } = await resolveWidgetInitState(
+  { config: widgetConfig, input },
+  { cache: tokenLists, cacheOnly: true }
+);
+```
+
+It is strictly zero-network. A list missing from both layers is simply absent, and nothing is left in flight, deliberately: work that outlives the response is unsafe on runtimes that freeze once it is sent. Warm the cache at startup instead.
+
+<Warning>
+`cacheOnly` results are best-effort. On a cold cache the widget's defaults come back instead of what you asked for, and that is indistinguishable from success in the return value. Never pass a `cacheOnly` result to a `<Widget />` you intend to hydrate: the client will resolve differently and the markup will mismatch. It is placeholder data.
+</Warning>
+
+### Placeholders
+
+`<WidgetSkeleton />` is a static shape with no state, shipped from the main entry:
+
+```tsx
+import { WidgetSkeleton } from "@velora-dex/widget";
+
+<WidgetSkeleton theme={widgetConfig.theme} />;
+```
+
+The other option is the real `<Widget />`, seeded with `cacheOnly` state and never hydrated. That is usually the better placeholder, since its DOM is nearly identical to what replaces it and the swap-in shifts nothing. Seeding it with best-effort state is safe precisely because it is never hydrated: the real render hydrates against its own markup.
+
+Three things to get right either way. Ship no JavaScript for it, using whatever your framework's "render but don't hydrate" mechanism is; a hydrated placeholder would run queries and defeat the purpose. Reserve the same space, since the widget's height varies with content and a mis-sized container causes layout shift on the swap. And make it inert with the [`inert`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/inert) attribute rather than `pointer-events: none`, which the widget's own styles override from inside.
+
+Which placeholder to use follows from `confirmed`, because the two sides are not symmetric:
+
+| Seeded state | The widget renders |
+|---|---|
+| `tokenTo` undefined | a **Select Token** control, an honest "nothing chosen" |
+| `tokenFrom` undefined | its **default token**, a false claim about the requested trade |
+
+So an unresolved to-side is safe to render as-is, while an unresolved from-side is not. Fall back to `<WidgetSkeleton />` there rather than showing a token nobody asked for.
+
+## Caveats
+
+- The `config` object must be the same for `resolveWidgetInitState` and `<Widget />`. Export it once so the two cannot drift.
+- `initState` must reach the client. It is serializable on purpose: resolve on the server, embed it in the page, hand the exact same object to the client widget. Recomputing different state in the browser reintroduces the mismatch SSR removes.
+- Don't server-render two widgets with different `input` on one page. Each resolves its own state on the server, but they share a single store in the browser, so the second adopts the first's trade and React reports a hydration mismatch. Two widgets showing the same trade are fine.
+- The persistent cache assumes a writable filesystem and fails quietly without one. Every disk operation is best-effort, so a read-only filesystem costs you caching with nothing to tell you.
+- Token lists are treated as immutable and global. The cross-request query cache is safe precisely because these public lists are request-independent, so don't route per-user data through it. At most refresh the cache/refetch the token lists on an hours-long interval.
+
+## Reference
+
+`@velora-dex/widget/ssr`, server-only:
+
+| Export | Role |
+|---|---|
+| `resolveWidgetInitState(props, options?)` | Resolves `tokenFrom` / `tokenTo` from the token lists, and reports `confirmed` and `listsComplete`. Never throws. |
+| `resolveWidgetSSRQueries(props, initState, options?)` | Prefetches prices, bridge routes and token support into a dehydrated query cache. Never throws. |
+| `warmTokenListsCache(params)` | Downloads every enabled token list, plus bridge-info, up front. Call once at startup and await it. |
+| `Cache` | In-process token-list cache with no `node:*` imports. |
+| `FileCache` | `Cache` plus a `node:fs` disk tier, so lists survive restarts. |
+| `ICache` / `TokenListsCache` | Interfaces for your own cache backend. |
+| `WidgetSSRState` / `WidgetInitState` / `SSRLogger` | Types passed server to client, and the logging hook. |
+
+Options on `resolveWidgetInitState`:
+
+| Option | Effect |
+|---|---|
+| `cache` | Persistent token-list cache. Omit to rely on the in-process query cache only. |
+| `timeoutMs` | Per-list download deadline, 3000 by default. Applied to the request's `AbortSignal`, so a slow host is hung up on rather than waited out. |
+| `cacheOnly` | Resolve from cached lists only. Never downloads, never leaves work in flight. |
+| `logger` | Where degraded resolution is reported. Omit it and a silently degraded render looks identical to a healthy one. |
+
+From the main `@velora-dex/widget` entry: `ssrState` on `<Widget />`, and `<WidgetSkeleton />`.
+
+## Related pages
+
+- [Next.js example](/widget/examples/nextjs) — the whole pattern in an app router project.
+- [Compatibility](/widget/compatibility) — peer dependencies, tested frameworks, known caveats.
+- [Configure](/widget/configure) — everything the `config` object accepts.
