@@ -1,8 +1,8 @@
 ---
 title: "Velora Widget compatibility"
 sidebarTitle: "Compatibility"
-description: "Tested environments, peer-dependency ranges, SSR caveats, and performance tips for @velora-dex/widget."
-keywords: ["widget","compatibility","ssr","nextjs","vite","tailwind"]
+description: "Tested environments, peer-dependency ranges, server-side rendering support, and performance tips for @velora-dex/widget."
+keywords: ["widget","compatibility","ssr","server-side rendering","nextjs","astro","vite","tailwind"]
 ---
 
 ## Peer dependencies
@@ -20,23 +20,59 @@ keywords: ["widget","compatibility","ssr","nextjs","vite","tailwind"]
 | Framework | Status | Notes |
 |---|---|---|
 | Vite + React | ✅ Works out of the box | See [examples/react](/widget/examples/react). |
-| Next.js (app router) | ✅ Works with client-only mount | Use `dynamic(... { ssr: false })`. See [examples/nextjs](/widget/examples/nextjs). |
-| Next.js (pages router) | ✅ Works with `dynamic` | Same dynamic-import pattern as app router. |
+| Next.js (app router) | ✅ Works, server-rendered | Render it from a `"use client"` module. See [examples/nextjs](/widget/examples/nextjs). |
+| Next.js (pages router) | ✅ Works | Client-only via `dynamic(... { ssr: false })`, or server-rendered with `ssrState` from `getServerSideProps`. |
+| Astro | ✅ Works, server-rendered | Needs a server adapter and `prerender = false` on the route. |
+| TanStack Start | ✅ Works, server-rendered | Resolve in a route loader, including React Server Components. |
 | Create React App | ✅ Works | No special setup. |
 
-## SSR caveat
+Astro, Next.js (app router) and TanStack Start are covered by an automated suite that server-renders the widget and hydrates it in a browser on every commit, across blocking, deferred and static mounts.
 
-The widget reads `window`, `localStorage`, and `prefers-color-scheme` on mount. It does **not** support server-side rendering. In Next.js (or any SSR/SSG framework), gate the import:
+## Server-side rendering
+
+The widget server-renders. Render `<Widget />` from a server-rendered route and the HTML contains a working widget, painted with its **default state**: the default pair for the configured chain, empty amounts, the default trade mode. The client resolves the tokens your `input` names shortly after mount, which shows up as a brief flash.
+
+To remove that flash, resolve the tokens on the server with the `@velora-dex/widget/ssr` entry and pass the result back in through `ssrState`:
+
+```tsx
+// server
+import { FileCache, resolveWidgetInitState } from "@velora-dex/widget/ssr";
+
+const { initState } = await resolveWidgetInitState(
+  { config: widgetConfig, input },
+  { cache: new FileCache() }
+);
+
+// client, same config object, same initState object
+<Widget config={widgetConfig} input={input} ssrState={{ initState }} />;
+```
+
+`resolveWidgetSSRQueries` takes it one step further and prefetches prices and bridge routes, so rates are on the page at first paint too.
+
+Keep the `/ssr` entry out of browser bundles: `FileCache` imports `node:fs`, so value imports belong in server-only modules. Type imports are erased at compile time and are safe anywhere.
+
+Call `resolveWidgetInitState` with the same `config` object you render `<Widget />` with. It decides which token lists and trade modes are enabled, and the two renders disagree if it drifts.
+
+The route has to render per request, since the resolved state depends on the request. A statically prerendered page cannot carry it.
+
+[Server-side rendering](/widget/ssr) has the rest: prefetching rates with `resolveWidgetSSRQueries`, picking a cache backend for your runtime, acting on a token that could not be resolved, and deferring the widget behind a placeholder.
+
+### Client-only mount
+
+Still supported, and the right answer when there is no server at request time (a static export) or you want the widget's JavaScript off the critical path:
 
 ```tsx
 // Next.js app router
 import dynamic from "next/dynamic";
+import { WidgetSkeleton } from "@velora-dex/widget";
 
 const Widget = dynamic(
   () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
-  { ssr: false }
+  { ssr: false, loading: () => <WidgetSkeleton theme="light" /> }
 );
 ```
+
+The initial HTML then has no widget in it, so anything that doesn't run JavaScript sees only the placeholder.
 
 ## Tailwind v4
 
@@ -134,12 +170,14 @@ The widget is large: it ships wallet connectors, EVM tooling, and the full tradi
 
 ## Known caveats
 
-- Server-side rendering is not supported (see SSR caveat above).
 - Strict-mode double-mount in dev triggers a brief double-fetch of price quotes, harmless and confined to development.
 - Sandboxed iframes without `allow-popups` and `allow-storage-access-by-user-activation` will break wallet-connection popups.
+- Don't server-render two widgets with different `input` on one page. Each resolves its own state on the server, but they share one store in the browser, so the second adopts the first's trade and React reports a hydration mismatch. Two widgets showing the same trade are fine.
+- The `FileCache` disk tier degrades quietly on a read-only filesystem: every write is best-effort, so you get no caching and no error. Serverless targets usually want `Cache`, or a backend of your own.
 
 ## Related pages
 
 - [Install](/widget/install) — install + render.
 - [examples/react](/widget/examples/react), [examples/nextjs](/widget/examples/nextjs) — concrete setups.
 - [Customize](/widget/customize) — CSS scoping details.
+- [Server-side rendering](/widget/ssr) — resolving state on the server, caching, deferred rendering.
