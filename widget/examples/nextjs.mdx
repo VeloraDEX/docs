@@ -1,11 +1,13 @@
 ---
 title: "Velora Widget Next.js example"
 sidebarTitle: "Next.js"
-description: "End-to-end widget integration for the Next.js app router, with a client-only mount and a /swap route."
-keywords: ["widget","nextjs","example","app-router"]
+description: "End-to-end widget integration for the Next.js app router: a server-rendered widget at /swap, and how to resolve its tokens on the server."
+keywords: ["widget","nextjs","example","app-router","ssr","server-side rendering"]
 ---
 
-A Next.js 14+ app-router integration that mounts the Velora Widget at `/swap`. The widget reads `window` and `localStorage` on mount, so it must be client-only. We use `next/dynamic` with `ssr: false`.
+A Next.js 14+ app-router integration that mounts the Velora Widget at `/swap`. The widget server-renders, so no `dynamic(... { ssr: false })` wrapper is needed: mark the file `"use client"` and render it. Next renders it to HTML on the request and hydrates it in the browser.
+
+Out of the box that first paint shows the widget's default state. To make it show the tokens the request asks for, resolve them on the server first — see [First paint with the right tokens](#first-paint-with-the-right-tokens).
 
 ## File tree
 
@@ -13,12 +15,16 @@ A Next.js 14+ app-router integration that mounts the Velora Widget at `/swap`. T
 my-app/
 ├─ package.json
 ├─ next.config.js
-└─ src/app/
-   ├─ layout.tsx
-   ├─ page.tsx
-   └─ swap/
-      ├─ page.tsx
-      └─ widget.tsx
+└─ src/
+   ├─ app/
+   │  ├─ layout.tsx
+   │  ├─ page.tsx
+   │  └─ swap/
+   │     ├─ page.tsx
+   │     └─ widget.tsx
+   └─ lib/                  # added by "First paint with the right tokens"
+      ├─ widget-config.ts
+      └─ widget-ssr.ts
 ```
 
 ## Install
@@ -59,17 +65,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ## `src/app/swap/widget.tsx`
 
-The widget itself, wrapped in `dynamic(... { ssr: false })`.
+The widget itself. `"use client"` because it uses hooks and browser APIs once it mounts; it is still rendered to HTML on the server for the initial request.
 
 ```tsx
 "use client";
 
-import dynamic from "next/dynamic";
-
-const Widget = dynamic(
-  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
-  { ssr: false, loading: () => <div>Loading widget…</div> }
-);
+import { Widget } from "@velora-dex/widget";
 
 export default function ClientWidget() {
   return (
@@ -115,11 +116,133 @@ pnpm dev
 
 Visit [http://localhost:3000/swap](http://localhost:3000/swap). You should see the widget render with **Connect Wallet** in the header.
 
-## Why `ssr: false`?
+## First paint with the right tokens
 
-The widget reads `window`, `localStorage`, and `prefers-color-scheme` on mount. None of those exist during server rendering. `dynamic(... { ssr: false })` defers the import to the browser, so the widget only ever runs client-side.
+A plain server render paints the widget's default token pair, then swaps in the pair your `input` names once token lists load in the browser. That flash is what the server-only `@velora-dex/widget/ssr` entry removes: resolve the tokens on the server, pass them to the widget as `ssrState`, and hand the same object to the client so both renders agree.
 
-If you forget `ssr: false`, you'll see a hydration-mismatch error or a `window is not defined` exception.
+Four files. The first matters more than it looks: `resolveWidgetInitState` must run with the same `config` you render with, so export it once.
+
+```ts src/lib/widget-config.ts
+import type { WidgetProps } from "@velora-dex/widget";
+
+export const widgetConfig = {
+  theme: "light",
+  partnerConfig: { partner: "my-app-name" },
+} satisfies WidgetProps["config"];
+```
+
+```ts src/lib/widget-ssr.ts
+import { FileCache, Cache, resolveWidgetInitState } from "@velora-dex/widget/ssr";
+import type { WidgetProps } from "@velora-dex/widget";
+import { widgetConfig } from "./widget-config";
+
+// One cache per server process. FileCache adds a disk tier, so downloaded
+// token lists survive restarts; use Cache where there is no writable disk if necessary.
+const tokenLists = new FileCache();
+
+export async function resolveWidgetState(input: WidgetProps["input"]) {
+  // `confirmed` reports which sides resolved to the token you asked for and
+  // which fell back to a widget default.
+  const { initState, confirmed } = await resolveWidgetInitState(
+    { config: widgetConfig, input },
+    { cache: tokenLists }
+  );
+
+  return { initState, confirmed };
+}
+```
+
+```tsx src/app/swap/page.tsx
+import ClientWidget from "./widget";
+import { resolveWidgetState } from "@/lib/widget-ssr";
+
+// The resolved state depends on the request, so this route must render per
+// request rather than be prerendered at build time.
+export const dynamic = "force-dynamic";
+
+export default async function SwapPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string; to?: string }>;
+}) {
+  const { from, to } = await searchParams;
+
+  const input = {
+    srcChainId: 1,
+    tokenFromAddress: from,
+    tokenToAddress: to,
+  };
+
+  const { initState } = await resolveWidgetState(input);
+
+  return (
+    <main style={{ display: "flex", justifyContent: "center", padding: "2rem" }}>
+      <ClientWidget input={input} ssrState={{ initState }} />
+    </main>
+  );
+}
+```
+
+```tsx src/app/swap/widget.tsx
+"use client";
+
+import { Widget, type WidgetProps } from "@velora-dex/widget";
+import type { WidgetSSRState } from "@velora-dex/widget/ssr";
+import { widgetConfig } from "@/lib/widget-config";
+
+export default function ClientWidget({
+  input,
+  ssrState,
+}: {
+  input: WidgetProps["input"];
+  ssrState: WidgetSSRState;
+}) {
+  return <Widget config={widgetConfig} input={input} ssrState={ssrState} />;
+}
+```
+
+<Warning>
+Import **values** from `@velora-dex/widget/ssr` in server files only. `FileCache` pulls in `node:fs`, and a `"use client"` module that imports it breaks the client build. Type imports (`import type { WidgetSSRState }`) are erased at compile time and are safe anywhere.
+</Warning>
+
+Tokens are step one. `resolveWidgetSSRQueries` goes further and prefetches prices, rates and bridge routes into a dehydrated query cache, so the first paint carries live numbers too:
+
+```ts
+const { queryState } = await resolveWidgetSSRQueries(
+  { config: widgetConfig, input },
+  initState,
+  { cache: tokenLists, timeoutMs: 1500 }
+);
+// <ClientWidget input={input} ssrState={{ initState, queryState }} />
+```
+
+Budget for it: that serialized cache is usually the largest thing on the page, several hundred KB on a typical trade route.
+
+<Note>
+[Server-side rendering](/widget/ssr) is the framework-agnostic version of this, and covers what comes next: prefetching rates, cache backends for serverless runtimes, telling a token that isn't listed from a list that failed to load, and deferring the widget behind a placeholder.
+</Note>
+
+## Do you still need `ssr: false`?
+
+Not for correctness. The widget renders on the server, and `ssrState` is what keeps the server and client renders in agreement.
+
+You would still reach for it when there is no server at request time, since a statically exported page cannot resolve anything per request. Some teams also use it to keep the widget's JavaScript off the critical path, though in the App Router a Suspense boundary usually serves that better: the widget arrives later in the same response instead of waiting for a second round trip.
+
+Either way the initial HTML has no widget in it, so crawlers and link unfurlers that don't run JavaScript see only the placeholder, and the visitor watches the default tokens resolve after mount.
+
+```tsx
+"use client";
+
+import dynamic from "next/dynamic";
+import { WidgetSkeleton } from "@velora-dex/widget";
+
+const Widget = dynamic(
+  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
+  { ssr: false, loading: () => <WidgetSkeleton theme="light" /> }
+);
+```
+
+`WidgetSkeleton` is a static placeholder shipped from the main entry. It reserves the widget's shape, so the swap-in shifts nothing on the page.
 
 ## With dApp-mode wallet
 
@@ -128,13 +251,8 @@ If your app already manages the wallet (wagmi, RainbowKit, or any other host-sid
 ```tsx
 "use client";
 
-import dynamic from "next/dynamic";
+import { Widget } from "@velora-dex/widget";
 import { useConnection, useWalletClient } from "wagmi";
-
-const Widget = dynamic(
-  () => import("@velora-dex/widget").then((m) => ({ default: m.Widget })),
-  { ssr: false }
-);
 
 export default function ClientWidget() {
   const { connector } = useConnection();
@@ -167,5 +285,6 @@ See [Wallet management](/widget/wallet-management) for the full pattern.
 
 - [Install](/widget/install) — package install and basic setup.
 - [Wallet management](/widget/wallet-management) — standalone vs dApp mode.
-- [Compatibility](/widget/compatibility) — full SSR notes.
+- [Server-side rendering](/widget/ssr) — the full reference for `@velora-dex/widget/ssr`.
+- [Compatibility](/widget/compatibility) — peer dependencies, tested frameworks, known caveats.
 - [React example](/widget/examples/react) — same widget on a Vite stack.

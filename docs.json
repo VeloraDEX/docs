@@ -143,6 +143,7 @@
               "widget/widget-api-reference",
               "widget/monetize",
               "widget/compatibility",
+              "widget/ssr",
               {
                 "group": "Examples",
                 "pages": [
