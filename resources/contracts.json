@@ -2,7 +2,7 @@
   "_meta": {
     "description": "Canonical per-chain deployment addresses for Velora's contract stack. Keyed by EVM chainId. Roles not deployed on a given chain are omitted.",
     "source": "https://velora.xyz/docs/resources/chains-and-contracts",
-    "lastUpdated": "2026-08-10",
+    "lastUpdated": "2026-09-08",
     "runtimeSource": "GET /chains on the Market API is the runtime source of truth for the supported-chain list.",
     "unverifiedRoles": {
       "note": "The plan-specified roles below are not yet sourced from a canonical Velora developer-docs page. Backfill when an authoritative source is published.",
@@ -52,8 +52,11 @@
       "feeClaimer": "0x00700052c0608F670705380a4900e0a8080010CC"    },
     "4663": {
       "name": "Robinhood Chain",
+      "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
       "delta": "0x0000000000bbf5c5fd284e657f01bd000933c96d",
-      "deltaWrappedNative": "0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742"    },
+      "deltaWrappedNative": "0x0a0d53b6684c7b32b4cbef5fe8483bfcc8406742",
+      "augustusRFQ": "0xD8b841de9C1370f3C362531024AAF18974Eb11ef",
+      "feeClaimer": "0x00700052c0608F670705380a4900e0a8080010CC"    },
     "8453": {
       "name": "Base",
       "augustusV6_2": "0x6a000f20005980200259b80c5102003040001068",
