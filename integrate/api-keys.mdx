@@ -1,0 +1,123 @@
+---
+title: "Authenticate Velora API requests with an API key"
+sidebarTitle: "API keys"
+description: "Send your Velora Pro API key in the x-api-key header to https://api-partners.velora.xyz. Keys sent to api.velora.xyz are ignored and get keyless rate limits."
+keywords:
+  - api key
+  - x-api-key
+  - api-partners
+  - authentication
+  - pro api
+  - rate limits
+  - velora portal
+  - 403 forbidden
+---
+
+To use your Pro plan, send your API key in the `x-api-key` header to `https://api-partners.velora.xyz`. That host checks the key and applies your plan's rate limit, burst, and daily quota. It serves the same endpoints, parameters, and responses as `https://api.velora.xyz`, so switching over is a change of base URL plus one header.
+
+You get the key from the [Velora Portal](/overview/velora-portal) when you subscribe to a plan.
+
+<Warning>
+**`api.velora.xyz` ignores API keys.** A request sent there with `x-api-key` still succeeds, but it's served at [keyless limits](/integrate/rate-limits), counted against your IP, and left out of the API calls chart in the portal. Your plan only applies on `https://api-partners.velora.xyz`.
+</Warning>
+
+## Which host to call
+
+| | `https://api-partners.velora.xyz` | `https://api.velora.xyz` |
+|---|---|---|
+| API key | Required, in `x-api-key` | Ignored |
+| Limits | Your plan's RPS, burst, and daily quota | Keyless limits per IP |
+| Without a valid key | `403 Forbidden` | Served normally |
+| Browser calls (CORS) | Not supported; call from your backend | Supported |
+| API calls on the portal **Usage** page | Yes | No |
+
+Every path works on both hosts: `/v2/quote`, `/v2/delta/*`, `/prices`, `/transactions`, `/swap`, and the rest of the [API reference](/api-reference/introduction). Only the host and the header change.
+
+## Make a keyed request
+
+Store the key in `VELORA_API_KEY` (the portal's `.env` download already does this), then send it on every request. Keep `partner` set to your [App ID](/overview/velora-portal#apps-and-app-ids) so the traffic and the swaps it produces are attributed to your app.
+
+<CodeGroup>
+
+```bash cURL
+curl -G "https://api-partners.velora.xyz/v2/quote" \
+  -H "x-api-key: $VELORA_API_KEY" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "userAddress=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" \
+  --data-urlencode "partner=my-app-name"
+```
+
+```ts fetch
+const params = new URLSearchParams({
+  srcToken: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+  destToken: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  amount: "1000000000000000000",
+  srcDecimals: "18",
+  destDecimals: "6",
+  side: "SELL",
+  chainId: "1",
+  mode: "ALL",
+  userAddress: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  partner: "my-app-name",
+});
+
+const res = await fetch(`https://api-partners.velora.xyz/v2/quote?${params}`, {
+  headers: { "x-api-key": process.env.VELORA_API_KEY! },
+});
+const quote = await res.json();
+```
+
+```ts SDK
+import { constructSimpleSDK } from "@velora-dex/sdk";
+
+const sdk = constructSimpleSDK({
+  chainId: 1,
+  fetch,
+  apiURL: "https://api-partners.velora.xyz",
+  apiKey: process.env.VELORA_API_KEY,
+});
+```
+
+</CodeGroup>
+
+Replace `my-app-name` with your own App ID. POST endpoints, such as submitting a Delta order, take the same header.
+
+With the SDK, set both `apiURL` and `apiKey`. The SDK sends `apiKey` as the `X-API-KEY` header (header names aren't case-sensitive), but its default `apiURL` is `https://api.velora.xyz`, where the key has no effect.
+
+## Keep the key on your server
+
+The keyed host doesn't answer browser CORS preflights, so a call from frontend code fails before it's sent. That's deliberate: a key shipped in frontend code is readable by anyone who opens your app, and they could spend your quota with it.
+
+Call `api-partners.velora.xyz` from your backend and pass the results to your frontend. Browser apps and the [Widget](/widget/overview) can keep calling `api.velora.xyz` with just `partner`, at keyless limits.
+
+If a key does leak, rotate it from the portal. The old key stops working immediately, so deploy the new one right away. See [Rotate a key](/overview/velora-portal#rotate-a-key).
+
+## Errors
+
+| Status | Cause | Fix |
+|---|---|---|
+| `403` `{"message":"Forbidden"}` from `api-partners` | No `x-api-key` header, a mistyped key, or a key that was rotated out | Send the current key from the portal's **API key** page. After a rotation, redeploy with the new key |
+| `403` on a browser request to `api-partners` | CORS preflight refused: the keyed host is server-to-server only | Move the call to your backend |
+| `429` from `api-partners` | Above your plan's RPS or burst, or today's quota is used up | Back off and retry. The daily quota resets at 00:00 UTC; for more headroom, [upgrade](/overview/pro-api-accounts#plan-comparison) |
+| `429` from `api.velora.xyz` while you have a plan | The key went to the keyless host, so keyless limits apply | Change the base URL to `https://api-partners.velora.xyz` |
+
+For endpoint-specific errors, see [Troubleshooting](/api-reference/troubleshooting).
+
+<CardGroup cols={3}>
+  <Card title="Velora Portal" icon="id-card" href="/overview/velora-portal">
+    Get a key, manage apps, and track usage.
+  </Card>
+  <Card title="Plans and pricing" icon="credit-card" href="/overview/pro-api-accounts">
+    RPS, burst, and daily quota per plan.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/integrate/rate-limits">
+    Keyless and keyed limits side by side.
+  </Card>
+</CardGroup>
