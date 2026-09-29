@@ -55,6 +55,7 @@
               "overview/quickstart",
               "overview/monetization",
               "overview/pro-api-accounts",
+              "overview/velora-portal",
               "faq"
             ]
           },
@@ -84,6 +85,7 @@
             "pages": [
               "integrate/api",
               "integrate/trading-modes",
+              "integrate/api-keys",
               "integrate/rate-limits",
               {
                 "group": "Products",

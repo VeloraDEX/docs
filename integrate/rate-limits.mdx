@@ -1,10 +1,36 @@
 ---
 title: "Velora API rate limits"
 sidebarTitle: "Rate limits"
-description: "Free-tier rate limits for the Velora REST API, and how to lift them with a Pro API account."
-keywords: ["rate limits","throttling","pro","free tier"]
+description: "Velora API rate limits without a key and with a Pro API key, how the daily quota resets, and what to do when you get a 429."
+keywords: ["rate limits", "throttling", "429 too many requests", "daily quota", "api key", "api-partners", "free tier", "pro"]
 ---
 
-The free tier is capped at **1 request per second** and **5,000 requests per day**.
+Without an API key, the Velora API allows about 1 request per second and 5,000 requests per day, counted per IP address. With a Pro API key sent to `https://api-partners.velora.xyz`, your limits are your plan's: up to 50 requests per second and 4 million requests per day on self-serve plans.
 
-For higher limits, consider upgrading to a [Pro API account](/overview/pro-api-accounts).
+## Keyless requests
+
+Requests to `https://api.velora.xyz` need no key, only your `partner` identifier. They're limited per IP address to about 1 RPS and 5,000 requests a day. That's enough to prototype and to run a low-traffic integration. When you go over, the API answers `429` with a message pointing to the [Velora Portal](/overview/velora-portal).
+
+Because the limit follows the IP, every service you run behind the same egress address shares it.
+
+## Keyed requests
+
+A Pro plan from the [Velora Portal](/overview/velora-portal) gives you an API key with three limits attached:
+
+| Limit | What it means |
+|---|---|
+| Max RPS | The sustained request rate your key can hold |
+| Burst | Short spikes above that rate |
+| Requests / day | The daily quota; it resets at 00:00 UTC |
+
+The limits follow the key, not your IP, and every app in your workspace shares them. Each plan's numbers are in the [plan comparison](/overview/pro-api-accounts#plan-comparison). The Free plan in the portal also comes with a key, at the same 1 RPS and 5,000 requests a day as keyless access.
+
+<Warning>
+The key only counts on `https://api-partners.velora.xyz`, in the `x-api-key` header. Sent to `https://api.velora.xyz`, it's ignored and the request gets keyless limits. See [API keys](/integrate/api-keys).
+</Warning>
+
+## When you get a 429
+
+A `429` means you've used up your request rate or your daily quota. Back off and retry with exponential delay; a tight retry loop only uses more of the quota.
+
+If it keeps happening, check which host you're calling first. A 429 from `api.velora.xyz` while you have a plan means the key isn't reaching the keyed host. A 429 from `api-partners.velora.xyz` means you've outgrown your plan: the **Usage** page in the portal shows your daily calls, and a higher [plan](/overview/pro-api-accounts#plan-comparison) lifts the ceiling.

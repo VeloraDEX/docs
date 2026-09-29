@@ -1,0 +1,125 @@
+---
+title: "Velora Portal: sign up, get an API key, and manage your Pro plan"
+sidebarTitle: "Velora Portal"
+description: "The Velora Portal is where you subscribe to a Pro API plan, get your API key, register App IDs, invite your team, and track API calls and swap volume."
+keywords:
+  - velora portal
+  - api key
+  - pro api
+  - sign up
+  - app id
+  - api usage dashboard
+  - subscription
+  - billing
+  - pay with usdc
+  - key rotation
+---
+
+The Velora Portal at [portal.velora.xyz](https://portal.velora.xyz) is the self-serve home of your Pro API account. You sign up, choose a [plan](/overview/pro-api-accounts#plan-comparison), pay by card or USDC, and get an API key that lifts your rate limits. The same account holds your App IDs, your team, your invoices, and a usage view of the calls and swaps your apps make.
+
+You don't need the portal to use the Velora API. Anonymous requests with a free `partner` string work on `https://api.velora.xyz` within the [keyless limits](/integrate/rate-limits). Come to the portal when you need higher throughput, a larger daily quota, or a view of your traffic.
+
+<Warning>
+Your API key only works on `https://api-partners.velora.xyz`. Sending `x-api-key` to `https://api.velora.xyz` does nothing: the request is served at keyless limits, as if you had no plan. See [Authenticate with an API key](/integrate/api-keys).
+</Warning>
+
+## Get started
+
+<Steps>
+  <Step title="Create an account">
+    Sign up at [portal.velora.xyz](https://portal.velora.xyz/signup) with your name, work email, company name, and a password. Confirm your email from the link we send you; it's valid for 24 hours, and the portal can send a new one if it expires. Once the account exists you can also link a Google account and sign in with Google.
+  </Step>
+  <Step title="Choose a plan">
+    Pick Free, one of the paid tiers, or redeem a promo code if Velora gave you one. Paid plans bill monthly or annually, and annual billing is 20% cheaper. The [plan comparison](/overview/pro-api-accounts#plan-comparison) lists every tier's limits.
+  </Step>
+  <Step title="Pay">
+    Pay by card (or Link) on Stripe's hosted checkout, or in USDC on a Request Finance payment page. Card and wallet details stay with those providers and never reach Velora. Your plan activates as soon as the payment is confirmed, which takes a moment for card and a few minutes for USDC.
+  </Step>
+  <Step title="Register your first app">
+    Give your integration a name and an App ID, such as `my-app-name`. The App ID is the value you send as `partner` on every request, so your traffic and swaps are attributed to that app. See [Apps and App IDs](#apps-and-app-ids).
+  </Step>
+  <Step title="Add company details">
+    Enter your registered company address and registration number. These lock once your key is created; to change them later, contact support.
+  </Step>
+  <Step title="Copy your API key">
+    The portal creates your key and shows it once setup finishes. Copy it, or download it as a `.env` file that also sets the keyed base URL:
+
+    ```bash .env
+    VELORA_API_KEY=<your key>
+    VELORA_API_BASE_URL=https://api-partners.velora.xyz
+    ```
+
+    Then make your first [keyed request](/integrate/api-keys).
+  </Step>
+</Steps>
+
+## Your API key
+
+Each workspace has one active API key, shared by all of its apps. The key carries your plan: it's what API Gateway checks for your request rate, burst, and daily quota. It identifies your workspace for quota purposes and grants no access to funds or account data.
+
+Only workspace admins can view and copy the key, from the **API key** page. The key is never sent by email; when a key is created or rotated, every admin gets a notice that points back to the portal.
+
+### Rotate a key
+
+If a key may have leaked, an admin can replace it from the **API key** page. Rotation takes effect at once:
+
+- The old key stops working immediately, so every service that uses it fails until you deploy the new one.
+- The new key keeps whatever is left of today's quota. Rotating doesn't reset your daily limit.
+- You can rotate up to 5 times in any 24 hours.
+
+Rotating the key, changing the plan, and managing the team need a sign-in from the last 24 hours. If you signed in earlier, the portal asks you to sign in again first.
+
+## Apps and App IDs
+
+An app is one of your integrations: a frontend, a trading bot, a backend service. Its App ID is the `partner` value you add to every request. The API key decides your limits, and the App ID decides which app a request and its swaps count towards. Keyed requests without `partner` still succeed, but they don't show up under any app.
+
+App IDs are 3 to 32 characters long: lowercase letters, digits, and single hyphens, starting with a letter. An ID another team already uses, or one with past traffic on Velora, is refused. You can have up to 3 active apps per workspace.
+
+An app can also carry monetization settings: a partner address and a fee of up to 200 basis points (2%). The portal shows the exact query string to send. Fees apply only to requests that include `partnerAddress` and `partnerFeeBps`, so copy them into your integration. See [Monetization](/overview/monetization) for how partner fees are collected.
+
+Renaming an App ID means requests that still send the old ID stop counting towards the app. Deleting an app takes it out of use and frees its slot, but keeps the ID reserved to your workspace and its history visible on the **Usage** page. Neither action touches your API key.
+
+## Usage
+
+The **Usage** page starts with a daily count of the requests made with your key, over this month, the last 30 days, or the last 90 days. Days are in UTC, and recent calls can take a few minutes to appear. Treat these counts as monitoring, not billing.
+
+Below the chart is every executed Delta swap, Limit Order, TWAP order, and Market swap that carried one of your App IDs, with its estimated volume and the fee it earned. You can filter by app and date range, up to a year back, and download the list as CSV. New trades show up within about 20 minutes.
+
+## Team
+
+Invite teammates from the **Team** page by email. Invitations are valid for 7 days, and an invitee can join with an existing Velora account or create one.
+
+A workspace has two roles. Admins manage billing, the API key, apps, company details, and the team. Users can see the workspace, apps, and usage, but not the key, and can't change anything. A workspace always keeps at least one admin, and whoever creates it starts as one.
+
+## Billing
+
+The **Billing** page shows your plan, payment method, and invoices, and is where admins upgrade, downgrade, or cancel. Your API key stays the same through all of these; only the limits attached to it change.
+
+Plan changes depend on how you pay:
+
+- **Card.** An upgrade starts right away and Stripe charges the prorated difference; a downgrade takes effect at the end of the current period. Card renewals are charged automatically, and you can update the card from the **Billing** page.
+- **USDC.** Changes take effect at the end of the current period, and nothing is charged on the spot. There's no auto-charge: each renewal invoice is paid from its payment link with a wallet signature.
+
+If a renewal isn't paid, the plan is marked past due and you keep full access for 7 days. After that the key moves to Free limits (1 RPS, 5,000 requests a day) until the invoice is paid, and then your plan comes back on the same key.
+
+Cancelling takes effect at the end of the period you paid for. After that the workspace moves to the Free plan and the key keeps working at Free limits.
+
+### Promo codes
+
+Velora sometimes issues promo codes that grant a plan for a set time. An admin redeems one from the **Billing** page or during onboarding, and sees what it grants before confirming. A promo replaces your current plan: an active subscription stops renewing and isn't refunded. When the promo ends, the workspace falls back to the Free plan, or to whatever it had before, if that's still valid.
+
+## Support
+
+For account, billing, or key problems, email [support@velora.xyz](mailto:support@velora.xyz). Error screens in the portal show a reference ID; include it so we can find the request.
+
+<CardGroup cols={3}>
+  <Card title="Authenticate with an API key" icon="key" href="/integrate/api-keys">
+    Send `x-api-key` to the keyed host.
+  </Card>
+  <Card title="Plans and pricing" icon="credit-card" href="/overview/pro-api-accounts">
+    Limits and prices for every tier.
+  </Card>
+  <Card title="Rate limits" icon="gauge" href="/integrate/rate-limits">
+    Keyless and keyed limits, and what a 429 means.
+  </Card>
+</CardGroup>
