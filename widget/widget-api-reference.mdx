@@ -96,7 +96,7 @@ interface ApiConfig {
 }
 ```
 
-Forwarded to the Velora SDK on every backend request (prices, swap construction, Delta order submission). Use when integrating against an authenticated tier or a partner-proxied endpoint.
+Forwarded to the Velora SDK on every backend request (prices, swap construction, Delta order submission). `apiKey` is sent as the `X-API-KEY` header. Use it when you proxy the widget's requests through your own endpoint and need to authenticate them there.
 
 | Field | Type | Description |
 |---|---|---|
@@ -113,7 +113,7 @@ Forwarded to the Velora SDK on every backend request (prices, swap construction,
 ```
 
 <Warning>
-This is client-side code. Don't embed secrets you wouldn't put in a public bundle.
+This is client-side code. Don't embed secrets you wouldn't put in a public bundle, and don't put a Velora Portal API key here. By default the widget calls `api.velora.xyz` from the browser, which ignores the key, and anyone using your app could copy it. Pro keys belong on your backend with `https://api-partners.velora.xyz`; see [API keys](/integrate/api-keys).
 </Warning>
 
 ## `EIP1193ProviderLax`

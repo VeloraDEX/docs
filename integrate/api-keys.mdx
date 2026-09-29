@@ -13,6 +13,8 @@ keywords:
   - 403 forbidden
 ---
 
+import ApiKeysFailureModes from "/snippets/failure-modes/api-keys.mdx";
+
 To use your Pro plan, send your API key in the `x-api-key` header to `https://api-partners.velora.xyz`. That host checks the key and applies your plan's rate limit, burst, and daily quota. It serves the same endpoints, parameters, and responses as `https://api.velora.xyz`, so switching over is a change of base URL plus one header.
 
 You get the key from the [Velora Portal](/overview/velora-portal) when you subscribe to a plan.
@@ -101,12 +103,7 @@ If a key does leak, rotate it from the portal. The old key stops working immedia
 
 ## Errors
 
-| Status | Cause | Fix |
-|---|---|---|
-| `403` `{"message":"Forbidden"}` from `api-partners` | No `x-api-key` header, a mistyped key, or a key that was rotated out | Send the current key from the portal's **API key** page. After a rotation, redeploy with the new key |
-| `403` on a browser request to `api-partners` | CORS preflight refused: the keyed host is server-to-server only | Move the call to your backend |
-| `429` from `api-partners` | Above your plan's RPS or burst, or today's quota is used up | Back off and retry. The daily quota resets at 00:00 UTC; for more headroom, [upgrade](/overview/pro-api-accounts#plan-comparison) |
-| `429` from `api.velora.xyz` while you have a plan | The key went to the keyless host, so keyless limits apply | Change the base URL to `https://api-partners.velora.xyz` |
+<ApiKeysFailureModes />
 
 For endpoint-specific errors, see [Troubleshooting](/api-reference/troubleshooting).
 
