@@ -72,7 +72,7 @@ Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /v2/quote`) so
 
 On Market, partner fees accrue inside the Fee Claimer contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true`. There's nothing to claim, but each swap carries an extra fee-transfer, and the user pays that gas on every trade, including very low-value ones where it can eat a meaningful share of the output.
 
-On Delta, fees accrue inside the main Delta contract and partners claim them directly from there; there is no separate Fee Claimer contract. This works in Delta's favor: the fee is accounted for as part of the fill itself, with no extra fee-transfer per swap, so taking a partner fee adds essentially no gas overhead to the trade.
+On Delta, fees accrue inside the main Delta contract and partners claim them directly from there, through the same Fee Claimer UI; there is no separate Fee Claimer contract. This works in Delta's favor: the fee is accounted for as part of the fill itself, with no extra fee-transfer per swap, so taking a partner fee adds essentially no gas overhead to the trade.
 
 Surplus routed to the user (`isSurplusToUser: true`) is settled in the same transaction as the swap, so there's no claim step either way.
 
@@ -80,10 +80,10 @@ Surplus routed to the user (`isSurplusToUser: true`) is settled in the same tran
 
 ### Fee Claimer UI
 
-Accumulated Market fees are claimable from the [Fee Claimer app](https://velora.xyz/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
+Accumulated Market and Delta fees are claimable from the [Fee Claimer app](https://velora.xyz/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, choose **New Claimer** for Market fees or **Delta** for Delta fees, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
 
 <Note>
-The UI covers Market fees only. Delta fees are claimed programmatically from the Delta contract, as shown below.
+Market and Delta fees sit in different contracts, so each is claimed in its own transaction. Fees from before Augustus v6 are under **Legacy Claimer**.
 </Note>
 
 ### Programmatically

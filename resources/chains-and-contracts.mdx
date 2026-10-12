@@ -75,7 +75,7 @@ On-chain OTC and RFQ settlement contract. Supports partial fills and bilateral s
 
 ### Fee Claimer
 
-Holds partner fees accrued from Market swaps until the partner claims them. Fees taken via `partnerAddress` accumulate in this contract per chain, and partners withdraw them through the [Fee Claimer app](https://velora.xyz/fee_claimer). Delta fees never pass through it; they accrue in the Delta contract itself. Deployed at the same address on every Market-enabled chain. See [Monetization](/overview/monetization) for fee parameters and the claim flow.
+Holds partner fees accrued from Market swaps until the partner claims them. Fees taken via `partnerAddress` accumulate in this contract per chain, and partners withdraw them through the [Fee Claimer app](https://velora.xyz/fee_claimer). Delta fees never pass through it; they accrue in the Delta contract itself and are claimed from the same app. Deployed at the same address on every Market-enabled chain. See [Monetization](/overview/monetization) for fee parameters and the claim flow.
 
 ## Related
 
