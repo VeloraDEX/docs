@@ -72,7 +72,7 @@ Pass `partnerFeeBps` to the quote endpoint (`GET /prices` or `GET /v2/quote`) so
 
 On Market, partner fees accrue inside the Fee Claimer contract by default. Partners claim accumulated balances through the Velora Fee Claimer UI, signed by `partnerAddress`. This batches gas across many swaps but adds a claim step. To skip the Fee Claimer and pay fees directly to `partnerAddress` on every swap, set `isDirectFeeTransfer: true`. There's nothing to claim, but each swap carries an extra fee-transfer, and the user pays that gas on every trade, including very low-value ones where it can eat a meaningful share of the output.
 
-On Delta, fees accrue inside the main Delta contract and partners claim them directly from there; there is no separate Fee Claimer contract. This works in Delta's favor: the fee is accounted for as part of the fill itself, with no extra fee-transfer per swap, so taking a partner fee adds essentially no gas overhead to the trade.
+On Delta, fees accrue inside the main Delta contract and partners claim them directly from there, through the same Fee Claimer UI; there is no separate Fee Claimer contract. This works in Delta's favor: the fee is accounted for as part of the fill itself, with no extra fee-transfer per swap, so taking a partner fee adds essentially no gas overhead to the trade.
 
 Surplus routed to the user (`isSurplusToUser: true`) is settled in the same transaction as the swap, so there's no claim step either way.
 
@@ -80,10 +80,10 @@ Surplus routed to the user (`isSurplusToUser: true`) is settled in the same tran
 
 ### Fee Claimer UI
 
-Accumulated Market fees are claimable from the [Fee Claimer app](https://velora.xyz/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
+Accumulated Market and Delta fees are claimable from the [Fee Claimer app](https://velora.xyz/fee_claimer). Connect the wallet matching `partnerAddress`, pick the chain, choose **New Claimer** for Market fees or **Delta** for Delta fees, review the available balances per token, and submit a claim transaction. Each chain is claimed separately; gas is paid by the claimer.
 
 <Note>
-The UI covers Market fees only. Delta fees are claimed programmatically from the Delta contract, as shown below.
+Market and Delta fees sit in different contracts, so each is claimed in its own transaction. Fees from before Augustus v6 are under **Legacy Claimer**.
 </Note>
 
 ### Programmatically
@@ -305,6 +305,57 @@ for (const [total, token] of data.rows) {
 ```
 
 </CodeGroup>
+
+### If a claim reverts
+
+A claim sweeps each token by transferring it to you, so it reverts when the token itself refuses the transfer, for example because its issuer has paused or suspended transfers. Both fee contracts report this as `TransferFailed()`. When several tokens are claimed in one transaction, a single such token makes the whole claim revert. The balance isn't lost: it stays in the contract and can be claimed once the token allows transfers again.
+
+The Fee Claimer app checks for these tokens before you claim. It marks them **Unclaimable** and leaves them out of **Claim Available Fees**. If a claim would still revert, the confirmation screen names the tokens to blame and offers to claim the rest without them.
+
+When claiming programmatically, simulate the claim of each token before sending. `simulateCalls` runs them all in one `eth_simulateV1` request, without sending anything:
+
+```ts Find tokens that block a claim
+import { createPublicClient, encodeFunctionData, http, parseAbi } from "viem";
+import { Address } from "viem/accounts";
+import { mainnet } from "viem/chains";
+
+const PARTNER_ADDRESS: Address = "0x..."; // your partnerAddress, which signs the claim
+
+// Delta fees. For Market fees, use the Fee Claimer address
+// and withdrawAllERC20, which takes the same arguments
+const CONTRACT_ADDRESS = "0x0000000000bbf5c5fd284e657f01bd000933c96d";
+const abi = parseAbi([
+  "function withdrawAllFees(address token, address recipient) returns (uint256 amount)",
+]);
+
+// tokens with a non-zero balance, e.g. from the fees endpoint plus getCollectedFees
+const tokens: Address[] = ["0x...", "0x..."];
+
+const publicClient = createPublicClient({ chain: mainnet, transport: http() });
+
+const { results } = await publicClient.simulateCalls({
+  account: PARTNER_ADDRESS,
+  calls: tokens.map((token) => ({
+    to: CONTRACT_ADDRESS,
+    data: encodeFunctionData({
+      abi,
+      functionName: "withdrawAllFees",
+      args: [token, PARTNER_ADDRESS],
+    }),
+  })),
+});
+
+const blocked = tokens.filter((_, i) => results[i].status !== "success");
+const claimable = tokens.filter((_, i) => results[i].status === "success");
+
+console.log("Can't be claimed right now:", blocked);
+```
+
+Then claim only the tokens in `claimable`, one at a time as in the snippets above, or together with `batchWithdrawAllFees(tokens, recipient)` on Delta and `batchWithdrawAllERC20(tokens, recipient)` on the Fee Claimer.
+
+<Note>
+Not every RPC supports `eth_simulateV1` (Avalanche's public RPC doesn't, for example). Where `simulateCalls` fails, check each token on its own with `simulateContract`, as the claim snippets above do: a token whose simulation reverts is one to leave out.
+</Note>
 
 ## Next steps
 
