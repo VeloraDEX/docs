@@ -48,7 +48,27 @@ The response carries either a `delta` block (gasless: sign and submit later) or 
 
 ## Auth & rate limits
 
-`partner` is your free, no-signup app identifier, not a secret. Pass `&partner=my-app-name` (a placeholder; use a stable value for your integration) on quote, swap, and order endpoints. Need higher RPS, larger quotas, analytics, and SLA support? See [Pro API accounts](/overview/pro-api-accounts).
+`partner` is your free, no-signup app identifier, not a secret. Pass `&partner=my-app-name` (a placeholder; use a stable value for your integration) on quote, swap, and order endpoints. Without a key, `https://api.velora.xyz` applies [keyless rate limits](/integrate/rate-limits) per IP.
+
+For higher RPS, larger quotas, analytics, and SLA support, subscribe to a [Pro plan](/overview/pro-api-accounts) in the [Velora Portal](/overview/velora-portal). Your API key goes in the `x-api-key` header, and keyed requests go to `https://api-partners.velora.xyz`. Every path on this reference works the same on both hosts.
+
+```bash
+curl -G "https://api-partners.velora.xyz/v2/quote" \
+  -H "x-api-key: $VELORA_API_KEY" \
+  --data-urlencode "srcToken=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" \
+  --data-urlencode "destToken=0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" \
+  --data-urlencode "amount=1000000000000000000" \
+  --data-urlencode "srcDecimals=18" \
+  --data-urlencode "destDecimals=6" \
+  --data-urlencode "side=SELL" \
+  --data-urlencode "chainId=1" \
+  --data-urlencode "mode=ALL" \
+  --data-urlencode "partner=my-app-name"
+```
+
+<Warning>
+`api.velora.xyz` ignores `x-api-key`. A keyed request sent there still gets keyless limits. See [API keys](/integrate/api-keys).
+</Warning>
 
 <Tip>
   Need contract addresses at runtime? [`contracts.json`](/resources/contracts.json) has canonical per-chain addresses for Augustus v6.2, Delta, and the Fee Vault, keyed by `chainId`. Human-readable: [Chains & contracts](/resources/chains-and-contracts).

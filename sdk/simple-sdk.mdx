@@ -38,6 +38,21 @@ const simpleSDK = constructSimpleSDK({ chainId: 1, fetch });
 
 Without a wallet, the SDK is **read-only** (quotes, prices, order status, supported tokens), but cannot approve, sign, or submit.
 
+### Use a Pro API key
+
+If you have a Pro plan from the [Velora Portal](/overview/velora-portal), pass `apiKey` and point `apiURL` at the keyed host. The SDK sends the key as the `X-API-KEY` header on every request.
+
+```ts
+const simpleSDK = constructSimpleSDK({
+  chainId: 1,
+  fetch,
+  apiURL: "https://api-partners.velora.xyz",
+  apiKey: process.env.VELORA_API_KEY,
+});
+```
+
+Set both. The default `apiURL` is `https://api.velora.xyz`, which ignores the key. Keep this on your server; see [API keys](/integrate/api-keys).
+
 ## Add a wallet
 
 Pass a second argument with your provider to enable write methods (`approveToken`, `signDeltaOrder`, `submitDeltaOrder`, `buildTx`-then-send).

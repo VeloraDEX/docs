@@ -16,11 +16,13 @@ keywords:
   - quota
   - SLA
   - dashboard
+  - velora portal
+  - api key
 ---
 
 Velora API plans price throughput, not trades. You pay for the request rate and daily volume you need, and the swap fee is yours to set, from zero to whatever your product charges.
 
-Start free with a partner ID. When your traffic outgrows the free limits, a [Pro plan](#plan-comparison) lifts them and adds a dashboard and SLA-backed support.
+Start free with a partner ID. When your traffic outgrows the free limits, subscribe to a [Pro plan](#plan-comparison) in the [Velora Portal](/overview/velora-portal). The plan comes as an API key that lifts your limits on `https://api-partners.velora.xyz`, along with a usage dashboard and SLA-backed support.
 
 ## Free tier
 
@@ -51,6 +53,8 @@ A free partner ID identifies your traffic but does **not** unlock partner-fee ec
 
 A Pro plan lifts your rate limits and quota and adds an analytics dashboard, early access to new features, and SLA-backed technical support.
 
+Your plan's limits are attached to the API key you get from the [Velora Portal](/overview/velora-portal), and they apply only to requests sent to `https://api-partners.velora.xyz` with the key in the `x-api-key` header. The same key sent to `https://api.velora.xyz` is ignored, and those requests get keyless limits. See [API keys](/integrate/api-keys).
+
 <Tip>
 You pay Velora for API throughput, not a fixed cut of every swap. Set your own partner fee, fixed or dynamic. See [Monetization](/overview/monetization) for how fees and surplus sharing work.
 </Tip>
@@ -68,7 +72,9 @@ You pay Velora for API throughput, not a fixed cut of every swap. Set your own p
 | Enterprise – Extended | $5,000 | 50 | 100 | 4,000,000 | 120,000,000 | Custom | Custom |
 | Custom | [Contact us](https://www.velora.xyz/contact) | 50+ | 200+ | Custom | Custom | Custom | Custom |
 
-Every paid tier includes technical support: email on Basic and Basic – Extended, chat on Pro and above. Pro and above also include access to other Velora products. Annual billing saves 20%. For current pricing and to subscribe, see [velora.xyz/portal](https://velora.xyz/portal).
+Every paid tier includes technical support: email on Basic and Basic – Extended, chat on Pro and above. Pro and above also include access to other Velora products. Annual billing saves 20%. Pay by card or in USDC. For current pricing and to subscribe, go to the [Velora Portal](https://portal.velora.xyz).
+
+The daily quota is the enforced limit, and it resets at 00:00 UTC. Monthly figures are 30-day projections of the daily quota, not a second cap.
 
 ### Which plan fits
 
@@ -78,16 +84,24 @@ Every paid tier includes technical support: email on Basic and Basic – Extende
 
 ## Get started
 
-<Card title="Subscribe to a Pro plan" icon="credit-card" href="https://velora.xyz/pro" horizontal>
-  Self-serve Basic, Pro, and Extended tiers. Monthly or annual billing, 20% off when billed annually.
-</Card>
+<Steps>
+  <Step title="Subscribe in the portal">
+    Create an account at [portal.velora.xyz](https://portal.velora.xyz), choose a plan, and pay by card or USDC. Every tier in the table above is self-serve. The [Velora Portal](/overview/velora-portal) page walks through each step.
+  </Step>
+  <Step title="Register your App ID">
+    Your App ID is the `partner` value you send on every request. It attributes your traffic and swaps to your app.
+  </Step>
+  <Step title="Send the key to the keyed host">
+    Add `x-api-key: $VELORA_API_KEY` to your requests and change the base URL to `https://api-partners.velora.xyz`. See [API keys](/integrate/api-keys).
+  </Step>
+</Steps>
 
 <CardGroup cols={3}>
-  <Card title="Contact us for Enterprise" icon="envelope" href="https://www.velora.xyz/contact">
-    Custom SLA, dedicated support, bespoke quotas.
+  <Card title="Contact us for a Custom plan" icon="envelope" href="https://www.velora.xyz/contact">
+    Above 50 RPS, bespoke quotas, or contractual terms.
   </Card>
-  <Card title="Free-tier rate limits" icon="gauge" href="/integrate/rate-limits">
-    The limits that apply before you subscribe.
+  <Card title="Rate limits" icon="gauge" href="/integrate/rate-limits">
+    Keyless limits, and what applies with a key.
   </Card>
   <Card title="Monetization" icon="coins" href="/overview/monetization">
     Partner fees, surplus sharing, and revenue splits.

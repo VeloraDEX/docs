@@ -11,8 +11,12 @@ keywords:
   - invalid srcToken
   - stale priceRoute
   - invalid signature
+  - 403 forbidden
+  - 429 too many requests
+  - api key
 ---
 
+import ApiKeysFailureModes from "/snippets/failure-modes/api-keys.mdx";
 import MarketPricesFailureModes from "/snippets/failure-modes/market-prices.mdx";
 import MarketTransactionsFailureModes from "/snippets/failure-modes/market-transactions.mdx";
 import DeltaV2PricesFailureModes from "/snippets/failure-modes/delta-v2-prices.mdx";
@@ -26,6 +30,14 @@ Each table covers a single endpoint and is updated from support tickets at each 
 <Tip>
   Building error-handling logic or LLM tools? Read [`/resources/errors.json`](/resources/errors.json) — it mirrors every row on this page in machine-readable form, with `endpoint`, `status`, `match`, `cause`, `fix`, and `docs` fields per error.
 </Tip>
+
+## All endpoints
+
+### API keys and rate limits
+
+These apply to every endpoint, on both `api.velora.xyz` and `api-partners.velora.xyz`. See [API keys](/integrate/api-keys) and [Rate limits](/integrate/rate-limits).
+
+<ApiKeysFailureModes />
 
 ## Delta V2 API
 

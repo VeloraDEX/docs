@@ -2,10 +2,42 @@
   "_meta": {
     "description": "Machine-readable mirror of the Velora API troubleshooting tables. Each row maps a documented symptom on a specific endpoint to its root cause, fix, and the human-readable docs anchor.",
     "source": "https://velora.xyz/docs/api-reference/troubleshooting",
-    "lastUpdated": "2026-06-15",
-    "note": "Documented examples — not an exhaustive enumeration of every possible error string. Updated from support tickets at each release."
+    "lastUpdated": "2026-09-29",
+    "note": "Documented examples — not an exhaustive enumeration of every possible error string. Updated from support tickets at each release. Rows with endpoint \"*\" apply to every endpoint."
   },
   "errors": [
+    {
+      "endpoint": "*",
+      "status": 403,
+      "match": "{\"message\":\"Forbidden\"} from api-partners.velora.xyz",
+      "cause": "No x-api-key header, a mistyped key, or a key that was rotated out.",
+      "fix": "Send the current key from the Velora Portal API key page; after a rotation, redeploy with the new key.",
+      "docs": "/api-reference/troubleshooting#api-keys-and-rate-limits"
+    },
+    {
+      "endpoint": "*",
+      "status": 403,
+      "match": "Browser request to api-partners.velora.xyz",
+      "cause": "CORS preflight refused: the keyed host is server-to-server only.",
+      "fix": "Call api-partners.velora.xyz from your backend; browser code calls api.velora.xyz with only partner.",
+      "docs": "/api-reference/troubleshooting#api-keys-and-rate-limits"
+    },
+    {
+      "endpoint": "*",
+      "status": 429,
+      "match": "Too Many Requests from api-partners.velora.xyz",
+      "cause": "Above the plan's RPS or burst, or the daily quota is used up.",
+      "fix": "Back off and retry; the quota resets at 00:00 UTC. Upgrade the plan for more headroom (see /overview/pro-api-accounts).",
+      "docs": "/api-reference/troubleshooting#api-keys-and-rate-limits"
+    },
+    {
+      "endpoint": "*",
+      "status": 429,
+      "match": "Too Many Requests from api.velora.xyz with a Pro plan",
+      "cause": "The key was sent to the keyless host, which ignores x-api-key and applies per-IP limits.",
+      "fix": "Change the base URL to https://api-partners.velora.xyz (see /integrate/api-keys).",
+      "docs": "/api-reference/troubleshooting#api-keys-and-rate-limits"
+    },
     {
       "endpoint": "GET /prices",
       "status": 400,
@@ -42,8 +74,8 @@
       "endpoint": "GET /prices",
       "status": 429,
       "match": "Too Many Requests",
-      "cause": "Free-tier rate limit hit, or Pro plan quota exceeded.",
-      "fix": "Upgrade to a Pro API account (see /overview/pro-api-accounts) to lift limits, or back off and retry.",
+      "cause": "Keyless per-IP limit hit, or Pro plan rate or daily quota used up.",
+      "fix": "Back off and retry; see /integrate/rate-limits. With a Pro plan, send x-api-key to https://api-partners.velora.xyz.",
       "docs": "/api-reference/troubleshooting#get-prices"
     },
     {

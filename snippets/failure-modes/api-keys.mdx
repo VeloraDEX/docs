@@ -1,0 +1,7 @@
+| Symptom | Root cause | Fix |
+|---|---|---|
+| 403 `{"message":"Forbidden"}` from `api-partners.velora.xyz` | No `x-api-key` header, a mistyped key, or a key that was rotated out | Send the current key from the portal's **API key** page; after a rotation, redeploy with the new key |
+| 403 on a browser request to `api-partners.velora.xyz` | CORS preflight refused: the keyed host is server-to-server only | Call the keyed host from your backend; browser code calls `api.velora.xyz` with only `partner` |
+| 429 from `api-partners.velora.xyz` | Above your plan's RPS or burst, or today's quota is used up | Back off and retry; the quota resets at 00:00 UTC. For more headroom, [upgrade your plan](/overview/pro-api-accounts#plan-comparison) |
+| 429 from `api.velora.xyz` although you have a Pro plan | The key went to the keyless host, which ignores `x-api-key` and applies per-IP limits | Change the base URL to `https://api-partners.velora.xyz`; see [API keys](/integrate/api-keys) |
+| Keyed calls missing from the portal's API calls chart | Requests sent to `api.velora.xyz`, or made less than a few minutes ago | Send keyed traffic to `api-partners.velora.xyz`; the chart counts only calls made with your key |

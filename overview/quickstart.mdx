@@ -71,7 +71,7 @@ export default function SwapPage() {
 </CodeGroup>
 
 <Note>
-  `my-app-name` is a placeholder. Replace it with your own app or project partner identifier. It tags your integration for analytics, support, and rate-limit upgrades; it is not an API key, and no signup is required.
+  `my-app-name` is a placeholder. Replace it with your own app or project partner identifier. It tags your integration for analytics and support; it is not an API key, and no signup is required. If you later get an API key from the [Velora Portal](/overview/velora-portal), it goes in the `x-api-key` header on `https://api-partners.velora.xyz`, not on `api.velora.xyz`.
 </Note>
 
 `GET /v2/quote?mode=DELTA` returns a `delta` block (sign with EIP-712, submit to `/v2/delta/orders`). `GET /v2/quote?mode=MARKET` returns a `market` block (calldata-ready against Augustus v6.2). `GET /v2/quote?mode=ALL` lets Velora pick the path server-side and returns one of `response.delta` (Delta intent) or `response.market` (Market route), never both. Branch on which block is present. See [Trading modes](/integrate/trading-modes).
@@ -85,5 +85,5 @@ One wrinkle in this example: it sells **native ETH**, and a Delta order with a n
 </Card>
 
 <Tip>
-  All endpoints work as soon as you pass a `partner` identifier; you don't need to sign up for anything. When you're ready for higher throughput, a dashboard, and SLA-backed support, grab a [Pro API account](/overview/pro-api-accounts) or [reach out](https://www.velora.xyz/contact) for bespoke arrangements.
+  All endpoints work as soon as you pass a `partner` identifier; you don't need to sign up for anything. When you're ready for higher throughput, a dashboard, and SLA-backed support, subscribe to a [Pro plan](/overview/pro-api-accounts) in the [Velora Portal](/overview/velora-portal) and send your key to the [keyed host](/integrate/api-keys), or [reach out](https://www.velora.xyz/contact) for bespoke arrangements.
 </Tip>
