@@ -23,7 +23,7 @@ openapi: "/api-reference/specs/market.json GET /swap"
 
 A `200` returns two objects:
 
-- **`priceRoute`** — the routing plan: `bestRoute`, `srcAmount` / `destAmount`, `gasCost` / `gasCostUSD`, `srcUSD` / `destUSD`, `contractMethod`, `version`, and an `hmac` integrity tag. Same shape as [`GET /prices`](/api-reference/market/prices).
+- **`priceRoute`** — the routing plan: `bestRoute`, `srcAmount` / `destAmount`, `gasCost` / `gasCostUSD` (plus `gasCostL1Wei` on rollups), `srcUSD` / `destUSD`, `contractMethod`, `version`, and an `hmac` integrity tag. Same shape as [`GET /prices`](/api-reference/market/prices).
 - **`txParams`** — a broadcastable tx envelope: `from`, `to` (the Augustus v6.2 router), `value`, `data` (encoded swap), `gasPrice`, and `chainId`. **No `gas` field** — estimate it locally.
 
 ```json
