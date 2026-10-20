@@ -160,11 +160,11 @@
         "description": "Build ready-to-broadcast transaction parameters from the `priceRoute` returned by GET /prices, passed verbatim. Unless `ignoreChecks=true`, the API verifies balances and allowances and simulates the transaction before returning calldata, so the response includes a `gas` estimate.",
         "parameters": [
           { "name": "chainId", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/ChainId" }, "description": "EVM chain ID. Matches `priceRoute.network`." },
-          { "name": "gasPrice", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Gas price to use for the transaction, in WEI." },
+          { "name": "gasPrice", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Gas price to use for the transaction, in WEI. Passing it returns a legacy transaction with this `gasPrice`." },
           { "name": "ignoreChecks", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip on-chain balance, allowance, and transaction-failure checks. The response omits the `gas` field when enabled." },
           { "name": "ignoreGasEstimate", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Skip the gas estimate. The response omits the `gas` field when enabled." },
           { "name": "onlyParams", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Return only the contract call parameters instead of a full transaction object." },
-          { "name": "eip1559", "in": "query", "required": false, "schema": { "type": "boolean", "default": false }, "description": "Return an EIP-1559 transaction with `maxFeePerGas` and `maxPriorityFeePerGas` in place of `gasPrice`." }
+          { "name": "eip1559", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Choose the fee fields of the returned transaction. On chains with EIP-1559 the response carries `maxFeePerGas` and `maxPriorityFeePerGas` by default, unless you pass `gasPrice`. Set `eip1559=false` to get a legacy `gasPrice` instead. BNB Chain has no EIP-1559, so it always returns `gasPrice`, and `eip1559=true` is rejected there. Also accepted as a JSON boolean in the request body." }
         ],
         "requestBody": {
           "required": true,
@@ -321,9 +321,9 @@
           "to": { "allOf": [{ "$ref": "#/components/schemas/Address" }], "description": "The Augustus v6.2 router. Send the transaction here; it is also the ERC-20 spender to approve." },
           "value": { "type": "string", "example": "0", "description": "Native token amount in WEI to send with the transaction. `\"0\"` for ERC-20 sources." },
           "data": { "type": "string", "description": "Encoded swap calldata." },
-          "gasPrice": { "type": "string", "example": "16000000000", "description": "Suggested gas price in WEI. Replaced by maxFeePerGas / maxPriorityFeePerGas when `eip1559=true`." },
-          "maxFeePerGas": { "type": "string", "description": "EIP-1559 max fee per gas in WEI. Present when `eip1559=true`." },
-          "maxPriorityFeePerGas": { "type": "string", "description": "EIP-1559 max priority fee per gas in WEI. Present when `eip1559=true`." },
+          "gasPrice": { "type": "string", "example": "16000000000", "description": "Legacy gas price in WEI. Returned on BNB Chain, or when you pass `gasPrice` or `eip1559=false`; otherwise replaced by `maxFeePerGas` and `maxPriorityFeePerGas`." },
+          "maxFeePerGas": { "type": "string", "description": "EIP-1559 max fee per gas in WEI: twice the base fee plus the priority fee, so the transaction stays valid if the base fee rises before inclusion. You still pay only the base fee plus the priority fee. Returned by default on chains with EIP-1559." },
+          "maxPriorityFeePerGas": { "type": "string", "description": "EIP-1559 max priority fee per gas in WEI. Returned together with `maxFeePerGas`." },
           "gas": { "type": "string", "description": "Gas limit estimate from the API's transaction checks. Returned by POST /transactions unless `ignoreChecks` or `ignoreGasEstimate` is set; omitted by GET /swap, where you estimate locally before broadcasting." },
           "chainId": { "$ref": "#/components/schemas/ChainId" }
         }
