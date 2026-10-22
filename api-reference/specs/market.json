@@ -252,18 +252,8 @@
           "destDecimals": { "type": "integer" },
           "destAmount": { "$ref": "#/components/schemas/TokenAmount" },
           "bestRoute": { "type": "array", "items": { "type": "object" } },
-          "gasCostUSD": {
-            "type": "string",
-            "description": "Estimated total network cost of the swap in USD. On rollups it includes the L1 data fee reported in `gasCostL1Wei`."
-          },
-          "gasCost": {
-            "type": "string",
-            "description": "Estimated execution gas of the swap, in gas units. On rollups this is L2 execution gas only; the L1 data fee is not paid per gas unit and is reported in `gasCostL1Wei`."
-          },
-          "gasCostL1Wei": {
-            "type": "string",
-            "description": "L1 data fee of the swap transaction, in wei of the native token. Only returned on rollups (Optimism, Base, Unichain, Arbitrum One, Robinhood Chain), where it is already included in `gasCostUSD`. It can be `0` on a chain that currently charges no L1 fee."
-          },
+          "gasCostUSD": { "type": "string" },
+          "gasCost": { "type": "string" },
           "side": { "type": "string", "enum": ["SELL", "BUY"] },
           "version": { "type": "string" },
           "contractAddress": { "$ref": "#/components/schemas/Address" },
